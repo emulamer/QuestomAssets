@@ -13,6 +13,10 @@ namespace ConsoleApp1
         static UPtr BeatmapDataSOType = new UPtr() { FileID = 1, PathID = 1552 };
         static UPtr BeatmapLevelCollectionSOType = new UPtr() { FileID = 1, PathID = 762 };
         static UPtr ReplaceLevelCollection = new UPtr() { FileID = 0, PathID = 240 };
+
+        const int BEATMAPDATA_CLONE_PATHID = 106;
+        const int BEATMAPLEVEL_CLONE_PATHID = 101;
+        const int LEVELCOLLECTION_CLONE_PATHID = 240;
         
 
         const int ASSET_PATHID_START = 4800010;
@@ -35,6 +39,7 @@ namespace ConsoleApp1
                 var fs = new AlignedStream(f);
                 WriteMBHeader(fs, assetName, BeatmapLevelSOType);
                 levelData.Write(fs);
+                fs.AlignTo(4);
                 f.Close();
             }
         }
@@ -46,6 +51,7 @@ namespace ConsoleApp1
                 AlignedStream fs = new AlignedStream(f);
                 WriteMBHeader(fs, assetName, BeatmapLevelCollectionSOType);
                 levelCollection.Write(fs);
+                fs.AlignTo(4);
                 f.Close();
             }
         }
@@ -67,12 +73,12 @@ namespace ConsoleApp1
                 fs.Write(new byte[128], 0, 128);
 
                 //_projectedData goes next
-                byte[] projectedData = beatmapSaveData.SerializeToBinary(true);
+                byte[] projectedData = beatmapSaveData.SerializeToBinary(false);
                 fs.Write(projectedData);
 
 
                 //seems to be trailed with a zero *shrug*
-                fs.WriteByte(0);
+                fs.AlignTo(4);
             }
         }
 
@@ -81,7 +87,7 @@ namespace ConsoleApp1
             int pathid = ASSET_PATHID_START;
             var sng = CustomSongLoader.LoadFromPath(inputPath);
             (sng._difficultyBeatmapSets.Where(x => x._beatmapCharacteristicName != Characteristic.Standard).ToList()).ForEach(y => sng._difficultyBeatmapSets.Remove(y));
-           // sng._songName = "ABeatSab";
+            sng._songName = "Aeat Aaber";
 
             sng._environmentSceneInfo = new UPtr() { FileID = 20, PathID = 1 };
             sng._audioClip = new UPtr() { FileID = 0, PathID = 39 };
@@ -106,14 +112,14 @@ namespace ConsoleApp1
                 foreach (var g in s._difficultyBeatmaps)
                 {
                     string bmAssetName = sng._levelID + ((s._beatmapCharacteristicName == Characteristic.Standard) ? "" : s._beatmapCharacteristicName.ToString()) + g._difficulty.ToString() + "BeatmapData";
-                    string fName = Path.Combine(outputPath, $"{pathid}_{bmAssetName}.asset");
+                    string fName = Path.Combine(outputPath, $"{pathid}_{BEATMAPDATA_CLONE_PATHID}_{bmAssetName}.asset");
                     WriteBeatmapAsset(bmAssetName, fName, g._beatmapSaveData);
                     g._beatmapDataPtr = new UPtr() { FileID = 0, PathID = pathid };
                     pathid++;
                 }
             }
             string levelAssetName = $"{sng._levelID}Level";
-            string levelAssetFile = Path.Combine(outputPath, $"{pathid}_{levelAssetName}.asset");
+            string levelAssetFile = Path.Combine(outputPath, $"{pathid}_{BEATMAPLEVEL_CLONE_PATHID}_{levelAssetName}.asset");
             
             WriteBeatmapLevelSOAsset(levelAssetName, levelAssetFile, sng);
             var lc = new BeatmapLevelCollectionSO();
@@ -122,23 +128,23 @@ namespace ConsoleApp1
             lc._beatmapLevels.Add(new UPtr() { FileID = 0, PathID = 162 });
             lc._beatmapLevels.Add(new UPtr() { FileID = 0, PathID = 207 });
             lc._beatmapLevels.Add(new UPtr() { FileID = 0, PathID = pathid});
-            WriteLevelCollectionAsset("OstVol2LevelCollection", Path.Combine(outputPath, "240_OstVol2LevelCollection.asset"), lc);
+            WriteLevelCollectionAsset("OstVol2LevelCollection", Path.Combine(outputPath, $"240_{LEVELCOLLECTION_CLONE_PATHID}_OstVol2LevelCollection.asset"), lc);
         }
         static void Main(string[] args)
         {
 
-            byte[] b;
-            using (FileStream f = File.OpenRead(@"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\7638-7516\assets\BeatSaberExpertPlusBeatmapData.asset"))
-            {
-                var offset = 204;
-                f.Seek(offset, SeekOrigin.Begin);
-                var len = f.Length - offset;
-                b = new byte[len];
-                f.Read(b, 0, (int)len);
-            }
+            //byte[] b;
+            //using (FileStream f = File.OpenRead(@"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\7638-7516\assets\BeatSaberExpertPlusBeatmapData.asset"))
+            //{
+            //    var offset = 204;
+            //    f.Seek(offset, SeekOrigin.Begin);
+            //    var len = f.Length - offset;
+            //    b = new byte[len];
+            //    f.Read(b, 0, (int)len);
+            //}
 
-            BeatmapSaveData beatmapSaveData = BeatmapSaveData.DeserializeFromFromBinary(b);
-            WriteBeatmapAsset("BeatSaberExpertPlusBeatmapData", @"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\7638-7516\assets\easy.out", beatmapSaveData);
+            //BeatmapSaveData beatmapSaveData = BeatmapSaveData.DeserializeFromFromBinary(b);
+            //WriteBeatmapAsset("BeatSaberExpertPlusBeatmapData", @"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\7638-7516\assets\easy.out", beatmapSaveData);
 
 
             MakeAssets(@"C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\CustomLevels\Jaroslav Beck - Beat Saber (Built in)",
