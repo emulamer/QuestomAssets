@@ -37,10 +37,11 @@ public class CustomSongLoader
                     _beatsPerMinute = bml._beatsPerMinute,
                     _shuffle = bml._shuffle,
                     _shufflePeriod = bml._shufflePeriod,
-                    _jsonData = jsonData,
-                    _beatmapSaveData = JsonConvert.DeserializeObject<BeatmapSaveData>(jsonData)
+                    _jsonData = jsonData
                 };
-                
+                dm._beatmapSaveData = JsonConvert.DeserializeObject<BeatmapSaveData>(jsonData);
+
+
             }
         }
         return bml;

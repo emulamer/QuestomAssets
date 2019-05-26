@@ -67,7 +67,7 @@ namespace ConsoleApp1
                 fs.Write(new byte[128], 0, 128);
 
                 //_projectedData goes next
-                byte[] projectedData = beatmapSaveData.SerializeToBinary(false);
+                byte[] projectedData = beatmapSaveData.SerializeToBinary(true);
                 fs.Write(projectedData);
 
 
@@ -80,7 +80,8 @@ namespace ConsoleApp1
         {
             int pathid = ASSET_PATHID_START;
             var sng = CustomSongLoader.LoadFromPath(inputPath);
-            sng._songName = "ABeatSab";
+            (sng._difficultyBeatmapSets.Where(x => x._beatmapCharacteristicName != Characteristic.Standard).ToList()).ForEach(y => sng._difficultyBeatmapSets.Remove(y));
+           // sng._songName = "ABeatSab";
 
             sng._environmentSceneInfo = new UPtr() { FileID = 20, PathID = 1 };
             sng._audioClip = new UPtr() { FileID = 0, PathID = 39 };
@@ -106,8 +107,8 @@ namespace ConsoleApp1
                 {
                     string bmAssetName = sng._levelID + ((s._beatmapCharacteristicName == Characteristic.Standard) ? "" : s._beatmapCharacteristicName.ToString()) + g._difficulty.ToString() + "BeatmapData";
                     string fName = Path.Combine(outputPath, $"{pathid}_{bmAssetName}.asset");
-                    WriteBeatmapAsset(bmAssetName, fName, g._beatmapData._beatmapSaveData);
-                    g._beatmapData.Ptr = new UPtr() { FileID = 0, PathID = pathid };
+                    WriteBeatmapAsset(bmAssetName, fName, g._beatmapSaveData);
+                    g._beatmapDataPtr = new UPtr() { FileID = 0, PathID = pathid };
                     pathid++;
                 }
             }
@@ -125,19 +126,19 @@ namespace ConsoleApp1
         }
         static void Main(string[] args)
         {
-            
-//byte[] b;
-//using (FileStream f = File.OpenRead(@"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\7638-7516\assets\origBeatSaberEasyBeatmapData.asset"))
-//{
-//    var offset =  196;
-//    f.Seek(offset, SeekOrigin.Begin);
-//    var len = f.Length - offset;
-//    b = new byte[len];
-//    f.Read(b, 0, (int)len);
-//}
 
-//BeatmapSaveData beatmapSaveData = BeatmapSaveData.DeserializeFromFromBinary(b);
-//            WriteBeatmapAsset("BeatSaberEasyBeatmapData", @"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\7638-7516\assets\easy.out", beatmapSaveData);
+            byte[] b;
+            using (FileStream f = File.OpenRead(@"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\7638-7516\assets\BeatSaberExpertPlusBeatmapData.asset"))
+            {
+                var offset = 204;
+                f.Seek(offset, SeekOrigin.Begin);
+                var len = f.Length - offset;
+                b = new byte[len];
+                f.Read(b, 0, (int)len);
+            }
+
+            BeatmapSaveData beatmapSaveData = BeatmapSaveData.DeserializeFromFromBinary(b);
+            WriteBeatmapAsset("BeatSaberExpertPlusBeatmapData", @"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\7638-7516\assets\easy.out", beatmapSaveData);
 
 
             MakeAssets(@"C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\CustomLevels\Jaroslav Beck - Beat Saber (Built in)",
