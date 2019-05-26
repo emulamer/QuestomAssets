@@ -8,52 +8,142 @@ namespace ConsoleApp1
     class Program
     {
 
+        // static void WriteLevelCollectionAsser(string name, string assetFileName, byte[] beatmapDataSOPtr)
+        static UPtr BeatmapLevelSOType = new UPtr() { FileID = 1, PathID = 644 };
+        static UPtr BeatmapDataSOType = new UPtr() { FileID = 1, PathID = 1552 };
+        static UPtr BeatmapLevelCollectionSOType = new UPtr() { FileID = 1, PathID = 762 };
+        static UPtr ReplaceLevelCollection = new UPtr() { FileID = 0, PathID = 240 };
+        
 
-        static void WriteAsset(string name, string assetFileName, byte[] beatmapDataSOPtr,  BeatmapSaveData beatmapSaveData)
+        const int ASSET_PATHID_START = 4800010;
+
+        static void WriteMBHeader(AlignedStream s, string name, UPtr scriptType)
         {
-            using (FileStream fs = File.OpenWrite(assetFileName))
+            //empty gameobject pointer
+            new UPtr().Write(s);
+            //enabled int
+            s.Write((int)1);
+            //pointer to the right monoscript type
+            scriptType.Write(s);
+            s.Write(name);
+        }
+        static void WriteBeatmapLevelSOAsset(string assetName, string outputFilename, BeatmapLevelDataSO levelData)
+        {
+            using (FileStream f = File.Open(outputFilename, FileMode.Create))
             {
-                byte[] gameObjPtr = new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-                byte[] enabled = { 0x01, 0x00, 0x00, 0x00 };
-
-                //this has to be the pointer (or whatever unity calls it) to the BeapMapDataSO
-                //beatMapDataSOPtr = { 0x01, 0x00, 0x00, 0x00, 0x10, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-                fs.Write(gameObjPtr, 0, gameObjPtr.Length);
-                fs.Write(enabled, 0, enabled.Length);
-                fs.Write(beatmapDataSOPtr, 0, beatmapDataSOPtr.Length);
-                byte[] namelen = BitConverter.GetBytes(name.Length);
-                fs.Write(namelen, 0, namelen.Length);
                 
-                byte[] nameBytes = System.Text.UTF8Encoding.UTF8.GetBytes(name);
-                fs.Write(nameBytes, 0, nameBytes.Length);
-                //dunno if it's aligned to something or what
-                if (name.Length % 2 != 0)
-                {
-                    fs.WriteByte(0);
-                }
-                //json data string length (0)
-                fs.Write(new byte[] { 0x0, 0x0, 0x0, 0x0 }, 0, 4);
+                var fs = new AlignedStream(f);
+                WriteMBHeader(fs, assetName, BeatmapLevelSOType);
+                levelData.Write(fs);
+                f.Close();
+            }
+        }
 
+        static void WriteLevelCollectionAsset(string assetName, string outputFilename, BeatmapLevelCollectionSO levelCollection)
+        {
+            using (FileStream f = File.Open(outputFilename, FileMode.Create))
+            {
+                AlignedStream fs = new AlignedStream(f);
+                WriteMBHeader(fs, assetName, BeatmapLevelCollectionSOType);
+                levelCollection.Write(fs);
+                f.Close();
+            }
+        }
+
+        static void WriteBeatmapAsset(string assetName, string outputFilename, BeatmapSaveData beatmapSaveData)
+        {            
+            using (FileStream f = File.Open(outputFilename, FileMode.Create))
+            {
+                AlignedStream fs = new AlignedStream(f);
+                WriteMBHeader(fs, assetName, BeatmapDataSOType);
+                //json data string length (0)
+                fs.Write((int)0);
                 //not really sure if the signature has to be 128 bytes, tossing in all zeroes just in case
 
                 //signature length (128)
-                fs.Write(new byte[] { 0x80, 0x0, 0x0, 0x0 }, 0, 4);
+                fs.Write((int)128);
 
                 ///signature (all zeroes)
                 fs.Write(new byte[128], 0, 128);
 
                 //_projectedData goes next
-                byte[] projectedData = beatmapSaveData.SerializeToBinary();
+                byte[] projectedData = beatmapSaveData.SerializeToBinary(false);
+                fs.Write(projectedData);
 
-                fs.Write(BitConverter.GetBytes(projectedData.Length), 0, 4);
-                fs.Write(projectedData, 0, projectedData.Length);
+
                 //seems to be trailed with a zero *shrug*
                 fs.WriteByte(0);
-
             }
+        }
+
+        static void MakeAssets(string inputPath, string outputPath)
+        {
+            int pathid = ASSET_PATHID_START;
+            var sng = CustomSongLoader.LoadFromPath(inputPath);
+
+            sng._environmentSceneInfo = new UPtr() { FileID = 20, PathID = 1 };
+            sng._audioClip = new UPtr() { FileID = 0, PathID = 39 };
+            pathid++;
+            sng._coverImageTexture2D = new UPtr() { FileID = 0, PathID = 19 };
+            pathid++;
+            foreach (var s in sng._difficultyBeatmapSets)
+            {
+                switch (s._beatmapCharacteristicName)
+                {
+                    case Characteristic.OneSaber:
+                        s._beatmapCharacteristic = new UPtr() { FileID = 19, PathID = 1 };
+                        break;
+                    case Characteristic.NoArrows:
+                        s._beatmapCharacteristic = new UPtr() { FileID = 6, PathID = 1 };
+                        break;
+                    case Characteristic.Standard:
+                        s._beatmapCharacteristic = new UPtr() { FileID = 22, PathID = 1 };
+                        break;
+                }
+
+                foreach (var g in s._difficultyBeatmaps)
+                {
+                    string bmAssetName = sng._levelID + ((s._beatmapCharacteristicName == Characteristic.Standard) ? "" : s._beatmapCharacteristicName.ToString()) + g._difficulty.ToString() + "BeatmapData";
+                    string fName = Path.Combine(outputPath, $"{pathid}_{bmAssetName}.asset");
+                    WriteBeatmapAsset(bmAssetName, fName, g._beatmapData._beatmapSaveData);
+                    g._beatmapData.Ptr = new UPtr() { FileID = 0, PathID = pathid };
+                    pathid++;
+                }
+            }
+            string levelAssetName = $"{pathid}_{sng._levelID}Level";
+            string levelAssetFile = Path.Combine(outputPath, $"{levelAssetName}.asset");
+            
+            WriteBeatmapLevelSOAsset(levelAssetName, levelAssetFile, sng);
+            var lc = new BeatmapLevelCollectionSO();
+            lc._beatmapLevels.Add(new UPtr() { FileID = 0, PathID = 90 });
+            lc._beatmapLevels.Add(new UPtr() { FileID = 0, PathID = 151 });
+            lc._beatmapLevels.Add(new UPtr() { FileID = 0, PathID = 162 });
+            lc._beatmapLevels.Add(new UPtr() { FileID = 0, PathID = 207 });
+            lc._beatmapLevels.Add(new UPtr() { FileID = 0, PathID = 229 });
+            lc._beatmapLevels.Add(new UPtr() { FileID = 0, PathID = pathid});
+            WriteLevelCollectionAsset("OstVol2LevelCollection", Path.Combine(outputPath, "OstVol2LevelCollection.asset"), lc);
         }
         static void Main(string[] args)
         {
+            
+byte[] b;
+using (FileStream f = File.OpenRead(@"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\7638-7516\assets\origBeatSaberEasyBeatmapData.asset"))
+{
+    var offset =  196;
+    f.Seek(offset, SeekOrigin.Begin);
+    var len = f.Length - offset;
+    b = new byte[len];
+    f.Read(b, 0, (int)len);
+}
+
+BeatmapSaveData beatmapSaveData = BeatmapSaveData.DeserializeFromFromBinary(b);
+            WriteBeatmapAsset("BeatSaberEasyBeatmapData", @"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\7638-7516\assets\easy.out", beatmapSaveData);
+
+
+            MakeAssets(@"C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\CustomLevels\Jaroslav Beck - Beat Saber (Built in)",
+                @"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\7638-7516\assets");
+            
+            return;
             if (System.Configuration.ConfigurationManager.AppSettings["BeapMapDataSOUnityPointer"] == null) {
                 Console.WriteLine("BeapMapDataSOUnityPointer must be set to the pointer of the BeatMapDataSO object in the .config file.");
                 return;
@@ -149,7 +239,7 @@ namespace ConsoleApp1
             try
             {
 
-                WriteAsset(assetname, assetfile, beatmapSOPtr, bmd);
+                //WriteBeatmapAsset(assetname, assetfile, beatmapSOPtr, bmd);
             }
             catch (Exception ex)
             {

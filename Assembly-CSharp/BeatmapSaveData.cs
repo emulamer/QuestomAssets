@@ -59,25 +59,33 @@ public class BeatmapSaveData
 		this._obstacles = obstacles;
 	}
 
-	// Token: 0x060006A9 RID: 1705 RVA: 0x000187D0 File Offset: 0x000169D0
-	public virtual byte[] SerializeToBinary()
-	{
-		byte[] result;
-		using (MemoryStream memoryStream = new MemoryStream())
-		{
+    // Token: 0x060006A9 RID: 1705 RVA: 0x000187D0 File Offset: 0x000169D0
+    public virtual byte[] SerializeToBinary(bool skipDeflate = false)
+    {
+        byte[] result;
+        using (MemoryStream memoryStream = new MemoryStream())
+        {
             using (DeflateStream ds = new DeflateStream(memoryStream, CompressionMode.Compress))
             {
-                new BinaryFormatter().Serialize(ds, this);
-                ds.Flush();
+                if (skipDeflate)
+                {
+                    new BinaryFormatter().Serialize(memoryStream, this);
+                }
+                else
+                {
+                    new BinaryFormatter().Serialize(ds, this);
+                    ds.Flush();
+                }
+
             }
             memoryStream.Close();
             result = memoryStream.ToArray();
         }
-		return result;
-	}
+        return result;
+    }
 
-	// Token: 0x060006AA RID: 1706 RVA: 0x0001881C File Offset: 0x00016A1C
-	public static BeatmapSaveData DeserializeFromFromBinary(byte[] data)
+    // Token: 0x060006AA RID: 1706 RVA: 0x0001881C File Offset: 0x00016A1C
+    public static BeatmapSaveData DeserializeFromFromBinary(byte[] data)
 	{
 		BeatmapSaveData result;
         using (MemoryStream memoryStream = new MemoryStream(data))
