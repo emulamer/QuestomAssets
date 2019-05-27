@@ -14,12 +14,14 @@ namespace ConsoleApp1
         static UPtr BeatmapLevelCollectionSOType = new UPtr() { FileID = 1, PathID = 762 };
         static UPtr ReplaceLevelCollection = new UPtr() { FileID = 0, PathID = 240 };
 
-        const int BEATMAPDATA_CLONE_PATHID = 106;
-        const int BEATMAPLEVEL_CLONE_PATHID = 101;
-        const int LEVELCOLLECTION_CLONE_PATHID = 240;
+        const int BEATMAPDATA_SCRIPT_ID = 0x0E;
+        const int BEATMAPLEVEL_SCRIPT_ID = 0x0F;
+        const int LEVELCOLLECTION_SCRIPT_ID = 0x10;
+
+        
         
 
-        const int ASSET_PATHID_START = 4800010;
+        const int ASSET_PATHID_START = 261;
 
         static void WriteMBHeader(AlignedStream s, string name, UPtr scriptType)
         {
@@ -91,9 +93,9 @@ namespace ConsoleApp1
 
             sng._environmentSceneInfo = new UPtr() { FileID = 20, PathID = 1 };
             sng._audioClip = new UPtr() { FileID = 0, PathID = 39 };
-            pathid++;
+            //pathid++;
             sng._coverImageTexture2D = new UPtr() { FileID = 0, PathID = 19 };
-            pathid++;
+            //pathid++;
             foreach (var s in sng._difficultyBeatmapSets)
             {
                 switch (s._beatmapCharacteristicName)
@@ -112,14 +114,14 @@ namespace ConsoleApp1
                 foreach (var g in s._difficultyBeatmaps)
                 {
                     string bmAssetName = sng._levelID + ((s._beatmapCharacteristicName == Characteristic.Standard) ? "" : s._beatmapCharacteristicName.ToString()) + g._difficulty.ToString() + "BeatmapData";
-                    string fName = Path.Combine(outputPath, $"{pathid}_{BEATMAPDATA_CLONE_PATHID}_{bmAssetName}.asset");
+                    string fName = Path.Combine(outputPath, $"{pathid}_{BEATMAPDATA_SCRIPT_ID}_{bmAssetName}.asset");
                     WriteBeatmapAsset(bmAssetName, fName, g._beatmapSaveData);
                     g._beatmapDataPtr = new UPtr() { FileID = 0, PathID = pathid };
                     pathid++;
                 }
             }
             string levelAssetName = $"{sng._levelID}Level";
-            string levelAssetFile = Path.Combine(outputPath, $"{pathid}_{BEATMAPLEVEL_CLONE_PATHID}_{levelAssetName}.asset");
+            string levelAssetFile = Path.Combine(outputPath, $"{pathid}_{BEATMAPLEVEL_SCRIPT_ID}_{levelAssetName}.asset");
             
             WriteBeatmapLevelSOAsset(levelAssetName, levelAssetFile, sng);
             var lc = new BeatmapLevelCollectionSO();
@@ -128,7 +130,7 @@ namespace ConsoleApp1
             lc._beatmapLevels.Add(new UPtr() { FileID = 0, PathID = 162 });
             lc._beatmapLevels.Add(new UPtr() { FileID = 0, PathID = 207 });
             lc._beatmapLevels.Add(new UPtr() { FileID = 0, PathID = pathid});
-            WriteLevelCollectionAsset("OstVol2LevelCollection", Path.Combine(outputPath, $"240_{LEVELCOLLECTION_CLONE_PATHID}_OstVol2LevelCollection.asset"), lc);
+            WriteLevelCollectionAsset("OstVol2LevelCollection", Path.Combine(outputPath, $"240_{LEVELCOLLECTION_SCRIPT_ID}_OstVol2LevelCollection.asset"), lc);
         }
         static void Main(string[] args)
         {
