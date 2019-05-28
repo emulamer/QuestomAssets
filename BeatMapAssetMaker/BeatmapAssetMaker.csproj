@@ -72,7 +72,9 @@
     <Compile Include="AssetsChanger\AssetsWriter.cs" />
     <Compile Include="AssetsChanger\AssetsType.cs" />
     <Compile Include="AssetsChanger\AssetsTexture2D.cs" />
-    <Compile Include="BeatSaber\AssetsBeatMapLevelDataObject.cs" />
+    <Compile Include="BeatSaber\AssetsBeatmapLevelCollectionObject.cs" />
+    <Compile Include="BeatSaber\AssetsBeatmapLevelDataObject.cs" />
+    <Compile Include="BeatSaber\AssetsBeatmapLevelPackObject.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="Program.cs" />

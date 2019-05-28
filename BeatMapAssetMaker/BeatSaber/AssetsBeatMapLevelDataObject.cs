@@ -8,12 +8,12 @@ using BeatmapAssetMaker.AssetsChanger;
 
 namespace BeatmapAssetMaker.BeatSaber
 {
-    public class AssetsBeatMapLevelDataObject : AssetsMonoBehaviourObject
+    public class AssetsBeatmapLevelDataObject : AssetsMonoBehaviourObject
     {
-        public AssetsBeatMapLevelDataObject(AssetsObjectInfo objectInfo) : base(objectInfo)
+        public AssetsBeatmapLevelDataObject(AssetsObjectInfo objectInfo) : base(objectInfo)
         { }
 
-        public AssetsBeatMapLevelDataObject(AssetsObjectInfo objectInfo, AssetsReader reader) : base(objectInfo, reader)
+        public AssetsBeatmapLevelDataObject(AssetsObjectInfo objectInfo, AssetsReader reader) : base(objectInfo, reader)
         { }
 
         private bool _changes;

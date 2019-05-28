@@ -410,22 +410,22 @@ namespace BeatmapAssetMaker
 
             try
             {
-                //if (args == null || args.Length < 3)
-                //{
-                //    Console.WriteLine("Usage: BeatmapAssetMaker assetsFile outputAssetsFile customSongsFolder");
-                //    Console.WriteLine("\tassetsFile: the name/path to the assets file.  If the assets file ends with .split0, send in the filename without the .split0, e.g. c:\\files\\assets\\Data\\sharedassets17.assets.split0 should be passed as c:\\files\\assets\\Data\\sharedassets17.assets");
-                //    Console.WriteLine("\toutputAssetsFile: the filename of the output assets file (also don't include .split0)");
-                //    Console.WriteLine("\tcustomSongsFolder: the folder that contains folders of custom songs in the new native beatsaber format, or a folder with a single song that contains an Info.dat file");
-                //    return;
-                //}
+                if (args == null || args.Length < 3)
+                {
+                    Console.WriteLine("Usage: BeatmapAssetMaker assetsFile outputAssetsFile customSongsFolder");
+                    Console.WriteLine("\tassetsFile: the name/path to the assets file.  If the assets file ends with .split0, send in the filename without the .split0, e.g. c:\\files\\assets\\Data\\sharedassets17.assets.split0 should be passed as c:\\files\\assets\\Data\\sharedassets17.assets");
+                    Console.WriteLine("\toutputAssetsFile: the filename of the output assets file (also don't include .split0)");
+                    Console.WriteLine("\tcustomSongsFolder: the folder that contains folders of custom songs in the new native beatsaber format, or a folder with a single song that contains an Info.dat file");
+                    return;
+                }
 
-                //string inputAssetsFile = args[0];
-                //string outputAssetsFile = args[1];
-                //string customSongsFolder = args[2];
+                string inputAssetsFile = args[0];
+                string outputAssetsFile = args[1];
+                string customSongsFolder = args[2];
 
-                string inputAssetsFile = @"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\aaoriginalbase\assets\bin\Data\sharedassets17.assets"; ;
-                string outputAssetsFile = @"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\dist\assets\sharedassets17.assets";
-                string customSongsFolder = @"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\dist\ToConvert";
+                //string inputAssetsFile = @"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\aaoriginalbase\assets\bin\Data\sharedassets17.assets"; ;
+                //string outputAssetsFile = @"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\dist\assets\sharedassets17.assets";
+                //string customSongsFolder = @"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\dist\ToConvert";
 
                 if (!Directory.Exists(Path.GetDirectoryName(outputAssetsFile)))
                 {
@@ -446,7 +446,7 @@ namespace BeatmapAssetMaker
                 {
                     //do many
                     List<string> foundSongs = Directory.EnumerateDirectories(customSongsFolder).Where(y => File.Exists(Path.Combine(y, "Info.dat"))).ToList();
-                    Console.WriteLine($"Found {foundSongs} custom songs to inject:");
+                    Console.WriteLine($"Found {foundSongs.Count()} custom songs to inject:");
                     customSongsFolders.AddRange(foundSongs);
                 }
                 if (customSongsFolders.Count < 1)
@@ -492,8 +492,8 @@ namespace BeatmapAssetMaker
                     }
                 }
 
-                byte[] levelColData = MakeLevelCollectionAsset("OstVol2LevelCollection", levelCollection);
-                var ostObj = ((AssetsMonoBehaviourObject)f.Objects.First(x => x is AssetsMonoBehaviourObject && ((AssetsMonoBehaviourObject)x).Name == "OstVol2LevelCollection"));
+                byte[] levelColData = MakeLevelCollectionAsset("ExtrasLevelCollection", levelCollection);
+                var ostObj = ((AssetsMonoBehaviourObject)f.Objects.First(x => x is AssetsMonoBehaviourObject && ((AssetsMonoBehaviourObject)x).Name == "ExtrasLevelCollection"));
                 ostObj.ScriptParametersData = levelColData;
 
                 try
