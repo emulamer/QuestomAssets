@@ -220,7 +220,7 @@ namespace BeatmapAssetMaker
             AssetsTexture2D coverAsset = null;
             string audioClipFile = Path.Combine(inputPath, sng._songFilename);
             string outputAudioClipFile = Path.Combine(outputAudioPath, sng._levelID + ".ogg");
-            if (!string.IsNullOrWhiteSpace(sng._coverImageFilename) && File.Exists(sng._coverImageFilename))
+            if (!string.IsNullOrWhiteSpace(sng._coverImageFilename) && File.Exists(Path.Combine(inputPath, sng._coverImageFilename)))
             {
                 try
                 {
