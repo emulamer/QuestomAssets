@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using BeatmapAssetMaker.AssetsChanger;
 namespace ConsoleApp1
 {
     class Program
@@ -13,6 +14,8 @@ namespace ConsoleApp1
         static UPtr BeatmapDataSOType = new UPtr() { FileID = 1, PathID = 1552 };
         static UPtr BeatmapLevelCollectionSOType = new UPtr() { FileID = 1, PathID = 762 };
         static UPtr ReplaceLevelCollection = new UPtr() { FileID = 0, PathID = 240 };
+
+
 
         const int BEATMAPDATA_SCRIPT_ID = 0x0E;
         const int BEATMAPLEVEL_SCRIPT_ID = 0x0F;
@@ -37,33 +40,67 @@ namespace ConsoleApp1
         {
             using (FileStream f = File.Open(outputFilename, FileMode.Create))
             {
-                
-                var fs = new AlignedStream(f);
-                WriteMBHeader(fs, assetName, BeatmapLevelSOType);
-                levelData.Write(fs);
-                fs.AlignTo(4);
-                f.Close();
+                using (MemoryStream ms = new MemoryStream(MakeBeatmapLevelSOAsset(assetName, levelData)))
+                {
+                    AlignedStream fs = new AlignedStream(f);
+                    WriteMBHeader(fs, assetName, BeatmapLevelSOType);
+                    ms.CopyTo(f);
+                }
             }
         }
 
+        static byte[] MakeBeatmapLevelSOAsset(string assetName, BeatmapLevelDataSO levelData)
+        {
+            using (MemoryStream f = new MemoryStream())
+            {                
+                var fs = new AlignedStream(f);
+                
+                levelData.Write(fs);
+                fs.AlignTo(4);
+                return f.ToArray();
+            }
+        }
         static void WriteLevelCollectionAsset(string assetName, string outputFilename, BeatmapLevelCollectionSO levelCollection)
         {
             using (FileStream f = File.Open(outputFilename, FileMode.Create))
             {
+                using (MemoryStream ms = new MemoryStream(MakeLevelCollectionAsset(assetName, levelCollection)))
+                {
+                    AlignedStream fs = new AlignedStream(f);
+                    WriteMBHeader(fs, assetName, BeatmapLevelCollectionSOType);
+                    ms.CopyTo(f);
+                }
+            }
+        }
+
+        static byte[] MakeLevelCollectionAsset(string assetName, BeatmapLevelCollectionSO levelCollection)
+        {
+            using (MemoryStream f = new MemoryStream())
+            {
                 AlignedStream fs = new AlignedStream(f);
-                WriteMBHeader(fs, assetName, BeatmapLevelCollectionSOType);
                 levelCollection.Write(fs);
-                fs.AlignTo(4);
-                f.Close();
+                return f.ToArray();
             }
         }
 
         static void WriteBeatmapAsset(string assetName, string outputFilename, BeatmapSaveData beatmapSaveData)
-        {            
+        {
             using (FileStream f = File.Open(outputFilename, FileMode.Create))
             {
+                using (MemoryStream ms = new MemoryStream(MakeBeatmapAsset(assetName, beatmapSaveData)))
+                {
+                    AlignedStream fs = new AlignedStream(f);
+                    WriteMBHeader(fs, assetName, BeatmapDataSOType);
+                    ms.CopyTo(f);
+                }
+            }
+        }
+        static byte[] MakeBeatmapAsset(string assetName, BeatmapSaveData beatmapSaveData)
+        {
+            using (MemoryStream f = new MemoryStream())
+            { 
                 AlignedStream fs = new AlignedStream(f);
-                WriteMBHeader(fs, assetName, BeatmapDataSOType);
+                //WriteMBHeader(fs, assetName, BeatmapDataSOType);
                 //json data string length (0)
                 fs.Write((int)0);
                 //not really sure if the signature has to be 128 bytes, tossing in all zeroes just in case
@@ -81,6 +118,7 @@ namespace ConsoleApp1
 
                 //seems to be trailed with a zero *shrug*
                 fs.AlignTo(4);
+                return f.ToArray();
             }
         }
 
@@ -132,9 +170,89 @@ namespace ConsoleApp1
             lc._beatmapLevels.Add(new UPtr() { FileID = 0, PathID = pathid});
             WriteLevelCollectionAsset("OstVol2LevelCollection", Path.Combine(outputPath, $"240_{LEVELCOLLECTION_SCRIPT_ID}_OstVol2LevelCollection.asset"), lc);
         }
+
+        static void MakeAssets(string inputPath, AssetsFile assetsFile)
+        {
+  
+            var sng = CustomSongLoader.LoadFromPath(inputPath);
+            (sng._difficultyBeatmapSets.Where(x => x._beatmapCharacteristicName != Characteristic.Standard).ToList()).ForEach(y => sng._difficultyBeatmapSets.Remove(y));
+            sng._songName = "Aeat Aaber";
+
+            sng._environmentSceneInfo = new UPtr() { FileID = 20, PathID = 1 };
+            sng._audioClip = new UPtr() { FileID = 0, PathID = 39 };
+
+            sng._coverImageTexture2D = new UPtr() { FileID = 0, PathID = 19 };
+
+            foreach (var s in sng._difficultyBeatmapSets)
+            {
+                switch (s._beatmapCharacteristicName)
+                {
+                    case Characteristic.OneSaber:
+                        s._beatmapCharacteristic = new UPtr() { FileID = 19, PathID = 1 };
+                        break;
+                    case Characteristic.NoArrows:
+                        s._beatmapCharacteristic = new UPtr() { FileID = 6, PathID = 1 };
+                        break;
+                    case Characteristic.Standard:
+                        s._beatmapCharacteristic = new UPtr() { FileID = 22, PathID = 1 };
+                        break;
+                }
+
+                foreach (var g in s._difficultyBeatmaps)
+                {
+                    string bmAssetName = sng._levelID + ((s._beatmapCharacteristicName == Characteristic.Standard) ? "" : s._beatmapCharacteristicName.ToString()) + g._difficulty.ToString() + "BeatmapData";
+
+                    byte[] assetData = MakeBeatmapAsset(bmAssetName, g._beatmapSaveData);
+                    AssetsMonoBehaviourObject bmAsset = new AssetsMonoBehaviourObject(new AssetsObjectInfo()
+                    {
+                        TypeIndex = AssetsConstants.BeatmapDataSOTypeIndex
+                    })
+                    {
+                        MonoscriptTypePtr = new AssetsPtr(BeatmapDataSOType),
+                        Name = bmAssetName,
+                        ScriptParametersData = assetData,
+                        GameObjectPtr = new AssetsPtr()
+                    };
+                    assetsFile.AddObject(bmAsset, true);
+                    g._beatmapDataPtr = new UPtr() { FileID = 0, PathID = bmAsset.ObjectInfo.ObjectID };
+
+                }
+            }
+
+            string levelAssetName = $"{sng._levelID}Level";
+           
+
+            byte[] bmLevelData = MakeBeatmapLevelSOAsset(levelAssetName, sng);
+            AssetsMonoBehaviourObject bmLevelAsset = new AssetsMonoBehaviourObject(new AssetsObjectInfo()
+            {
+                TypeIndex = AssetsConstants.BeatmapLevelTypeIndex
+            })
+            {
+                MonoscriptTypePtr = new AssetsPtr(BeatmapLevelSOType),
+                Name = levelAssetName,
+                ScriptParametersData = bmLevelData,
+                GameObjectPtr = new AssetsPtr()
+            };
+            assetsFile.AddObject(bmLevelAsset, true);
+
+            var lc = new BeatmapLevelCollectionSO();
+            lc._beatmapLevels.Add(new UPtr() { FileID = 0, PathID = 90 });
+            lc._beatmapLevels.Add(new UPtr() { FileID = 0, PathID = 151 });
+            lc._beatmapLevels.Add(new UPtr() { FileID = 0, PathID = 162 });
+            lc._beatmapLevels.Add(new UPtr() { FileID = 0, PathID = 207 });
+            lc._beatmapLevels.Add(new UPtr() { FileID = 0, PathID = bmLevelAsset.ObjectInfo.ObjectID });
+            byte[] levelColData = MakeLevelCollectionAsset("OstVol2LevelCollection", lc);
+            ((AssetsMonoBehaviourObject)assetsFile.Objects.First(x => x is AssetsMonoBehaviourObject && ((AssetsMonoBehaviourObject)x).Name == "OstVol2LevelCollection")).ScriptParametersData = levelColData;
+        }
+
         static void Main(string[] args)
         {
+            Dictionary<Guid, Type> scriptHashToTypes = new Dictionary<Guid, Type>();
 
+            AssetsFile f = new AssetsFile(@"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\7638-7516\assets\UABECombined.17", scriptHashToTypes);
+            MakeAssets(@"C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\CustomLevels\Jaroslav Beck - Beat Saber (Built in)", f);
+            f.Write(@"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\7638-7516\assets\sharedassets17.assets.split0");
+            return;
             //byte[] b;
             //using (FileStream f = File.OpenRead(@"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\7638-7516\assets\BeatSaberExpertPlusBeatmapData.asset"))
             //{

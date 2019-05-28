@@ -8,7 +8,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>BeatmapAssetMaker</RootNamespace>
     <AssemblyName>BeatmapAssetMaker</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
@@ -23,6 +23,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -32,6 +33,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
@@ -47,6 +49,24 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AssetsChanger\AssetsAudioClip.cs" />
+    <Compile Include="AssetsChanger\AssetsConstants.cs" />
+    <Compile Include="AssetsChanger\AssetsExternalFile.cs" />
+    <Compile Include="AssetsChanger\AssetsGLTextureSettings.cs" />
+    <Compile Include="AssetsChanger\AssetsMetadata.cs" />
+    <Compile Include="AssetsChanger\AssetsMonoBehaviourObject.cs" />
+    <Compile Include="AssetsChanger\AssetsObject.cs" />
+    <Compile Include="AssetsChanger\AssetsObjectInfo.cs" />
+    <Compile Include="AssetsChanger\AssetsFile.cs" />
+    <Compile Include="AssetsChanger\AssetsHeader.cs" />
+    <Compile Include="AssetsChanger\AssetsPtr.cs" />
+    <Compile Include="AssetsChanger\AssetsReader.cs" />
+    <Compile Include="AssetsChanger\AssetsStreamedResource.cs" />
+    <Compile Include="AssetsChanger\AssetsStreamingInfo.cs" />
+    <Compile Include="AssetsChanger\AssetsWriter.cs" />
+    <Compile Include="AssetsChanger\AssetsType.cs" />
+    <Compile Include="AssetsChanger\AssetsTexture2D.cs" />
+    <Compile Include="Log.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
