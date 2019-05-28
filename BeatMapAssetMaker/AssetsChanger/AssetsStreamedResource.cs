@@ -22,6 +22,7 @@ namespace BeatmapAssetMaker.AssetsChanger
         private void Parse(AssetsReader reader)
         {
             Source = reader.ReadString();
+            reader.AlignToObjectData(4);
             Offset = reader.ReadUInt64();
             Size = reader.ReadUInt64();
         }
@@ -29,6 +30,7 @@ namespace BeatmapAssetMaker.AssetsChanger
         public void Write(AssetsWriter writer)
         {
             writer.Write(Source);
+            writer.AlignTo(4);
             writer.Write(Offset);
             writer.Write(Size);
         }

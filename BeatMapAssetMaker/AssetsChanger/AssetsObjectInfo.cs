@@ -38,5 +38,13 @@ namespace BeatmapAssetMaker.AssetsChanger
             writer.Write(DataSize);
             writer.Write(TypeIndex);
         }
+
+        public AssetsPtr LocalPtrTo
+        {
+            get
+            {
+                return new AssetsPtr(0, ObjectID);
+            }
+        }
     }
 }

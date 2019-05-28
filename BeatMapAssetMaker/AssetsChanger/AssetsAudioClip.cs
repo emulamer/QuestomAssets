@@ -227,7 +227,8 @@ namespace BeatmapAssetMaker.AssetsChanger
         { }
 
         public AssetsAudioClip(AssetsObjectInfo objectInfo, AssetsReader reader) : base(objectInfo, reader)
-        { }
+        {
+        }
 
         protected override void Parse(AssetsReader reader)
         {
@@ -249,6 +250,7 @@ namespace BeatmapAssetMaker.AssetsChanger
             reader.AlignToObjectData(4);
             _resource = new AssetsStreamedResource(reader);
             _compressionFormat = reader.ReadInt32();
+            reader.AlignToObjectData(4);
         }
 
         private void SerializeToData()
@@ -275,7 +277,8 @@ namespace BeatmapAssetMaker.AssetsChanger
                     _resource.Write(writer);
                     writer.Write(_compressionFormat);
                     //TODO: I think this might be some kind of alignment thing?  not sure.
-                    writer.Write((byte)0);
+                    //writer.Write((byte)0);
+                    writer.AlignTo(4);
                 }
                 _data = ms.ToArray();
             }

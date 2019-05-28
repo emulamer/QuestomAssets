@@ -10,6 +10,7 @@ namespace BeatmapAssetMaker.AssetsChanger
     {
         private bool _changes = false;
 
+        
         private AssetsPtr _gameObjectPtr;
         private int _enabled;
         private string _name;
@@ -107,7 +108,7 @@ namespace BeatmapAssetMaker.AssetsChanger
             _enabled = reader.ReadInt32();
             _monoscriptTypePointer = new AssetsPtr(reader);
             _name = reader.ReadString();
-           
+            reader.AlignToObjectData(4);
         }
 
         protected override void Parse(AssetsReader reader)
@@ -132,6 +133,7 @@ namespace BeatmapAssetMaker.AssetsChanger
                     bw.Write(_enabled);
                     _monoscriptTypePointer.Write(bw);
                     bw.Write(_name);
+                    bw.AlignTo(4);
                     bw.Write(_scriptParametersData);
                 }
                 _data = ms.ToArray();

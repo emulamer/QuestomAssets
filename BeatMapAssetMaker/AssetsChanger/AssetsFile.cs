@@ -73,8 +73,11 @@ namespace BeatmapAssetMaker.AssetsChanger
                                     assetsObject = new AssetsMonoBehaviourObject(objectInfo, reader);
                                 }
                                 break;
-                            case AssetsConstants.AudioClipType:
+                            case AssetsConstants.AudioClipClassID:
                                 assetsObject = new AssetsAudioClip(objectInfo, reader);
+                                break;
+                            case AssetsConstants.Texture2DClassID:
+                                assetsObject = new AssetsTexture2D(objectInfo, reader);
                                 break;
                             default:
                                 assetsObject = new AssetsObject(objectInfo, reader);
@@ -85,6 +88,22 @@ namespace BeatmapAssetMaker.AssetsChanger
                     }
                 }
             }
+        }
+
+        public int GetTypeIndexFromClassID(int classID)
+        {
+            var type = Metadata.Types.FirstOrDefault(x => x.ClassID == classID);
+            if (type == null)
+                throw new ArgumentException("ClassID was not found in metadata.");
+
+            return Metadata.Types.IndexOf(type);
+        }
+
+        public int GetClassIDFromTypeIndex(int typeIndex)
+        {
+            if (typeIndex < 1 || typeIndex > Metadata.Types.Count() - 1)
+                throw new ArgumentException("There is no type at this index.");
+            return Metadata.Types[typeIndex].ClassID;
         }
 
         public void Write(string fileName)
@@ -106,11 +125,12 @@ namespace BeatmapAssetMaker.AssetsChanger
             using (AssetsWriter writer = new AssetsWriter(metaMS))
             {
                 Metadata.Write(writer);
-                
                 writer.AlignTo(4);
-                //I don't know why
-                writer.Write((int)0);
+                
+                
+
             }
+            //+4 because of the writing int0 hack
             Header.FileSize = Header.HeaderSize + (int)objectsMS.Length + (int)metaMS.Length;
             Header.ObjectDataOffset = Header.HeaderSize + (int)metaMS.Length;
             Header.MetadataSize = (int)metaMS.Length;
@@ -124,12 +144,10 @@ namespace BeatmapAssetMaker.AssetsChanger
                 }
                 metaMS.CopyTo(fs);
 
-                //not sure if this should align to 4, 8, 16, 32, etc.
-                //int alignto = 24;
-                //int count = alignto - ((int)fs.Position % alignto);
-                //if (count > 0 && count < alignto)
-                //    fs.Write(new byte[count], 0, count);
-
+        
+                //I don't know why, this is a hack
+              //  fs.Write(new byte[4],0,4);
+                
                 objectsMS.CopyTo(fs);
             }
 

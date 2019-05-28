@@ -68,9 +68,10 @@ namespace BeatmapAssetMaker.AssetsChanger
             writer.Write(Types.Count());
             Types.ForEach(x => x.Write(writer));
             writer.Write(ObjectInfos.Count());
+            writer.AlignTo(4);
             ObjectInfos.ForEach(x => x.Write(writer));
-            writer.AlignTo(8);
             writer.Write(Adds.Count());
+            writer.AlignTo(4);
             Adds.ForEach(x => x.Write(writer));
             writer.Write(ExternalFiles.Count());
             ExternalFiles.ForEach(x => x.Write(writer));

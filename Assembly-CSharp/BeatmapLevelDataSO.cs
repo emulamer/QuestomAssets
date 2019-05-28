@@ -12,12 +12,21 @@ public class BeatmapLevelDataSO
     {
         _difficultyBeatmapSets = new List<DifficultyBeatmapSetSO>();
     }
+    private string __levelID;
     public string _levelID
     {
         get
         {
+            if (__levelID == null)
+            {
+                __levelID = new string(_songName.Where(c => char.IsLetter(c)).ToArray());
+            }
             //this probably isn't safe to use as a songID
-            return new string(_songName.Where(c => char.IsLetter(c)).ToArray());
+            return __levelID;
+        }
+        set
+        {
+            __levelID = value;
         }
     }
 
@@ -27,12 +36,12 @@ public class BeatmapLevelDataSO
     public string _levelAuthorName;
     [JsonIgnore]
     public UPtr _audioClip;
-    public float _beatsPerMinute;
-    public float _songTimeOffset;
-    public float _shuffle;
-    public float _shufflePeriod;
-    public float _previewStartTime;
-    public float _previewDuration;
+    public Single _beatsPerMinute;
+    public Single _songTimeOffset;
+    public Single _shuffle;
+    public Single _shufflePeriod;
+    public Single _previewStartTime;
+    public Single _previewDuration;
     [JsonIgnore]
     public UPtr _coverImageTexture2D;
     [JsonIgnore]

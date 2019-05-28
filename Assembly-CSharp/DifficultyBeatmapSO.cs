@@ -11,7 +11,7 @@ using System.Text;
 
         public Difficulty _difficulty;
         public int _difficultyRank;
-        public float _noteJumpMovementSpeed;
+        public Single _noteJumpMovementSpeed;
         public int _noteJumpStartBeatOffset;
 
         public BeatmapDataSO _beatmapData;
