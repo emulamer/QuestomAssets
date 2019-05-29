@@ -1,110 +1,66 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{9FCD4D5E-8E64-49C5-A90A-0D17DD98C8A3}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>BeatmapAssetMaker</RootNamespace>
-    <AssemblyName>BeatmapAssetMaker</AssemblyName>
-    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <Deterministic>true</Deterministic>
-    <TargetFrameworkProfile />
+    <TargetFrameworks>netstandard2</TargetFrameworks>
+    <AssemblyTitle>BeatmapAssetMaker</AssemblyTitle>
+    <Product>BeatmapAssetMaker</Product>
+    <Copyright>Copyright ©  2019</Copyright>
+    <StartupObject>BeatmapAssetMaker.Program</StartupObject>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2|AnyCPU'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.VisualBasic" />
+    <PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Drawing.Common" Version="4.5.1" />
+  </ItemGroup>
+  <ItemGroup>
     <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\New Unity Project\packages\Newtonsoft.Json.12.0.2\lib\net35\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="NVorbis, Version=0.8.6.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\NVorbis.0.8.6\lib\net35\NVorbis.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.configuration" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Numerics" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AssetsChanger\AssetsAudioClip.cs" />
-    <Compile Include="AssetsChanger\AssetsConstants.cs" />
-    <Compile Include="AssetsChanger\AssetsExternalFile.cs" />
-    <Compile Include="AssetsChanger\AssetsGLTextureSettings.cs" />
-    <Compile Include="AssetsChanger\AssetsMetadata.cs" />
-    <Compile Include="AssetsChanger\AssetsMonoBehaviourObject.cs" />
-    <Compile Include="AssetsChanger\AssetsObject.cs" />
-    <Compile Include="AssetsChanger\AssetsObjectInfo.cs" />
-    <Compile Include="AssetsChanger\AssetsFile.cs" />
-    <Compile Include="AssetsChanger\AssetsHeader.cs" />
-    <Compile Include="AssetsChanger\AssetsPtr.cs" />
-    <Compile Include="AssetsChanger\AssetsReader.cs" />
-    <Compile Include="AssetsChanger\AssetsStreamedResource.cs" />
-    <Compile Include="AssetsChanger\AssetsStreamingInfo.cs" />
-    <Compile Include="AssetsChanger\AssetsWriter.cs" />
-    <Compile Include="AssetsChanger\AssetsType.cs" />
-    <Compile Include="AssetsChanger\AssetsTexture2D.cs" />
-    <Compile Include="BeatSaber\AssetsBeatmapLevelCollectionObject.cs" />
-    <Compile Include="BeatSaber\AssetsBeatmapLevelDataObject.cs" />
-    <Compile Include="BeatSaber\AssetsBeatmapLevelPackObject.cs" />
-    <Compile Include="BeatSaber\AssetsMainLevelPackCollection.cs" />
-    <Compile Include="Extensions.cs" />
-    <Compile Include="Log.cs" />
-    <Compile Include="Program.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Resource1.Designer.cs">
+    <Compile Update="Resource1.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resource1.resx</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
     <None Include="Resources\CustomSongsCover.ETC_RGB4" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Assembly-CSharp\Assembly-CSharp.csproj">
-      <Project>{0dad5d23-076f-465d-9736-2cf0d28b6d47}</Project>
-      <Name>Assembly-CSharp</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Resource1.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resource1.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
+    <ProjectReference Include="..\Assembly-CSharp\Assembly-CSharp.csproj" />
+    <ProjectReference Include="..\StbSharp\StbSharp\StbSharp.NETStandard.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Mox.png" />
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <Compile Remove="BeatmapData.cs" />
+    <Compile Remove="BeatmapDataLoader.cs" />
+    <Compile Remove="BeatmapEventData.cs" />
+    <Compile Remove="BeatmapEventType.cs" />
+    <Compile Remove="BeatmapLineData.cs" />
+    <Compile Remove="BeatmapObjectData.cs" />
+    <Compile Remove="BeatmapObjectType.cs" />
+    <Compile Remove="BeatmapSaveData.cs" />
+    <Compile Remove="NoteCutDirection.cs" />
+    <Compile Remove="NoteData.cs" />
+    <Compile Remove="NoteLineLayer.cs" />
+    <Compile Remove="NoteType.cs" />
+    <Compile Remove="NoteTypeExtensions.cs" />
+    <Compile Remove="ObstacleData.cs" />
+    <Compile Remove="ObstacleType.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="BeatmapAssetMaker.runtimeconfig.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>

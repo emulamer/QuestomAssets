@@ -16,22 +16,10 @@ namespace BeatmapAssetMaker.BeatSaber
         public AssetsBeatmapLevelDataObject(AssetsObjectInfo objectInfo, AssetsReader reader) : base(objectInfo, reader)
         { }
 
-        private bool _changes;
-        private BeatmapLevelDataSO _beatMapLevelData;
-        public BeatmapLevelDataSO BeatMapLevelData
-        {
-            get
-            {
-                return _beatMapLevelData;
-            }
-            set
-            {
-                if (_beatMapLevelData != value)
-                    _changes = true;
 
-                _beatMapLevelData = value;
-            }
-        }
+        private BeatmapLevelDataSO _beatMapLevelData;
+        public BeatmapLevelDataSO BeatMapLevelData { get; set; }
+        
 
         private void SerializeScriptParameters()
         {

@@ -1,30 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.IO;
 using BeatmapAssetMaker.AssetsChanger;
 using System.Drawing;
-using System.Drawing.Imaging;
-using Newtonsoft.Json.Linq;
 using BeatmapAssetMaker.BeatSaber;
-
+using System.Runtime.InteropServices;
 
 namespace BeatmapAssetMaker
 {
     class Program
     {
-
-        // static void WriteLevelCollectionAsser(string name, string assetFileName, byte[] beatmapDataSOPtr)
-
-        static UPtr ReplaceLevelCollection = new UPtr() { FileID = 0, PathID = 240 };
-
         static bool IMPORT_COVERS = false;
-
-        const int BEATMAPDATA_SCRIPT_ID = 0x0E;
-        const int BEATMAPLEVEL_SCRIPT_ID = 0x0F;
-        const int LEVELCOLLECTION_SCRIPT_ID = 0x10;
-
         
         
 
@@ -40,19 +27,14 @@ namespace BeatmapAssetMaker
             }
         }
 
- 
-
         static byte[] MakeBeatmapAsset(string assetName, BeatmapSaveData beatmapSaveData)
         {
             using (MemoryStream f = new MemoryStream())
             { 
                 AlignedStream fs = new AlignedStream(f);
-                //WriteMBHeader(fs, assetName, BeatmapDataSOType);
-                //json data string length (0)
-                fs.Write((int)0);
-                //not really sure if the signature has to be 128 bytes, tossing in all zeroes just in case
 
-                //signature length (128)
+                //write empty signature
+                fs.Write((int)0);
                 fs.Write((int)128);
 
                 ///signature (all zeroes)
@@ -67,14 +49,15 @@ namespace BeatmapAssetMaker
         }
 
 
-        public static byte[] LoadToRGB(Image image)
+        public static byte[] LoadToRGB(Bitmap image)
         {
+            
             
             
             byte[] imageBytes;
             using (MemoryStream msCover = new MemoryStream())
             {
-                image.Save(msCover, System.Drawing.Imaging.ImageFormat.Bmp);
+                image.Save(msCover,  System.Drawing.Imaging.ImageFormat.Bmp);
 
                 imageBytes = new byte[msCover.Length - 54];
                 byte[] msBytes = msCover.ToArray();
@@ -116,7 +99,7 @@ namespace BeatmapAssetMaker
                     try
                     {
                         string coverFile = Path.Combine(inputPath, sng._coverImageFilename);
-                        Image coverImage = Image.FromFile(coverFile);
+                        Bitmap coverImage = (Bitmap)Bitmap.FromFile(coverFile);
                         var imageBytes = LoadToRGB(coverImage);
 
                         coverAsset = new AssetsTexture2D(new AssetsObjectInfo()
@@ -168,8 +151,36 @@ namespace BeatmapAssetMaker
                     Console.WriteLine("No cover art found.");
                 }
             }
+            int channels;
+            int frequency;
+            Single length;
+            unsafe
+            {
+                byte[] oggBytes = File.ReadAllBytes(audioClipFile);
+                GCHandle pinnedArray = GCHandle.Alloc(oggBytes, GCHandleType.Pinned);
+                try
+                {
+                    IntPtr pointer = pinnedArray.AddrOfPinnedObject();
+                    int error;
+                    StbSharp.StbVorbis.stb_vorbis_alloc alloc;
+                    StbSharp.StbVorbis.stb_vorbis v = StbSharp.StbVorbis.stb_vorbis_open_memory((byte*)pointer.ToPointer(), oggBytes.Length, &error, &alloc);
+                    channels = v.channels;
+                    frequency = (int)v.sample_rate;
+                    length = StbSharp.StbVorbis.stb_vorbis_stream_length_in_seconds(v);
+                    StbSharp.StbVorbis.stb_vorbis_close(v);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Exception parsing ogg file {audioClipFile}: {0} {1}", ex.Message, ex.StackTrace);
+                    return null;
+                }
+                finally
+                {
+                    pinnedArray.Free();
+                }
+            }
+            
 
-            var v = new NVorbis.VorbisReader(audioClipFile);
             var audioClip = new AssetsAudioClip(new AssetsObjectInfo()
             {
                 //todo: make these hash lookups and not by index
@@ -186,9 +197,9 @@ namespace BeatmapAssetMaker
                 Legacy3D = true,
                 CompressionFormat = 1,
                 BitsPerSample = 16,
-                Channels = v.Channels,
-                Frequency = v.SampleRate,
-                Length = (Single)v.TotalTime.TotalSeconds,
+                Channels = channels,
+                Frequency = frequency,
+                Length = (Single)length,
                 Resource = new AssetsStreamedResource(Path.GetFileName(outputAudioClipFile), 0, Convert.ToUInt64(new FileInfo(audioClipFile).Length))
             };
             assetsFile.AddObject(audioClip, true);

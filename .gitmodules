@@ -1,0 +1,3 @@
+[submodule "StbSharp"]
+	path = StbSharp
+	url = https://github.com/emulamer/StbSharp.git
