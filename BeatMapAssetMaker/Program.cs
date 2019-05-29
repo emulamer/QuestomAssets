@@ -40,15 +40,7 @@ namespace BeatmapAssetMaker
             }
         }
 
-        static byte[] MakeLevelCollectionAsset(string assetName, BeatmapLevelCollectionSO levelCollection)
-        {
-            using (MemoryStream f = new MemoryStream())
-            {
-                AlignedStream fs = new AlignedStream(f);
-                levelCollection.Write(fs);
-                return f.ToArray();
-            }
-        }
+ 
 
         static byte[] MakeBeatmapAsset(string assetName, BeatmapSaveData beatmapSaveData)
         {
@@ -559,7 +551,8 @@ namespace BeatmapAssetMaker
                 var extFile = file19.Metadata.ExternalFiles.First(x => x.FileName == "sharedassets17.assets");
                 var fileIndex = file19.Metadata.ExternalFiles.IndexOf(extFile) + 1;
                 var mainLevelPack = file19.Objects.First(x => x is BeatSaber.AssetsMainLevelPackCollection) as BeatSaber.AssetsMainLevelPackCollection;
-                mainLevelPack.BeatmapLevelPacks.Add(new AssetsPtr(fileIndex, levelPack.ObjectInfo.ObjectID));
+                if (!mainLevelPack.BeatmapLevelPacks.Any(x=> x.FileID == fileIndex && x.PathID == levelPack.ObjectInfo.ObjectID))
+                    mainLevelPack.BeatmapLevelPacks.Add(new AssetsPtr(fileIndex, levelPack.ObjectInfo.ObjectID));
 
                 try
                 {

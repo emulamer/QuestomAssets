@@ -8,15 +8,13 @@ using System.Text;
 public class BeatmapDataSO
 {
     
-    public System.String _jsonData; // 0x0000000C
-
-    public System.Byte[] _signatureBytes; // 0x00000010
-    public System.Byte[] _projectedData; // 0x00000014
-    //public BeatmapData _beatmapData; // 0x00000018
-    public System.Single _beatsPerMinute; // 0x0000001C
-    public System.Single _shuffle; // 0x00000020
-    public System.Single _shufflePeriod; // 0x00000024
-    public System.Boolean _hasRequiredDataForLoad; // 0x00000028
+    public System.String _jsonData;
+    public System.Byte[] _signatureBytes;
+    public System.Byte[] _projectedData;
+    public System.Single _beatsPerMinute;
+    public System.Single _shuffle;
+    public System.Single _shufflePeriod;
+    public System.Boolean _hasRequiredDataForLoad;
     
     
 

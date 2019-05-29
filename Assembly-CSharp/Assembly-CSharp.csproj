@@ -47,14 +47,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AlignedStream.cs" />
-    <Compile Include="BeatMapData.cs" />
     <Compile Include="BeatmapDataLoader.cs" />
     <Compile Include="BeatmapDataSO.cs" />
-    <Compile Include="BeatmapEventData.cs" />
     <Compile Include="BeatmapEventType.cs" />
-    <Compile Include="BeatmapLevelCollectionSO.cs" />
     <Compile Include="BeatmapLevelDataSO.cs" />
-    <Compile Include="BeatmapLineData.cs" />
     <Compile Include="BeatmapObjectData.cs" />
     <Compile Include="BeatmapObjectType.cs" />
     <Compile Include="BeatmapSaveData.cs" />
@@ -67,8 +63,6 @@
     <Compile Include="NoteData.cs" />
     <Compile Include="NoteLineLayer.cs" />
     <Compile Include="NoteType.cs" />
-    <Compile Include="NoteTypeExtensions.cs" />
-    <Compile Include="ObstacleData.cs" />
     <Compile Include="ObstacleType.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UPtr.cs" />
