@@ -49,8 +49,8 @@ namespace BeatmapAssetMaker.AssetsChanger
 
                     //I think align to 16?  this is a guess based on how they're written
                     reader.AlignTo(16);
-                    if (reader.BaseStream.Position != Header.ObjectDataOffset)
-                        throw new Exception("Object data isn't where the header says it should be!");
+                    //if (reader.BaseStream.Position != Header.ObjectDataOffset)
+                     //   throw new Exception("Object data isn't where the header says it should be!");
            
                     foreach (var objectInfo in Metadata.ObjectInfos)
                     {

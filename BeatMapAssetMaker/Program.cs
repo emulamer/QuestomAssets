@@ -19,7 +19,7 @@ namespace BeatmapAssetMaker
 
         static UPtr ReplaceLevelCollection = new UPtr() { FileID = 0, PathID = 240 };
 
-        const bool IMPORT_COVERS = false;
+        static bool IMPORT_COVERS = false;
 
         const int BEATMAPDATA_SCRIPT_ID = 0x0E;
         const int BEATMAPLEVEL_SCRIPT_ID = 0x0F;
@@ -176,10 +176,7 @@ namespace BeatmapAssetMaker
                     Console.WriteLine("No cover art found.");
                 }
             }
-            else
-            {
 
-            }
             var v = new NVorbis.VorbisReader(audioClipFile);
             var audioClip = new AssetsAudioClip(new AssetsObjectInfo()
             {
@@ -414,10 +411,11 @@ namespace BeatmapAssetMaker
                 }
                 if (args == null || args.Length < 3)
                 {
-                    Console.WriteLine("Usage: BeatmapAssetMaker assetsFolder outputAssetsFolder customSongsFolder");
+                    Console.WriteLine("Usage: BeatmapAssetMaker assetsFolder outputAssetsFolder customSongsFolder [covers] [nomoxie]");
                     Console.WriteLine("\tassetsFolder: the name/path to where the assets files are. ");
                     Console.WriteLine("\toutputAssetsFolder: the output folder for the assets ");
                     Console.WriteLine("\tcustomSongsFolder: the folder that contains folders of custom songs in the new native beatsaber format, or a folder with a single song that contains an Info.dat file");
+                    Console.WriteLine("\tIf you want covers (they will run slow) then add \"covers\" as the last parameter.  If you don't want the dog pack cover, add \"nomoxie\"");
                     Console.WriteLine("");
                     Console.WriteLine("OR");
                     Console.WriteLine("BeatmapAssetMaker --patch pathToBeatSaberBinary (i.e. libil2spp.so)");
@@ -427,6 +425,17 @@ namespace BeatmapAssetMaker
                 string inputAssetsFile = args[0];
                 string outputAssetsFolder = args[1];
                 string customSongsFolder = args[2];
+                bool moxie = true;
+                if (args.Length > 3)
+                {
+                    for (int i = 3; i < args.Length; i++)
+                    {
+                        if (args[i].ToLower() == "covers")
+                            IMPORT_COVERS = true;
+                        if (args[i].ToLower() == "nomoxie")
+                            moxie = false;
+                    }
+                }
 
                 //string inputAssetsFile = @"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\aaoriginalbase\assets\bin\Data\sharedassets17.assets"; ;
                 //string outputAssetsFile = @"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\dist\assets\sharedassets17.assets";
@@ -532,7 +541,7 @@ namespace BeatmapAssetMaker
                     })
                     {
                         MonoscriptTypePtr = AssetsConstants.BeatmapLevelPackScriptPtr,
-                        CoverImage = LoadPackCover(f),//new AssetsPtr(0, 45),
+                        CoverImage = moxie?LoadPackCover(f):new AssetsPtr(0, 45),
                         Enabled = 1,
                         GameObjectPtr = new AssetsPtr(),
                         IsPackAlwaysOwned = true,

@@ -29,7 +29,7 @@ namespace BeatmapAssetMaker.AssetsChanger
 
         public static AssetsPtr BeatmapLevelTypePtr { get { return new AssetsPtr(1, 644); } }
 
-        public static AssetsPtr BeatmapDataTypePtr { get { return new AssetsPtr(1, 15520); } }
+        public static AssetsPtr BeatmapDataTypePtr { get { return new AssetsPtr(1, 1552); } }
 
         public static AssetsPtr BeatmapLevelCollectionTypePtr { get { return new AssetsPtr(1, 762); } }
 
