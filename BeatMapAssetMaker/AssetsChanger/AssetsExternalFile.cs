@@ -25,7 +25,7 @@ namespace BeatmapAssetMaker.AssetsChanger
             writer.WriteCString(AssetName);
             writer.Write(ID);
             writer.Write(Type);
-            writer.WriteCString(FileName);
+            writer.WriteCString(FileName);            
         }
 
         private void Parse(AssetsReader reader)

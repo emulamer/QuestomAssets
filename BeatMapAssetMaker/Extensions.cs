@@ -17,7 +17,7 @@ namespace BeatmapAssetMaker
             };
         }
 
-        public static AssetsChanger.AssetsPtr ToUPtr(this UPtr ptr)
+        public static AssetsChanger.AssetsPtr ToAssetsPtr(this UPtr ptr)
         {
             return new AssetsChanger.AssetsPtr(ptr.FileID, ptr.PathID);
         }

@@ -24,7 +24,7 @@ namespace BeatmapAssetMaker.AssetsChanger
             {
                 if (!IsScriptType)
                 {
-                    throw new InvalidOperationException("ScriptHash only exists if the type is a MonoBehaviour.");
+                    return Guid.Empty;
                 }
                 return _scriptHash;
             }

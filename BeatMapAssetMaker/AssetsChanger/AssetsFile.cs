@@ -99,6 +99,14 @@ namespace BeatmapAssetMaker.AssetsChanger
             return Metadata.Types.IndexOf(type);
         }
 
+        public int GetTypeIndexFromScriptHash(Guid hash)
+        {
+            var type = Metadata.Types.FirstOrDefault(x => x.ScriptHash == hash);
+            if (type == null)
+                throw new ArgumentException("Script hash was not found in metadata.");
+            return Metadata.Types.IndexOf(type);
+        }
+
         public int GetClassIDFromTypeIndex(int typeIndex)
         {
             if (typeIndex < 1 || typeIndex > Metadata.Types.Count() - 1)
@@ -125,7 +133,7 @@ namespace BeatmapAssetMaker.AssetsChanger
             using (AssetsWriter writer = new AssetsWriter(metaMS))
             {
                 Metadata.Write(writer);
-                writer.AlignTo(4);
+                writer.AlignTo(2);
                 
                 
 
@@ -133,6 +141,14 @@ namespace BeatmapAssetMaker.AssetsChanger
             //+4 because of the writing int0 hack
             Header.FileSize = Header.HeaderSize + (int)objectsMS.Length + (int)metaMS.Length;
             Header.ObjectDataOffset = Header.HeaderSize + (int)metaMS.Length;
+            int diff = (int)(objectsMS.Length + metaMS.Length) % 4;
+            if (diff > 0 && diff < 4)
+            {
+                Header.ObjectDataOffset += diff;
+                Header.FileSize += diff;
+                
+            }
+            
             Header.MetadataSize = (int)metaMS.Length;
             objectsMS.Seek(0, SeekOrigin.Begin);
             metaMS.Seek(0, SeekOrigin.Begin);
@@ -144,10 +160,12 @@ namespace BeatmapAssetMaker.AssetsChanger
                 }
                 metaMS.CopyTo(fs);
 
-        
-                //I don't know why, this is a hack
-              //  fs.Write(new byte[4],0,4);
-                
+
+                if (diff > 0 && diff < 4)
+                {
+                    fs.Write(new byte[diff], 0, diff);
+                }
+
                 objectsMS.CopyTo(fs);
             }
 

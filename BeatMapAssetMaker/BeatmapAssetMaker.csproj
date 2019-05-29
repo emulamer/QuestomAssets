@@ -48,6 +48,7 @@
     <Reference Include="System.configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Numerics" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -75,20 +76,35 @@
     <Compile Include="BeatSaber\AssetsBeatmapLevelCollectionObject.cs" />
     <Compile Include="BeatSaber\AssetsBeatmapLevelDataObject.cs" />
     <Compile Include="BeatSaber\AssetsBeatmapLevelPackObject.cs" />
+    <Compile Include="BeatSaber\AssetsMainLevelPackCollection.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Resource1.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resource1.resx</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
     <None Include="packages.config" />
+    <None Include="Resources\CustomSongsCover.ETC_RGB4" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Assembly-CSharp\Assembly-CSharp.csproj">
       <Project>{0dad5d23-076f-465d-9736-2cf0d28b6d47}</Project>
       <Name>Assembly-CSharp</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resource1.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resource1.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Mox.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -10,8 +10,8 @@ namespace BeatmapAssetMaker.AssetsChanger
     {
         private bool _changes = false;
 
-        
-        private AssetsPtr _gameObjectPtr;
+
+        private AssetsPtr _gameObjectPtr = new AssetsPtr();
         private int _enabled;
         private string _name;
         private AssetsPtr _monoscriptTypePointer;
@@ -108,6 +108,7 @@ namespace BeatmapAssetMaker.AssetsChanger
             _enabled = reader.ReadInt32();
             _monoscriptTypePointer = new AssetsPtr(reader);
             _name = reader.ReadString();
+
             reader.AlignToObjectData(4);
         }
 
@@ -117,7 +118,7 @@ namespace BeatmapAssetMaker.AssetsChanger
             ParseProperties(reader);
             _changes = false;
             var readLength = ObjectInfo.DataSize-(reader.Position - startPos);
-            _scriptParametersData = reader.ReadBytes(readLength);
+            ScriptParametersData = reader.ReadBytes(readLength);
 
         }
 
@@ -134,7 +135,7 @@ namespace BeatmapAssetMaker.AssetsChanger
                     _monoscriptTypePointer.Write(bw);
                     bw.Write(_name);
                     bw.AlignTo(4);
-                    bw.Write(_scriptParametersData);
+                    bw.Write(ScriptParametersData);
                 }
                 _data = ms.ToArray();
             }
@@ -157,11 +158,9 @@ namespace BeatmapAssetMaker.AssetsChanger
         {
             get
             {
-                if (_changes || _data == null)
-                {
-                    SerializeToData();
-                    _changes = false;
-                }
+               
+                SerializeToData();
+          
                 return _data;
             }
             set
