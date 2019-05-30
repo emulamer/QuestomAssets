@@ -5,16 +5,16 @@ using System.Text;
 
 namespace BeatmapAssetMaker.AssetsChanger
 {
-    public class AssetsStreamedResource
+    public class StreamedResource
     {
-        public AssetsStreamedResource(string source, UInt64 offset, UInt64 size)
+        public StreamedResource(string source, UInt64 offset, UInt64 size)
         {
             Source = source;
             Offset = offset;
             Size = size;
         }
 
-        public AssetsStreamedResource(AssetsReader reader)
+        public StreamedResource(AssetsReader reader)
         {
             Parse(reader);
         }

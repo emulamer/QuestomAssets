@@ -8,69 +8,58 @@ using System.IO;
 
 namespace BeatmapAssetMaker.BeatSaber
 {
-    public class AssetsMainLevelPackCollection : AssetsMonoBehaviourObject
+    public sealed class AssetsMainLevelPackCollection : AssetsMonoBehaviourObject
     {
-        public AssetsMainLevelPackCollection(AssetsObjectInfo objectInfo, AssetsReader reader) : base(objectInfo, reader)
-        { }
+        public AssetsMainLevelPackCollection(AssetsObjectInfo objectInfo, AssetsReader reader) : base(objectInfo)
+        {
+            Parse(reader);
+        }
 
         public AssetsMainLevelPackCollection(AssetsObjectInfo objectInfo) : base(objectInfo)
         { }
 
+        public AssetsMainLevelPackCollection(AssetsMetadata metadata) : base(metadata, AssetsConstants.ScriptHash.MainLevelsCollectionHash, AssetsConstants.ScriptPtr.MainLevelsCollectionScriptPtr)
+        { }
+
+        public void UpdateTypes(AssetsMetadata metadata)
+        {
+            base.UpdateType(metadata, AssetsConstants.ScriptHash.MainLevelsCollectionHash, AssetsConstants.ScriptPtr.MainLevelsCollectionScriptPtr);
+        }
+
         public List<AssetsPtr> BeatmapLevelPacks { get; set; } = new List<AssetsPtr>();
         public List<AssetsPtr> PreviewBeatmapLevelPacks { get; set; } = new List<AssetsPtr>();
 
-        private byte[] SerializeData()
+        protected override void Parse(AssetsReader reader)
         {
-            using (MemoryStream ms = new MemoryStream())
-            {
-                using (AssetsWriter writer= new AssetsWriter(ms))
-                {
-                    writer.Write(BeatmapLevelPacks.Count());
-                    foreach (var ptr in BeatmapLevelPacks)
-                    {
-                        ptr.Write(writer);
-                    }
-                    writer.Write(PreviewBeatmapLevelPacks.Count());
-                    foreach (var ptr in PreviewBeatmapLevelPacks)
-                    {
-                        ptr.Write(writer);
-                    }
-                }
-                return ms.ToArray();
-            }
+            base.Parse(reader);
+            BeatmapLevelPacks = reader.ReadArrayOf(x => new AssetsPtr(x));
+            PreviewBeatmapLevelPacks = reader.ReadArrayOf(x => new AssetsPtr(x));
         }
 
-        private void DeserializeData()
+        public override void Write(AssetsWriter writer)
         {
-            using (MemoryStream ms = new MemoryStream(base.ScriptParametersData))
+            base.WriteBase(writer);
+            writer.Write(BeatmapLevelPacks.Count());
+            foreach (var ptr in BeatmapLevelPacks)
             {
-                using (AssetsReader reader = new AssetsReader(ms))
-                {
-                    int count = reader.ReadInt32();
-                    for (int i = 0; i < count; i++)
-                    {
-                        BeatmapLevelPacks.Add(new AssetsPtr(reader));
-                    }
-
-                    count = reader.ReadInt32();
-                    for (int i = 0; i < count; i++)
-                    {
-                        PreviewBeatmapLevelPacks.Add(new AssetsPtr(reader));
-                    }
-                }
+                ptr.Write(writer);
             }
+            writer.Write(PreviewBeatmapLevelPacks.Count());
+            foreach (var ptr in PreviewBeatmapLevelPacks)
+            {
+                ptr.Write(writer);
             }
-
+        }
+      
         public override byte[] ScriptParametersData
         {
             get
             {
-                return SerializeData();
+                throw new InvalidOperationException("Cannot access parameters data from this object.");
             }
             set
             {
-                base.ScriptParametersData = value;
-                DeserializeData();
+                throw new InvalidOperationException("Cannot access parameters data from this object.");
             }
         }
     }

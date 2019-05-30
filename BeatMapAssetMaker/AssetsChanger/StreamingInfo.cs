@@ -5,12 +5,12 @@ using System.Text;
 
 namespace BeatmapAssetMaker.AssetsChanger
 {
-    public class AssetsStreamingInfo
+    public class StreamingInfo
     {
-        public AssetsStreamingInfo()
+        public StreamingInfo()
         { }
 
-        public AssetsStreamingInfo(AssetsReader reader)
+        public StreamingInfo(AssetsReader reader)
         {
             Parse(reader);
         }

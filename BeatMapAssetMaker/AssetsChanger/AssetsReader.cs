@@ -84,5 +84,22 @@ namespace BeatmapAssetMaker.AssetsChanger
             byte[] stringBytes = ReadBytes(length);
             return System.Text.Encoding.UTF8.GetString(stringBytes);
         }
+
+        public byte[] ReadArray()
+        {
+            int count = ReadInt32();
+            return ReadBytes(count);
+        }
+
+        public List<T> ReadArrayOf<T>(Func<AssetsReader,T> objectCreator)
+        {
+            List<T> list = new List<T>();
+            int count = ReadInt32();
+            for (int i = 0; i < count; i++)
+            {
+                list.Add(objectCreator(this));
+            }
+            return list;
+        }
     }
 }

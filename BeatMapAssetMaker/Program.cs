@@ -6,71 +6,16 @@ using BeatmapAssetMaker.AssetsChanger;
 using System.Drawing;
 using BeatmapAssetMaker.BeatSaber;
 using System.Runtime.InteropServices;
+using System.Diagnostics;
 
 namespace BeatmapAssetMaker
 {
     class Program
     {
         static bool IMPORT_COVERS = false;
-        
-        
-
-        static byte[] MakeBeatmapLevelSOAsset(string assetName, BeatmapLevelDataSO levelData)
-        {
-            using (MemoryStream f = new MemoryStream())
-            {                
-                var fs = new AlignedStream(f);
-                
-                levelData.Write(fs);
-                fs.AlignTo(4);
-                return f.ToArray();
-            }
-        }
-
-        static byte[] MakeBeatmapAsset(string assetName, BeatmapSaveData beatmapSaveData)
-        {
-            using (MemoryStream f = new MemoryStream())
-            { 
-                AlignedStream fs = new AlignedStream(f);
-
-                //write empty signature
-                fs.Write((int)0);
-                fs.Write((int)128);
-
-                ///signature (all zeroes)
-                fs.Write(new byte[128], 0, 128);
-
-                //_projectedData goes next
-                byte[] projectedData = beatmapSaveData.SerializeToBinary(false);
-                fs.Write(projectedData);
-                fs.AlignTo(4);
-                return f.ToArray();
-            }
-        }
 
 
-        public static byte[] LoadToRGB(Bitmap image)
-        {
-            
-            
-            
-            byte[] imageBytes;
-            using (MemoryStream msCover = new MemoryStream())
-            {
-                image.Save(msCover,  System.Drawing.Imaging.ImageFormat.Bmp);
 
-                imageBytes = new byte[msCover.Length - 54];
-                byte[] msBytes = msCover.ToArray();
-                Array.Copy(msBytes, 54, imageBytes, 0, imageBytes.Length);
-            }
-            for (int i = 0; i < imageBytes.Length-2; i += 3)
-            {
-                byte hold = imageBytes[i];
-                imageBytes[i] = imageBytes[i + 2];
-                imageBytes[i + 2] = hold;
-            }
-            return imageBytes;
-        }
 
         /// <summary>
         /// Makes an asseet 
@@ -78,270 +23,197 @@ namespace BeatmapAssetMaker
         /// <param name="inputPath"></param>
         /// <param name="outputPath"></param>
         /// <returns>the UPtr to the BeatSaberLevel</returns>
-        static AssetsPtr MakeAssets(string inputPath, AssetsFile assetsFile, string outputAudioPath)
-        {
+        //static AssetsPtr MakeAssets(string inputPath, AssetsFile assetsFile, string outputAudioPath)
+        //{
 
-            var sng = CustomSongLoader.LoadFromPath(inputPath);
+        //    var sng = BeatmapLevelData.LoadFromPath(inputPath);
 
-            if (assetsFile.Objects.Where(x=>x is AssetsMonoBehaviourObject).Any(x=>((AssetsMonoBehaviourObject)x).Name == sng._levelID+"Level"))
-            {
-                Console.WriteLine($"{inputPath} seems to have a duplicate level ID of {sng._levelID} as another song that's already loaded.  Skipping it.");
-                return null;
-            }
-                                 
-            AssetsTexture2D coverAsset = null;
-            string audioClipFile = Path.Combine(inputPath, sng._songFilename);
-            string outputAudioClipFile = Path.Combine(outputAudioPath, sng._levelID + ".ogg");
-            if (IMPORT_COVERS)
-            {
-                if (!string.IsNullOrWhiteSpace(sng._coverImageFilename) && File.Exists(Path.Combine(inputPath, sng._coverImageFilename)))
-                {
-                    try
-                    {
-                        string coverFile = Path.Combine(inputPath, sng._coverImageFilename);
-                        Bitmap coverImage = (Bitmap)Bitmap.FromFile(coverFile);
-                        var imageBytes = LoadToRGB(coverImage);
+        //    if (assetsFile.Objects.Where(x=>x is AssetsMonoBehaviourObject).Any(x=>((AssetsMonoBehaviourObject)x).Name == sng.LevelID+"Level"))
+        //    {
+        //        Console.WriteLine($"{inputPath} seems to have a duplicate level ID of {sng.LevelID} as another song that's already loaded.  Skipping it.");
+        //        return null;
+        //    }
 
-                        coverAsset = new AssetsTexture2D(new AssetsObjectInfo()
-                        {
-                            TypeIndex = assetsFile.GetTypeIndexFromClassID(AssetsConstants.Texture2DClassID)
-                        })
-                        {
-                            Name = sng._levelID + "Cover",
-                            ForcedFallbackFormat = 4,
-                            DownscaleFallback = false,
-                            Width = coverImage.Width,
-                            Height = coverImage.Height,
-                            CompleteImageSize = imageBytes.Length,
-                            TextureFormat = 3,
-                            MipCount = 1,
-                            IsReadable = false,
-                            StreamingMipmaps = false,
-                            StreamingMipmapsPriority = 0,
-                            ImageCount = 1,
-                            TextureDimension = 2,
-                            TextureSettings = new AssetsGLTextureSettings()
-                            {
-                                FilterMode = 2,
-                                Aniso = 1,
-                                MipBias = -1,
-                                WrapU = 1,
-                                WrapV = 1,
-                                WrapW = 0
-                            },
-                            LightmapFormat = 6,
-                            ColorSpace = 1,
-                            ImageData = imageBytes,
-                            StreamData = new AssetsStreamingInfo()
-                            {
-                                offset = 0,
-                                size = 0,
-                                path = ""
-                            }
-                        };
-                        assetsFile.AddObject(coverAsset, true);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine("Error loading cover art asset: {0} {1}", ex.Message, ex.StackTrace);
-                    }
-                }
-                else
-                {
-                    Console.WriteLine("No cover art found.");
-                }
-            }
-            int channels;
-            int frequency;
-            Single length;
-            unsafe
-            {
-                byte[] oggBytes = File.ReadAllBytes(audioClipFile);
-                GCHandle pinnedArray = GCHandle.Alloc(oggBytes, GCHandleType.Pinned);
-                try
-                {
-                    IntPtr pointer = pinnedArray.AddrOfPinnedObject();
-                    int error;
-                    StbSharp.StbVorbis.stb_vorbis_alloc alloc;
-                    StbSharp.StbVorbis.stb_vorbis v = StbSharp.StbVorbis.stb_vorbis_open_memory((byte*)pointer.ToPointer(), oggBytes.Length, &error, &alloc);
-                    channels = v.channels;
-                    frequency = (int)v.sample_rate;
-                    length = StbSharp.StbVorbis.stb_vorbis_stream_length_in_seconds(v);
-                    StbSharp.StbVorbis.stb_vorbis_close(v);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Exception parsing ogg file {audioClipFile}: {0} {1}", ex.Message, ex.StackTrace);
-                    return null;
-                }
-                finally
-                {
-                    pinnedArray.Free();
-                }
-            }
-            
+        //    AssetsTexture2D coverAsset = null;
+        //    string audioClipFile = Path.Combine(inputPath, sng.SongFilename);
+        //    string outputAudioClipFile = Path.Combine(outputAudioPath, sng.LevelID + ".ogg");
+        //    if (IMPORT_COVERS)
+        //    {
+        //        if (!string.IsNullOrWhiteSpace(sng.CoverImageFilename) && File.Exists(Path.Combine(inputPath, sng.CoverImageFilename)))
+        //        {
+        //            try
+        //            {
+        //                string coverFile = Path.Combine(inputPath, sng.CoverImageFilename);
+        //                Bitmap coverImage = (Bitmap)Bitmap.FromFile(coverFile);
+        //                var imageBytes = LoadToRGB(coverImage);
 
-            var audioClip = new AssetsAudioClip(new AssetsObjectInfo()
-            {
-                //todo: make these hash lookups and not by index
-                TypeIndex = assetsFile.GetTypeIndexFromClassID(AssetsConstants.AudioClipClassID)
-            })
-            {
-                Name = sng._levelID,
-                LoadType = 1,
-                IsTrackerFormat = false,
-                Ambisonic = false,
-                SubsoundIndex = 0,
-                PreloadAudioData = false,
-                LoadInBackground = true,
-                Legacy3D = true,
-                CompressionFormat = 1,
-                BitsPerSample = 16,
-                Channels = channels,
-                Frequency = frequency,
-                Length = (Single)length,
-                Resource = new AssetsStreamedResource(Path.GetFileName(outputAudioClipFile), 0, Convert.ToUInt64(new FileInfo(audioClipFile).Length))
-            };
-            assetsFile.AddObject(audioClip, true);
-            //todo: move elsewhere
-            File.Copy(audioClipFile, outputAudioClipFile, true);
-
-            sng._environmentSceneInfo = new UPtr() { FileID = 20, PathID = 1 };
-            sng._audioClip = audioClip.ObjectInfo.LocalPtrTo.ToUPtr();
-
-            //temporarily, use beatsaber's cover art if one couldn't be loaded
-            if (coverAsset == null)
-                sng._coverImageTexture2D = new UPtr() { FileID = 0, PathID = 19 };
-            else
-                sng._coverImageTexture2D = coverAsset.ObjectInfo.LocalPtrTo.ToUPtr();
-
-            foreach (var s in sng._difficultyBeatmapSets)
-            {
-                switch (s._beatmapCharacteristicName)
-                {
-                    case Characteristic.OneSaber:
-                        s._beatmapCharacteristic = new UPtr() { FileID = 19, PathID = 1 };
-                        break;
-                    case Characteristic.NoArrows:
-                        s._beatmapCharacteristic = new UPtr() { FileID = 6, PathID = 1 };
-                        break;
-                    case Characteristic.Standard:
-                        s._beatmapCharacteristic = new UPtr() { FileID = 22, PathID = 1 };
-                        break;
-                }
-
-                foreach (var g in s._difficultyBeatmaps)
-                {
-                    string bmAssetName = sng._levelID + ((s._beatmapCharacteristicName == Characteristic.Standard) ? "" : s._beatmapCharacteristicName.ToString()) + g._difficulty.ToString() + "BeatmapData";
-
-                    byte[] assetData = MakeBeatmapAsset(bmAssetName, g._beatmapSaveData);
-                    AssetsMonoBehaviourObject bmAsset = new AssetsMonoBehaviourObject(new AssetsObjectInfo()
-                    {
-                        TypeIndex = AssetsConstants.BeatmapDataSOTypeIndex
-                    })
-                    {
-                        MonoscriptTypePtr = AssetsConstants.BeatmapDataTypePtr,
-                        Name = bmAssetName,
-                        ScriptParametersData = assetData,
-                        GameObjectPtr = new AssetsPtr()
-                    };
-                    assetsFile.AddObject(bmAsset, true);
-                    g._beatmapDataPtr = new UPtr() { FileID = 0, PathID = bmAsset.ObjectInfo.ObjectID };
-                }
-            }
-
-            string levelAssetName = $"{sng._levelID}Level";
+        //                coverAsset = new AssetsTexture2D(assetsFile.Metadata)
+        //                {
+        //                    Name = sng.LevelID + "Cover",
+        //                    ForcedFallbackFormat = 4,
+        //                    DownscaleFallback = false,
+        //                    Width = coverImage.Width,
+        //                    Height = coverImage.Height,
+        //                    CompleteImageSize = imageBytes.Length,
+        //                    TextureFormat = 3,
+        //                    MipCount = 1,
+        //                    IsReadable = false,
+        //                    StreamingMipmaps = false,
+        //                    StreamingMipmapsPriority = 0,
+        //                    ImageCount = 1,
+        //                    TextureDimension = 2,
+        //                    TextureSettings = new GLTextureSettings()
+        //                    {
+        //                        FilterMode = 2,
+        //                        Aniso = 1,
+        //                        MipBias = -1,
+        //                        WrapU = 1,
+        //                        WrapV = 1,
+        //                        WrapW = 0
+        //                    },
+        //                    LightmapFormat = 6,
+        //                    ColorSpace = 1,
+        //                    ImageData = imageBytes,
+        //                    StreamData = new StreamingInfo()
+        //                    {
+        //                        offset = 0,
+        //                        size = 0,
+        //                        path = ""
+        //                    }
+        //                };
+        //                assetsFile.AddObject(coverAsset, true);
+        //            }
+        //            catch (Exception ex)
+        //            {
+        //                Console.WriteLine("Error loading cover art asset: {0} {1}", ex.Message, ex.StackTrace);
+        //            }
+        //        }
+        //        else
+        //        {
+        //            Console.WriteLine("No cover art found.");
+        //        }
+        //    }
+        //    int channels;
+        //    int frequency;
+        //    Single length;
+        //    unsafe
+        //    {
+        //        byte[] oggBytes = File.ReadAllBytes(audioClipFile);
+        //        GCHandle pinnedArray = GCHandle.Alloc(oggBytes, GCHandleType.Pinned);
+        //        try
+        //        {
+        //            IntPtr pointer = pinnedArray.AddrOfPinnedObject();
+        //            int error;
+        //            StbSharp.StbVorbis.stb_vorbis_alloc alloc;
+        //            StbSharp.StbVorbis.stb_vorbis v = StbSharp.StbVorbis.stb_vorbis_open_memory((byte*)pointer.ToPointer(), oggBytes.Length, &error, &alloc);
+        //            channels = v.channels;
+        //            frequency = (int)v.sample_rate;
+        //            length = StbSharp.StbVorbis.stb_vorbis_stream_length_in_seconds(v);
+        //            StbSharp.StbVorbis.stb_vorbis_close(v);
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            Console.WriteLine($"Exception parsing ogg file {audioClipFile}: {0} {1}", ex.Message, ex.StackTrace);
+        //            return null;
+        //        }
+        //        finally
+        //        {
+        //            pinnedArray.Free();
+        //        }
+        //    }
 
 
-            byte[] bmLevelData = MakeBeatmapLevelSOAsset(levelAssetName, sng);
-            AssetsMonoBehaviourObject bmLevelAsset = new AssetsMonoBehaviourObject(new AssetsObjectInfo()
-            {
-                //todo: make these hash lookups and not by index
-                TypeIndex = AssetsConstants.BeatmapLevelTypeIndex
-            })
-            {
-                MonoscriptTypePtr = AssetsConstants.BeatmapLevelTypePtr,
-                Name = levelAssetName,
-                ScriptParametersData = bmLevelData,
-                GameObjectPtr = new AssetsPtr()
-            };
-            assetsFile.AddObject(bmLevelAsset, true);
+        //    var audioClip = new AssetsAudioClip(assetsFile.Metadata)
+        //    {
+        //        Name = sng.LevelID,
+        //        LoadType = 1,
+        //        IsTrackerFormat = false,
+        //        Ambisonic = false,
+        //        SubsoundIndex = 0,
+        //        PreloadAudioData = false,
+        //        LoadInBackground = true,
+        //        Legacy3D = true,
+        //        CompressionFormat = 1,
+        //        BitsPerSample = 16,
+        //        Channels = channels,
+        //        Frequency = frequency,
+        //        Length = (Single)length,
+        //        Resource = new StreamedResource(Path.GetFileName(outputAudioClipFile), 0, Convert.ToUInt64(new FileInfo(audioClipFile).Length))
+        //    };
+        //    assetsFile.AddObject(audioClip, true);
+        //    //todo: move elsewhere
+        //    File.Copy(audioClipFile, outputAudioClipFile, true);
 
-            return bmLevelAsset.ObjectInfo.LocalPtrTo;
+        //    sng.EnvironmentSceneInfo = AssetsConstants.KnownObjects.DefaultEnvironment;
+        //    sng.AudioClip = audioClip.ObjectInfo.LocalPtrTo;
 
-        }
-        private static AssetsPtr LoadPackCover(AssetsFile assetsFile)
-        {
-            //var extrasSprite = assetsFile.Objects.First(x => x.ObjectInfo.ObjectID == 45);
-            //I don't want to write all the code for the Sprint class, so I'm encoding the binary and swapping specific bits around
-            string spriteData = "CwAAAEV4dHJhc0NvdmVyAAAAAAAAAAAAAACARAAAgEQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIBEAAAAPwAAAD8BAAAAAAAAAKrborQQ7eZHhB371sswB+MgA0UBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADgAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAYAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAAAAAAAAQACAAIAAQADAAQAAAAOAAAAAAAAAwAAAAAAAAAAAAAAAAEAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABQAAAAAAAAvwAAAD8AAAAAAAAAPwAAAD8AAAAAAAAAvwAAAL8AAAAAAAAAPwAAAL8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIBEAACARAAAAAAAAAAAAACAvwAAgL8AAAAAAACARAAAAEQAAIBEAAAARAAAgD8AAAAAAAAAAA==";
-            byte[] spriteBytes = Convert.FromBase64String(spriteData);
+        //    //temporarily, use beatsaber's cover art if one couldn't be loaded
+        //    if (coverAsset == null)
+        //        sng.CoverImageTexture2D = AssetsConstants.KnownObjects.BeatSaberCoverArt;
+        //    else
+        //        sng.CoverImageTexture2D = coverAsset.ObjectInfo.LocalPtrTo;
 
-            var imageBytes = BeatmapAssetMaker.Resource1.CustomSongsCover;
+        //    foreach (var s in sng.DifficultyBeatmapSets)
+        //    {
+        //        switch (s.BeatmapCharacteristicName)
+        //        {
+        //            case Characteristic.OneSaber:
+        //                s.BeatmapCharacteristic = AssetsConstants.KnownObjects.OneSaberCharacteristic;
+        //                break;
+        //            case Characteristic.NoArrows:
+        //                s.BeatmapCharacteristic = AssetsConstants.KnownObjects.NoArrowsCharacteristic;
+        //                break;
+        //            case Characteristic.Standard:
+        //                s.BeatmapCharacteristic = AssetsConstants.KnownObjects.StandardCharacteristic;
+        //                break;
+        //        }
 
-            var packCover = new AssetsTexture2D(new AssetsObjectInfo()
-            {
-                TypeIndex = assetsFile.GetTypeIndexFromClassID(AssetsConstants.Texture2DClassID)
-            })
-            {
-                Name = "CustomSongsCover",
-                ForcedFallbackFormat = 4,
-                DownscaleFallback = false,
-                Width = 1024,
-                Height = 1024,
-                CompleteImageSize = imageBytes.Length,
-                TextureFormat = 34,
-                MipCount = 11,
-                IsReadable = false,
-                StreamingMipmaps = false,
-                StreamingMipmapsPriority = 0,
-                ImageCount = 1,
-                TextureDimension = 2,
-                TextureSettings = new AssetsGLTextureSettings()
-                {
-                    FilterMode = 2,
-                    Aniso = 1,
-                    MipBias = -1,
-                    WrapU = 1,
-                    WrapV = 1,
-                    WrapW = 0
-                },
-                LightmapFormat = 6,
-                ColorSpace = 1,
-                ImageData = imageBytes,
-                StreamData = new AssetsStreamingInfo()
-                {
-                    offset = 0,
-                    size = 0,
-                    path = ""
-                }
-            };
-            assetsFile.AddObject(packCover, true);
-            byte[] finalBytes;
-            using (MemoryStream ms = new MemoryStream(spriteBytes))
-            {
-                ms.Seek(116, SeekOrigin.Begin);
-                using (AssetsWriter writer = new AssetsWriter(ms))
-                    packCover.ObjectInfo.LocalPtrTo.Write(writer);
+        //        foreach (var g in s.DifficultyBeatmaps)
+        //        {
 
-                finalBytes = ms.ToArray();
-            }
-            var nameBytes = System.Text.UTF8Encoding.UTF8.GetBytes("Custom");
-            Array.Copy(nameBytes, 0, finalBytes, 4, nameBytes.Length);
-            AssetsObject coverAsset = new AssetsObject(new AssetsObjectInfo()
-            {
-                TypeIndex = assetsFile.GetTypeIndexFromClassID(AssetsConstants.SpriteClassID)
-            })
-            {
-                Data = finalBytes
-            };
+        //            string bmAssetName = sng.LevelID + ((s.BeatmapCharacteristicName == Characteristic.Standard) ? "" : s.BeatmapCharacteristicName.ToString()) + g.Difficulty.ToString() + "BeatmapData";
 
-            assetsFile.AddObject(coverAsset, true);
-            return coverAsset.ObjectInfo.LocalPtrTo; 
-        }
+        //            byte[] assetData = MakeBeatmapAsset(bmAssetName, g.BeatmapSaveData);
+
+        //            AssetsMonoBehaviourObject bmAsset = new AssetsMonoBehaviourObject(new AssetsObjectInfo()
+        //            {
+        //                TypeIndex = AssetsConstants.BeatmapDataSOTypeIndex
+        //            })
+        //            {
+        //                MonoscriptTypePtr = AssetsConstants.BeatmapDataTypePtr,
+        //                Name = bmAssetName,
+        //                ScriptParametersData = assetData,
+        //                GameObjectPtr = new AssetsPtr()
+        //            };
+        //            assetsFile.AddObject(bmAsset, true);
+        //            g._beatmapDataPtr = new UPtr() { FileID = 0, PathID = bmAsset.ObjectInfo.ObjectID };
+        //        }
+        //    }
+
+        //    string levelAssetName = $"{sng._levelID}Level";
+
+
+        //    byte[] bmLevelData = MakeBeatmapLevelSOAsset(levelAssetName, sng);
+        //    AssetsMonoBehaviourObject bmLevelAsset = new AssetsMonoBehaviourObject(new AssetsObjectInfo()
+        //    {
+        //        //todo: make these hash lookups and not by index
+        //        TypeIndex = AssetsConstants.BeatmapLevelTypeIndex
+        //    })
+        //    {
+        //        MonoscriptTypePtr = AssetsConstants.ScriptPtr.BeatmapLevelCo.BeatmapLevelTypePtr,
+        //        Name = levelAssetName,
+        //        ScriptParametersData = bmLevelData,
+        //        GameObjectPtr = new AssetsPtr()
+        //    };
+        //    assetsFile.AddObject(bmLevelAsset, true);
+
+        //    return bmLevelAsset.ObjectInfo.LocalPtrTo;
+
+        //}
+
         static void Main(string[] args)
         {
-            
+
             //string playlist = @"C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\Playlists\SongBrowserPluginFavorites.json";
             //string customSongsFolder2 = @"C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\CustomSongs";
             //string copyToFolder = @"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\dist\ToConvert";
@@ -369,7 +241,7 @@ namespace BeatmapAssetMaker
             //}
             //return;
 
-            
+
             try
             {
                 if (args != null && args.Length == 2 && args[0].ToLower() == "--patch")
@@ -498,36 +370,51 @@ namespace BeatmapAssetMaker
                 }
 
                 Dictionary<Guid, Type> scriptHashToTypes = new Dictionary<Guid, Type>();
-                scriptHashToTypes.Add(AssetsConstants.BeatmapLevelPackScriptHash, typeof(BeatSaber.AssetsBeatmapLevelPackObject));
-                scriptHashToTypes.Add(AssetsConstants.BeatmapLevelCollectionScriptHash, typeof(BeatSaber.AssetsBeatmapLevelCollectionObject));
-                scriptHashToTypes.Add(new Guid("8398a1c6-7d3b-cc41-e8d7-83cd6a11bfd4"), typeof(BeatSaber.AssetsMainLevelPackCollection));
-                AssetsFile f = new AssetsFile(fileName17, scriptHashToTypes);
+                scriptHashToTypes.Add(AssetsConstants.ScriptHash.BeatmapLevelPackScriptHash, typeof(BeatSaber.AssetsBeatmapLevelPackObject));
+                scriptHashToTypes.Add(AssetsConstants.ScriptHash.BeatmapLevelCollectionScriptHash, typeof(BeatSaber.AssetsBeatmapLevelCollectionObject));
+                scriptHashToTypes.Add(AssetsConstants.ScriptHash.MainLevelsCollectionHash, typeof(BeatSaber.AssetsMainLevelPackCollection));
+                scriptHashToTypes.Add(AssetsConstants.ScriptHash.BeatmapDataHash, typeof(BeatmapData));
+                scriptHashToTypes.Add(AssetsConstants.ScriptHash.BeatmapLevelDataHash, typeof(BeatmapLevelData));
 
-                var levelCollection = f.Objects.FirstOrDefault(x => x is AssetsBeatmapLevelCollectionObject && ((AssetsBeatmapLevelCollectionObject)x).Name == "CustomSongsLevelPackCollection") as AssetsBeatmapLevelCollectionObject;
+
+                AssetsFile assetsFile = new AssetsFile(fileName17, scriptHashToTypes);
+
+
+
+                var levelCollection = assetsFile.Objects.FirstOrDefault(x => x is AssetsBeatmapLevelCollectionObject && ((AssetsBeatmapLevelCollectionObject)x).Name == "CustomSongsLevelPackCollection") as AssetsBeatmapLevelCollectionObject;
 
                 if (levelCollection == null)
                 {
-                    levelCollection = new BeatSaber.AssetsBeatmapLevelCollectionObject(new AssetsObjectInfo()
-                    {
-
-                        TypeIndex = f.GetTypeIndexFromScriptHash(AssetsConstants.BeatmapLevelCollectionScriptHash)
-                    })
-                    {
-                        MonoscriptTypePtr = AssetsConstants.BeatmapLevelCollectionTypePtr,
-                        Enabled = 1,
-                        Name = "CustomSongsLevelPackCollection"
-                    };
-                    f.AddObject(levelCollection, true);
+                    levelCollection = new AssetsBeatmapLevelCollectionObject(assetsFile.Metadata)
+                    { Name = "CustomSongsLevelPackCollection" };
+                    assetsFile.AddObject(levelCollection, true);
                 }
+                int totalSongs = customSongsFolders.Count;
+                Console.WriteLine($"Found {totalSongs} custom song folders to convert...");
+                Stopwatch sw = new Stopwatch();
+                sw.Start();
+                int songCount = 0;
 
                 foreach (var customSongFolder in customSongsFolders)
                 {
+                    songCount++;
+                    if (songCount % 20 == 0)
+                        Console.WriteLine($"{songCount.ToString().PadLeft(5)} of {totalSongs}... (+{(int)sw.Elapsed.TotalSeconds} seconds, {String.Format("{0:n0}", GC.GetTotalMemory(false))} bytes of memory used");
+
                     try
                     {
-                        var levelPtr = MakeAssets(customSongFolder, f, outputAssetsFolder);
-                        if (levelPtr == null)
+                        var level = CustomLevelLoader.LoadSongFromPathToAsset(customSongFolder, assetsFile);
+
+                        if (level == null)
                             continue;
-                        levelCollection.BeatmapLevels.Add(levelPtr);
+
+                        //copy audio file to the output
+                        var oggSrc = Path.Combine(customSongFolder, level.SongFilename);
+                        var clip = assetsFile.Objects.First(x => x.ObjectInfo.ObjectID == level.AudioClip.PathID) as AssetsAudioClip;
+                        var oggDst = Path.Combine(outputAssetsFolder, clip.Resource.Source);
+                        File.Copy(oggSrc, oggDst, true);
+
+                        levelCollection.BeatmapLevels.Add(level.ObjectInfo.LocalPtrTo);
                     }
                     catch (Exception ex)
                     {
@@ -536,15 +423,12 @@ namespace BeatmapAssetMaker
                         return;
                     }
                 }
-                var levelPack = f.Objects.FirstOrDefault(x => x is AssetsBeatmapLevelPackObject && ((AssetsBeatmapLevelPackObject)x).Name == "CustomSongsLevelPack") as AssetsBeatmapLevelPackObject;
-                if (levelPack == null) {
-                    levelPack = new BeatSaber.AssetsBeatmapLevelPackObject(new AssetsObjectInfo()
+                var levelPack = assetsFile.Objects.FirstOrDefault(x => x is AssetsBeatmapLevelPackObject && ((AssetsBeatmapLevelPackObject)x).Name == "CustomSongsLevelPack") as AssetsBeatmapLevelPackObject;
+                if (levelPack == null)
+                {
+                    levelPack = new BeatSaber.AssetsBeatmapLevelPackObject(assetsFile.Metadata)
                     {
-                        TypeIndex = f.GetTypeIndexFromScriptHash(AssetsConstants.BeatmapLevelPackScriptHash)
-                    })
-                    {
-                        MonoscriptTypePtr = AssetsConstants.BeatmapLevelPackScriptPtr,
-                        CoverImage = moxie?LoadPackCover(f):new AssetsPtr(0, 45),
+                        CoverImage = moxie?CustomLevelLoader.LoadPackCover(assetsFile):new AssetsPtr(0, 45),
                         Enabled = 1,
                         GameObjectPtr = new AssetsPtr(),
                         IsPackAlwaysOwned = true,
@@ -553,7 +437,7 @@ namespace BeatmapAssetMaker
                         PackName = "Custom Songs",
                         BeatmapLevelCollection = levelCollection.ObjectInfo.LocalPtrTo
                     };
-                    f.AddObject(levelPack, true);
+                    assetsFile.AddObject(levelPack, true);
                 }
                 levelPack.BeatmapLevelCollection = levelCollection.ObjectInfo.LocalPtrTo;
                 AssetsFile file19 = new AssetsFile(fileName19, scriptHashToTypes);
@@ -562,12 +446,12 @@ namespace BeatmapAssetMaker
                 var extFile = file19.Metadata.ExternalFiles.First(x => x.FileName == "sharedassets17.assets");
                 var fileIndex = file19.Metadata.ExternalFiles.IndexOf(extFile) + 1;
                 var mainLevelPack = file19.Objects.First(x => x is BeatSaber.AssetsMainLevelPackCollection) as BeatSaber.AssetsMainLevelPackCollection;
-                if (!mainLevelPack.BeatmapLevelPacks.Any(x=> x.FileID == fileIndex && x.PathID == levelPack.ObjectInfo.ObjectID))
+                if (!mainLevelPack.BeatmapLevelPacks.Any(x => x.FileID == fileIndex && x.PathID == levelPack.ObjectInfo.ObjectID))
                     mainLevelPack.BeatmapLevelPacks.Add(new AssetsPtr(fileIndex, levelPack.ObjectInfo.ObjectID));
 
                 try
                 {
-                    f.Write(Path.Combine(outputAssetsFolder, "sharedassets17.assets"));
+                    assetsFile.Write(Path.Combine(outputAssetsFolder, "sharedassets17.assets"));
                     file19.Write(Path.Combine(outputAssetsFolder, "sharedassets19.assets"));
                 }
                 catch (Exception ex)
@@ -576,8 +460,6 @@ namespace BeatmapAssetMaker
                     Environment.ExitCode = -1;
                     return;
                 }
-
-
             }
             catch (Exception ex)
             {

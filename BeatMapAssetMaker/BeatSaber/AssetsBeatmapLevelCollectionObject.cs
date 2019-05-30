@@ -5,47 +5,44 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BeatmapAssetMaker.AssetsChanger;
+using Newtonsoft.Json;
 
 namespace BeatmapAssetMaker.BeatSaber
 {
-    public class AssetsBeatmapLevelCollectionObject : AssetsMonoBehaviourObject
+    public sealed class AssetsBeatmapLevelCollectionObject : AssetsMonoBehaviourObject, INeedAssetsMetadata
     {
-        public AssetsBeatmapLevelCollectionObject(AssetsObjectInfo objectInfo, AssetsReader reader) : base(objectInfo, reader)
+        public AssetsBeatmapLevelCollectionObject(AssetsMetadata metadata) : base(metadata, AssetsConstants.ScriptHash.BeatmapLevelCollectionScriptHash, AssetsConstants.ScriptPtr.BeatmapLevelCollectionScriptPtr)
         { }
 
-        public AssetsBeatmapLevelCollectionObject(AssetsObjectInfo objectInfo) : base(objectInfo)
-        { }
+        public AssetsBeatmapLevelCollectionObject(AssetsObjectInfo objectInfo, AssetsReader reader) : base(objectInfo)
+        {
+            Parse(reader);
+        }
+
+        public void UpdateTypes(AssetsMetadata metadata)
+        {
+            base.UpdateType(metadata, AssetsConstants.ScriptHash.BeatmapLevelCollectionScriptHash, AssetsConstants.ScriptPtr.BeatmapLevelCollectionScriptPtr);
+        }
 
         public List<AssetsPtr> BeatmapLevels { get; set; } = new List<AssetsPtr>();
 
-        private byte[] SerializeData()
+        protected override void Parse(AssetsReader reader)
         {
-            using (MemoryStream ms = new MemoryStream())
+            base.Parse(reader);
+            int count = reader.ReadInt32();
+            for (int i = 0; i < count; i++)
             {
-                using (AssetsWriter writer = new AssetsWriter(ms))
-                {
-                    writer.Write(BeatmapLevels.Count());
-                    foreach (var bml in BeatmapLevels)
-                    {
-                        bml.Write(writer);
-                    }
-                }
-                return ms.ToArray();
+                BeatmapLevels.Add(new AssetsPtr(reader));
             }
         }
 
-        private void DeserializeData()
+        public override void Write(AssetsWriter writer)
         {
-            using (MemoryStream ms = new MemoryStream(base.ScriptParametersData))
+            base.WriteBase(writer);
+            writer.Write(BeatmapLevels.Count());
+            foreach (var bml in BeatmapLevels)
             {
-                using (AssetsReader reader = new AssetsReader(ms))
-                {
-                    int count = reader.ReadInt32();
-                    for (int i = 0; i < count; i++)
-                    {
-                        BeatmapLevels.Add(new AssetsPtr(reader));
-                    }
-                }
+                bml.Write(writer);
             }
         }
 
@@ -53,12 +50,11 @@ namespace BeatmapAssetMaker.BeatSaber
         {
             get
             {
-                return SerializeData();
+                throw new InvalidOperationException("Cannot access parameters data from this object.");
             }
             set
             {
-                base.ScriptParametersData = value;
-                DeserializeData();
+                throw new InvalidOperationException("Cannot access parameters data from this object.");
             }
         }
 

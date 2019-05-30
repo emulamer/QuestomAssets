@@ -43,6 +43,7 @@ namespace BeatmapAssetMaker.AssetsChanger
                 byte[] bytes = System.Text.Encoding.UTF8.GetBytes(value);
                 Write(bytes);
             }
+            AlignTo(4);
         }
         public void Write(Guid value)
         {
@@ -64,6 +65,11 @@ namespace BeatmapAssetMaker.AssetsChanger
         {
             var bytes = BitConverter.GetBytes(value);
             Array.Reverse(bytes);
+            Write(bytes);
+        }
+        public void WriteArray(byte[] bytes)
+        {
+            Write(bytes.Length);
             Write(bytes);
         }
 

@@ -5,65 +5,144 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BeatmapAssetMaker.AssetsChanger;
+using Newtonsoft.Json;
 
 namespace BeatmapAssetMaker.BeatSaber
 {
-    public class AssetsBeatmapLevelDataObject : AssetsMonoBehaviourObject
+    public sealed class AssetsBeatmapLevelDataObject : AssetsMonoBehaviourObject
     {
+        public AssetsBeatmapLevelDataObject()
+        { }
+
+        public AssetsBeatmapLevelCollectionObject(AssetsMetadata metadata) : base(metadata, AssetsConstants.ClassHash, AssetsConstants.ScriptPtr.BeatmapLevelCollectionTypePtr)
+        { }
+
         public AssetsBeatmapLevelDataObject(AssetsObjectInfo objectInfo) : base(objectInfo)
         { }
 
-        public AssetsBeatmapLevelDataObject(AssetsObjectInfo objectInfo, AssetsReader reader) : base(objectInfo, reader)
-        { }
+        public AssetsBeatmapLevelDataObject(AssetsObjectInfo objectInfo, AssetsReader reader) : base(objectInfo)
+        {
+            Parse(reader);
+        }
 
-
-        private BeatmapLevelDataSO _beatMapLevelData;
-        public BeatmapLevelDataSO BeatMapLevelData { get; set; }
-        
+        public override byte[] ScriptParametersData
+        {
+            get
+            {
+                throw new InvalidOperationException("Cannot access parameters data from this object.");
+            }
+            set
+            {
+                throw new InvalidOperationException("Cannot access parameters data from this object.");
+            }
+        }
+        asdfasdfasdfsadfsadfsdfsadfsfsfsdaf
+        //public BeatmapLevelData BeatmapLevelData { get; set; }       
 
         private void SerializeScriptParameters()
         {
             using (MemoryStream ms = new MemoryStream())
             {
-                var writer = new AlignedStream(ms);
-                _beatMapLevelData.Write(writer);
-                ScriptParametersData = ms.ToArray();
+                using (var writer = new AssetsWriter(ms))
+                {
+                    BeatmapLevelData.Write(writer);
+                    ScriptParametersData = ms.ToArray();
+                }
             }
         }
 
-        private void DeserializeScriptParameters()
+        private void DeserializeScriptParameters(byte[] scriptParametersData)
         {
             using (MemoryStream ms = new MemoryStream(ScriptParametersData))
             {
                 using (AssetsReader reader = new AssetsReader(ms))
                 {
-                    _beatMapLevelData = new BeatmapLevelDataSO();
+                    BeatmapLevelData = new BeatmapLevelData();
 
-                    _beatMapLevelData._levelID = reader.ReadString();
-                    _beatMapLevelData._songName = reader.ReadString();
-                    _beatMapLevelData._songAuthorName = reader.ReadString();
-                    _beatMapLevelData._levelAuthorName = reader.ReadString();
-                    _beatMapLevelData._audioClip = new AssetsPtr(reader).ToUPtr();
-                    _beatMapLevelData._beatsPerMinute = reader.ReadSingle();
-                    _beatMapLevelData._songTimeOffset = reader.ReadSingle();
-                    _beatMapLevelData._shuffle = reader.ReadSingle();
-                    _beatMapLevelData._shufflePeriod = reader.ReadSingle();
-                    _beatMapLevelData._previewStartTime = reader.ReadSingle();
-                    _beatMapLevelData._previewDuration = reader.ReadSingle();
-                    _beatMapLevelData._coverImageTexture2D = new AssetsPtr(reader).ToUPtr();
-                    _beatMapLevelData._environmentSceneInfo = new AssetsPtr(reader).ToUPtr();
+                    BeatmapLevelData.LevelID = reader.ReadString();
+                    BeatmapLevelData.SongName = reader.ReadString();
+                    BeatmapLevelData.SongAuthorName = reader.ReadString();
+                    BeatmapLevelData.LevelAuthorName = reader.ReadString();
+                    BeatmapLevelData.AudioClip = new AssetsPtr(reader);
+                    BeatmapLevelData.BeatsPerMinute = reader.ReadSingle();
+                    BeatmapLevelData.SongTimeOffset = reader.ReadSingle();
+                    BeatmapLevelData.Shuffle = reader.ReadSingle();
+                    BeatmapLevelData.ShufflePeriod = reader.ReadSingle();
+                    BeatmapLevelData.PreviewStartTime = reader.ReadSingle();
+                    BeatmapLevelData.PreviewDuration = reader.ReadSingle();
+                    BeatmapLevelData.CoverImageTexture2D = new AssetsPtr(reader);
+                    BeatmapLevelData.EnvironmentSceneInfo = new AssetsPtr(reader);
                     int numBeatmaps = reader.ReadInt32();
                     for (int i = 0; i < numBeatmaps; i++)
                     {
-                        _beatMapLevelData._difficultyBeatmapSets.Add(DeserializeBeatmapSet(reader));
+                        BeatmapLevelData.DifficultyBeatmapSets.Add(DeserializeBeatmapSet(reader));
                     }                    
                 }
             }
         }
 
-        private DifficultyBeatmapSetSO DeserializeBeatmapSet(AssetsReader reader)
+
+        private void Parse(AssetsReader reader)
         {
-            DifficultyBeatmapSetSO set = new DifficultyBeatmapSetSO();
+            JsonData = reader.ReadString();
+            SignatureBytes = reader.ReadArray();
+            ProjectedData = reader.ReadArray();
+            reader.AlignTo(4);
+        }
+
+        public void Write(AssetsWriter writer)
+        {
+            base.WriteBase(writer);
+            writer.Write(JsonData);
+            writer.WriteArray(SignatureBytes);
+            writer.WriteArray(ProjectedData);
+            writer.AlignTo(4);
+        }
+
+        public void TransformToProjectedData()
+        {
+            if (string.IsNullOrWhiteSpace(JsonData))
+                throw new InvalidOperationException("JsonData must be set before transforming to ProjectedData.");
+
+            var saveData = BeatmapSaveData.DeserializeFromJSONString(JsonData);
+
+            ProjectedData = saveData.SerializeToBinary();
+        }
+
+        public void TransformToJsonData()
+        {
+            if (ProjectedData == null || ProjectedData.Length < 1)
+                throw new InvalidOperationException("ProjectedData must be set before transforming to JsonData.");
+
+            var saveData = BeatmapSaveData.DeserializeFromFromBinary(ProjectedData);
+            JsonData = saveData.SerializeToJSONString();
+        }
+
+        [JsonProperty("_jsonData")]
+        public string JsonData { get; set; }
+
+        [JsonProperty("_signatureBytes")]
+        public byte[] SignatureBytes { get; set; } = new byte[128];
+
+        [JsonProperty("_projectedData")]
+        public byte[] ProjectedData { get; set; }
+
+        [JsonProperty("_beatsPerMinute")]
+        public Single BeatsPerMinute { get; set; }
+
+        [JsonProperty("_shuffle")]
+        public Single Shuffle { get; set; }
+
+        [JsonProperty("_shufflePeriod")]
+        public Single ShufflePeriod { get; set; }
+
+        [JsonProperty("_hasRequiredDataForLoad")]
+        public bool HasRequiredDataForLoad { get; set; }
+
+        private DifficultyBeatmapSet DeserializeBeatmapSet(AssetsReader reader)
+        {
+
+            DifficultyBeatmapSet set = new DifficultyBeatmapSet();
             set._beatmapCharacteristic = new AssetsPtr(reader).ToUPtr();
             int numBeatmaps = reader.ReadInt32();
             for (int i = 0; i < numBeatmaps; i++)

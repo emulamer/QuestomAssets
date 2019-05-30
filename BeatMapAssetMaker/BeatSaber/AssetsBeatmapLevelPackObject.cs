@@ -8,12 +8,22 @@ using BeatmapAssetMaker.AssetsChanger;
 
 namespace BeatmapAssetMaker.BeatSaber
 {
-    public class AssetsBeatmapLevelPackObject : AssetsMonoBehaviourObject
+    public sealed class AssetsBeatmapLevelPackObject : AssetsMonoBehaviourObject, INeedAssetsMetadata
     {
-        public AssetsBeatmapLevelPackObject(AssetsObjectInfo objectInfo, AssetsReader reader) : base(objectInfo, reader)
+        public AssetsBeatmapLevelPackObject(AssetsMetadata metadata) : base(metadata, AssetsConstants.ScriptHash.BeatmapLevelPackScriptHash, AssetsConstants.ScriptPtr.BeatmapLevelPackScriptPtr)
         { }
+
+        public AssetsBeatmapLevelPackObject(AssetsObjectInfo objectInfo, AssetsReader reader) : base(objectInfo)
+        {
+            Parse(reader);
+        }
         public AssetsBeatmapLevelPackObject(AssetsObjectInfo objectInfo) : base(objectInfo)
         { }
+
+        public void UpdateTypes(AssetsMetadata metadata)
+        {
+            base.UpdateType(metadata, AssetsConstants.ScriptHash.BeatmapLevelPackScriptHash, AssetsConstants.ScriptPtr.BeatmapLevelPackScriptPtr);
+        }
 
         public string PackID { get; set; }
 
@@ -25,54 +35,41 @@ namespace BeatmapAssetMaker.BeatSaber
 
         public AssetsPtr BeatmapLevelCollection { get; set; }
 
-        private byte[] SerializeData()
+        public override void Write(AssetsWriter writer)
         {
-            using (MemoryStream ms = new MemoryStream())
-            {
-                using (AssetsWriter writer = new AssetsWriter(ms))
-                {
-                    writer.Write(PackID);
-                    writer.AlignTo(4);
-                    writer.Write(PackName);
-                    writer.AlignTo(4);
-                    CoverImage.Write(writer);
-                    writer.Write(IsPackAlwaysOwned);
-                    writer.AlignTo(4);
-                    BeatmapLevelCollection.Write(writer);
-                }
-                return ms.ToArray();
-            }
-
+            base.WriteBase(writer);
+            writer.Write(PackID);
+            writer.AlignTo(4);
+            writer.Write(PackName);
+            writer.AlignTo(4);
+            CoverImage.Write(writer);
+            writer.Write(IsPackAlwaysOwned);
+            writer.AlignTo(4);
+            BeatmapLevelCollection.Write(writer);
         }
 
-        private void DeserializeData()
+        protected override void Parse(AssetsReader reader)
         {
-            using (MemoryStream ms = new MemoryStream(base.ScriptParametersData))
-            {
-                using (AssetsReader reader = new AssetsReader(ms))
-                {
-                    PackID = reader.ReadString();
-                    reader.AlignToObjectData(4);
-                    PackName = reader.ReadString();
-                    reader.AlignToObjectData(4);
-                    CoverImage = new AssetsPtr(reader);
-                    IsPackAlwaysOwned = reader.ReadBoolean();
-                    reader.AlignTo(4);
-                    BeatmapLevelCollection = new AssetsPtr(reader);
-                }
-            }
+            base.Parse(reader);
+            PackID = reader.ReadString();
+            reader.AlignToObjectData(4);
+            PackName = reader.ReadString();
+            reader.AlignToObjectData(4);
+            CoverImage = new AssetsPtr(reader);
+            IsPackAlwaysOwned = reader.ReadBoolean();
+            reader.AlignTo(4);
+            BeatmapLevelCollection = new AssetsPtr(reader);
         }
 
         public override byte[] ScriptParametersData
         {
             get
             {
-                return SerializeData();
+                throw new InvalidOperationException("Cannot access parameters data from this object.");
             }
             set
             {
-                base.ScriptParametersData = value;
-                DeserializeData();
+                throw new InvalidOperationException("Cannot access parameters data from this object.");
             }
         }
     }

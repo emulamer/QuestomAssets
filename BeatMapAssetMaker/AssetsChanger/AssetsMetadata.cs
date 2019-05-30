@@ -76,7 +76,29 @@ namespace BeatmapAssetMaker.AssetsChanger
             writer.Write(ExternalFiles.Count());
             ExternalFiles.ForEach(x => x.Write(writer));
         }
+        public int GetTypeIndexFromClassID(int classID)
+        {
+            var type = Types.FirstOrDefault(x => x.ClassID == classID);
+            if (type == null)
+                throw new ArgumentException("ClassID was not found in metadata.");
 
+            return Types.IndexOf(type);
+        }
+
+        public int GetTypeIndexFromScriptHash(Guid hash)
+        {
+            var type = Types.FirstOrDefault(x => x.ScriptHash == hash);
+            if (type == null)
+                throw new ArgumentException("Script hash was not found in metadata.");
+            return Types.IndexOf(type);
+        }
+
+        public int GetClassIDFromTypeIndex(int typeIndex)
+        {
+            if (typeIndex < 1 || typeIndex > Types.Count() - 1)
+                throw new ArgumentException("There is no type at this index.");
+            return Types[typeIndex].ClassID;
+        }
     }
 }
 

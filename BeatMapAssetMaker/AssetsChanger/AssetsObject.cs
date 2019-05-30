@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -8,9 +9,36 @@ namespace BeatmapAssetMaker.AssetsChanger
 {
     public class AssetsObject
     {
+        [JsonIgnore]
         public virtual byte[] Data { get; set; }
 
+        [JsonIgnore]
         public AssetsObjectInfo ObjectInfo { get; set; }
+
+        public AssetsObject()
+        { }
+
+        protected void UpdateType(AssetsMetadata metadata, Guid scriptHash)
+        {
+            ObjectInfo = new AssetsObjectInfo()
+            {
+                TypeIndex = metadata.GetTypeIndexFromScriptHash(scriptHash)
+            };
+        }
+
+        public AssetsObject(AssetsMetadata metadata, int classID)
+        {
+            ObjectInfo = new AssetsObjectInfo()
+            {
+                TypeIndex = metadata.Types.IndexOf(metadata.Types.First(x => x.ClassID == classID))
+            };
+        }
+            
+
+        public AssetsObject(AssetsMetadata metadata, Guid scriptHash)
+        {
+            UpdateType(metadata, scriptHash);
+        }
 
         public AssetsObject(AssetsObjectInfo objectInfo)
         {
@@ -21,12 +49,22 @@ namespace BeatmapAssetMaker.AssetsChanger
         {
             ObjectInfo = objectInfo;
             Parse(reader);
+            ParseDetails(reader);
         }
 
         protected virtual void Parse(AssetsReader reader)
         {
             reader.SeekObjectData(ObjectInfo.DataOffset);
+        }
+
+        private void ParseDetails(AssetsReader reader)
+        {
             Data = reader.ReadBytes(ObjectInfo.DataSize);
+        }
+        
+        protected virtual void WriteBase(AssetsWriter writer)
+        {
+
         }
 
         public virtual void Write(AssetsWriter writer)
@@ -45,8 +83,5 @@ namespace BeatmapAssetMaker.AssetsChanger
                 return (int)ms.Length;
             }
         }
-
-
-        
     }
 }

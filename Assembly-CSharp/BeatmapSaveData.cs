@@ -41,7 +41,18 @@ public class BeatmapSaveData
 		}
 	}
 
-    public virtual byte[] SerializeToBinary(bool skipDeflate = false)
+    public string SerializeToJSONString()
+    {
+        return JsonConvert.SerializeObject(this);
+    }
+
+    public static BeatmapSaveData DeserializeFromJSONString(string stringData)
+    {
+        BeatmapSaveData beatmapSaveData = JsonConvert.DeserializeObject<BeatmapSaveData>(stringData);
+        return beatmapSaveData;
+    }
+
+    public byte[] SerializeToBinary(bool skipDeflate = false)
     {
         byte[] result;
         using (MemoryStream memoryStream = new MemoryStream())
@@ -57,7 +68,6 @@ public class BeatmapSaveData
                     new BinaryFormatter().Serialize(ds, this);
                     ds.Flush();
                 }
-
             }
             memoryStream.Close();
             result = memoryStream.ToArray();
@@ -66,29 +76,17 @@ public class BeatmapSaveData
     }
 
     public static BeatmapSaveData DeserializeFromFromBinary(byte[] data)
-	{
-		BeatmapSaveData result;
+    {
+        BeatmapSaveData result;
         using (MemoryStream memoryStream = new MemoryStream(data))
         {
             using (DeflateStream ds = new DeflateStream(memoryStream, CompressionMode.Decompress))
             {
-
                 result = (BeatmapSaveData)new BinaryFormatter().Deserialize(ds);
             }
-		}
+        }
         return result;
-	}
-
-	public virtual string SerializeToJSONString()
-	{
-		return JsonConvert.SerializeObject(this);
-	}
-
-	public static BeatmapSaveData DeserializeFromJSONString(string stringData)
-	{
-		BeatmapSaveData beatmapSaveData = JsonConvert.DeserializeObject<BeatmapSaveData>(stringData);
-		return beatmapSaveData;
-	}
+    }
 
 	protected const string kCurrentVersion = "2.0.0";
 

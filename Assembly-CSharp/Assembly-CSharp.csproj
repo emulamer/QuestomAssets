@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <RootNamespace>Assembly_CSharp</RootNamespace>
-    <TargetFrameworks>netstandard2</TargetFrameworks>
+    <TargetFrameworks>netcoreapp2.0;net462</TargetFrameworks>
     <AssemblyTitle>Assembly-CSharp</AssemblyTitle>
     <Product>Assembly-CSharp</Product>
     <Copyright>Copyright ©  2019</Copyright>

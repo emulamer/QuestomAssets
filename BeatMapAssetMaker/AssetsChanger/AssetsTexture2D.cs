@@ -6,17 +6,22 @@ using System.Text;
 
 namespace BeatmapAssetMaker.AssetsChanger
 {
-    public class AssetsTexture2D : AssetsObject
+    public sealed class AssetsTexture2D : AssetsObject
     {
-        public AssetsTexture2D(AssetsObjectInfo objectInfo, AssetsReader reader) : base(objectInfo, reader)
-        { }
+        public AssetsTexture2D(AssetsObjectInfo objectInfo, AssetsReader reader) : base(objectInfo)
+        {
+            Parse(reader);
+        }
 
         public AssetsTexture2D(AssetsObjectInfo objectInfo) : base(objectInfo)
         { }
 
+        public AssetsTexture2D(AssetsMetadata metadata) : base(metadata, AssetsConstants.ClassID.Texture2DClassID)
+        { }
 
         protected override void Parse(AssetsReader reader)
         {
+            base.Parse(reader);
             Name = reader.ReadString();
             reader.AlignToObjectData(4);
             ForcedFallbackFormat = reader.ReadInt32();
@@ -33,64 +38,52 @@ namespace BeatmapAssetMaker.AssetsChanger
             StreamingMipmapsPriority = reader.ReadInt32();
             ImageCount = reader.ReadInt32();
             TextureDimension = reader.ReadInt32();
-            TextureSettings = new AssetsGLTextureSettings(reader);
+            TextureSettings = new GLTextureSettings(reader);
             LightmapFormat = reader.ReadInt32();
             ColorSpace = reader.ReadInt32();
             int imageDataSize = reader.ReadInt32();
             ImageData = reader.ReadBytes(imageDataSize);
             reader.AlignToObjectData(4);
-            StreamData = new AssetsStreamingInfo(reader);
+            StreamData = new StreamingInfo(reader);
+        }
+        public override void Write(AssetsWriter writer)
+        {
+            base.WriteBase(writer);
+            writer.Write(Name);
+            writer.AlignTo(4);
+            writer.Write(ForcedFallbackFormat);
+            writer.Write(DownscaleFallback);
+            writer.AlignTo(4);
+            writer.Write(Width);
+            writer.Write(Height);
+            writer.Write(CompleteImageSize);
+            writer.Write(TextureFormat);
+            writer.Write(MipCount);
+            writer.Write(IsReadable);
+            writer.Write(StreamingMipmaps);
+            writer.AlignTo(4);
+            writer.Write(StreamingMipmapsPriority);
+            writer.Write(ImageCount);
+            writer.Write(TextureDimension);
+            TextureSettings.Write(writer);
+            writer.Write(LightmapFormat);
+            writer.Write(ColorSpace);
+            writer.Write(ImageData.Length);
+            writer.Write(ImageData);
+            writer.AlignTo(4);
+            StreamData.Write(writer);
         }
 
-        private byte[] Serialize()
-        {
-            using (MemoryStream ms = new MemoryStream())
-            {
-                using (AssetsWriter writer = new AssetsWriter(ms))
-                {
-                    writer.Write(Name);
-                    writer.AlignTo(4);
-                    writer.Write(ForcedFallbackFormat);
-                    writer.Write(DownscaleFallback);
-                    writer.AlignTo(4);
-                    writer.Write(Width);
-                    writer.Write(Height);
-                    writer.Write(CompleteImageSize);
-                    writer.Write(TextureFormat);
-                    writer.Write(MipCount);
-                    writer.Write(IsReadable);
-                    writer.Write(StreamingMipmaps);
-                    writer.AlignTo(4);
-                    writer.Write(StreamingMipmapsPriority);
-                    writer.Write(ImageCount);
-                    writer.Write(TextureDimension);
-                    TextureSettings.Write(writer);
-                    writer.Write(LightmapFormat);
-                    writer.Write(ColorSpace);
-                    writer.Write(ImageData.Length);
-                    writer.Write(ImageData);
-                    writer.AlignTo(4);
-                    StreamData.Write(writer);
-                }
-                return ms.ToArray();
-            }
-        }
 
         public override byte[] Data
         {
             get
             {
-                return Serialize();
+                throw new InvalidOperationException("Data cannot be accessed from this class.");
             }
             set
             {
-                using (MemoryStream ms = new MemoryStream(value))
-                {
-                    using (AssetsReader reader = new AssetsReader(ms))
-                    {
-                        Parse(reader);
-                    }
-                }
+                throw new InvalidOperationException("Data cannot be accessed from this class.");
             }
         }
 
@@ -108,11 +101,11 @@ namespace BeatmapAssetMaker.AssetsChanger
         public Int32 StreamingMipmapsPriority { get; set; }
         public Int32 ImageCount { get; set; }
         public Int32 TextureDimension { get; set; }
-        public AssetsGLTextureSettings TextureSettings { get; set; }  
+        public GLTextureSettings TextureSettings { get; set; }  
         public Int32 LightmapFormat { get; set; }
         public Int32 ColorSpace { get; set; }
         public byte[] ImageData { get; set; }
-        public AssetsStreamingInfo StreamData { get; set; }
+        public StreamingInfo StreamData { get; set; }
 
     }
 }

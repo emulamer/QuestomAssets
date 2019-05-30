@@ -58,7 +58,7 @@ namespace BeatmapAssetMaker.AssetsChanger
                         var objectType = Metadata.Types[objectInfo.TypeIndex];
                         switch (objectType.ClassID)
                         {
-                            case AssetsConstants.MonoBehaviourScriptType:
+                            case AssetsConstants.ClassID.MonoBehaviourScriptType:
                                 if (scriptHashToTypes.ContainsKey(objectType.ScriptHash))
                                 {
                                     Type assetObjectType = scriptHashToTypes[objectType.ScriptHash];
@@ -73,10 +73,10 @@ namespace BeatmapAssetMaker.AssetsChanger
                                     assetsObject = new AssetsMonoBehaviourObject(objectInfo, reader);
                                 }
                                 break;
-                            case AssetsConstants.AudioClipClassID:
+                            case AssetsConstants.ClassID.AudioClipClassID:
                                 assetsObject = new AssetsAudioClip(objectInfo, reader);
                                 break;
-                            case AssetsConstants.Texture2DClassID:
+                            case AssetsConstants.ClassID.Texture2DClassID:
                                 assetsObject = new AssetsTexture2D(objectInfo, reader);
                                 break;
                             default:
@@ -90,29 +90,7 @@ namespace BeatmapAssetMaker.AssetsChanger
             }
         }
 
-        public int GetTypeIndexFromClassID(int classID)
-        {
-            var type = Metadata.Types.FirstOrDefault(x => x.ClassID == classID);
-            if (type == null)
-                throw new ArgumentException("ClassID was not found in metadata.");
 
-            return Metadata.Types.IndexOf(type);
-        }
-
-        public int GetTypeIndexFromScriptHash(Guid hash)
-        {
-            var type = Metadata.Types.FirstOrDefault(x => x.ScriptHash == hash);
-            if (type == null)
-                throw new ArgumentException("Script hash was not found in metadata.");
-            return Metadata.Types.IndexOf(type);
-        }
-
-        public int GetClassIDFromTypeIndex(int typeIndex)
-        {
-            if (typeIndex < 1 || typeIndex > Metadata.Types.Count() - 1)
-                throw new ArgumentException("There is no type at this index.");
-            return Metadata.Types[typeIndex].ClassID;
-        }
 
         public void Write(string fileName)
         {
@@ -176,7 +154,7 @@ namespace BeatmapAssetMaker.AssetsChanger
             return Metadata.ObjectInfos.Max(x => x.ObjectID) + 1;
         }
 
-        public void AddObject(AssetsObject assetsObject, bool assignNextObjectID = false)
+        public void AddObject(AssetsObject assetsObject, bool assignNextObjectID = true)
         {
             if (assetsObject.ObjectInfo == null)
                 throw new ArgumentException("ObjectInfo must be set!");
