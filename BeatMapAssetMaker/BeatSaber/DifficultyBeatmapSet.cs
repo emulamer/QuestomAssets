@@ -13,7 +13,7 @@ namespace BeatmapAssetMaker.BeatSaber
 
         //unity asset format only
         [JsonIgnore]
-        public AssetsPtr BeatmapCharacteristic { get; set; }
+        public PPtr BeatmapCharacteristic { get; set; }
 
         //json format only
         [JsonProperty("_beatmapCharacteristicName")]
@@ -32,7 +32,7 @@ namespace BeatmapAssetMaker.BeatSaber
 
         private void Parse(AssetsReader reader)
         {
-            BeatmapCharacteristic = new AssetsPtr(reader);
+            BeatmapCharacteristic = new PPtr(reader);
             DifficultyBeatmaps = reader.ReadArrayOf(x => new DifficultyBeatmap(x));
         }
 

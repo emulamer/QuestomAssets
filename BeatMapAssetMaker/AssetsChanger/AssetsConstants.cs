@@ -18,12 +18,12 @@ namespace BeatmapAssetMaker.AssetsChanger
 
         public static class KnownObjects
         {
-            public static AssetsPtr DefaultEnvironment { get { return new AssetsPtr(20, 1); } }
-            public static AssetsPtr BeatSaberCoverArt { get { return new AssetsPtr(0, 19); } }
+            public static PPtr DefaultEnvironment { get { return new PPtr(20, 1); } }
+            public static PPtr BeatSaberCoverArt { get { return new PPtr(0, 19); } }
 
-            public static AssetsPtr OneSaberCharacteristic{ get { return new AssetsPtr(19, 1); } }
-            public static AssetsPtr NoArrowsCharacteristic { get { return new AssetsPtr(6, 1); } }
-            public static AssetsPtr StandardCharacteristic { get { return new AssetsPtr(22, 1); } }
+            public static PPtr OneSaberCharacteristic{ get { return new PPtr(19, 1); } }
+            public static PPtr NoArrowsCharacteristic { get { return new PPtr(6, 1); } }
+            public static PPtr StandardCharacteristic { get { return new PPtr(22, 1); } }
    
 
         }
@@ -44,12 +44,12 @@ namespace BeatmapAssetMaker.AssetsChanger
 
         public static class ScriptPtr
         {
-            public static AssetsPtr BeatmapLevelDataScriptPtr { get { return new AssetsPtr(1, 644); } }
-            public static AssetsPtr BeatmapDataScriptPtr { get { return new AssetsPtr(1, 1552); } }
-            public static AssetsPtr BeatmapLevelCollectionScriptPtr { get { return new AssetsPtr(1, 762); } }
-            public static AssetsPtr BeatmapLevelPackScriptPtr { get { return new AssetsPtr(1, 1480); } }
+            public static PPtr BeatmapLevelDataScriptPtr { get { return new PPtr(1, 644); } }
+            public static PPtr BeatmapDataScriptPtr { get { return new PPtr(1, 1552); } }
+            public static PPtr BeatmapLevelCollectionScriptPtr { get { return new PPtr(1, 762); } }
+            public static PPtr BeatmapLevelPackScriptPtr { get { return new PPtr(1, 1480); } }
            // public static AssetsPtr BeatmapLevelDataScriptPtr { get { return new AssetsPtr(0, 39); } }
-            public static AssetsPtr MainLevelsCollectionScriptPtr { get { return new AssetsPtr(1, 1530); } }
+            public static PPtr MainLevelsCollectionScriptPtr { get { return new PPtr(1, 1530); } }
         }
     }
 }

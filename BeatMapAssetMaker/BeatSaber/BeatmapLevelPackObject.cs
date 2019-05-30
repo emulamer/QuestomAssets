@@ -8,16 +8,16 @@ using BeatmapAssetMaker.AssetsChanger;
 
 namespace BeatmapAssetMaker.BeatSaber
 {
-    public sealed class AssetsBeatmapLevelPackObject : AssetsMonoBehaviourObject, INeedAssetsMetadata
+    public sealed class BeatmapLevelPackObject : MonoBehaviourObject, INeedAssetsMetadata
     {
-        public AssetsBeatmapLevelPackObject(AssetsMetadata metadata) : base(metadata, AssetsConstants.ScriptHash.BeatmapLevelPackScriptHash, AssetsConstants.ScriptPtr.BeatmapLevelPackScriptPtr)
+        public BeatmapLevelPackObject(AssetsMetadata metadata) : base(metadata, AssetsConstants.ScriptHash.BeatmapLevelPackScriptHash, AssetsConstants.ScriptPtr.BeatmapLevelPackScriptPtr)
         { }
 
-        public AssetsBeatmapLevelPackObject(AssetsObjectInfo objectInfo, AssetsReader reader) : base(objectInfo)
+        public BeatmapLevelPackObject(ObjectInfo objectInfo, AssetsReader reader) : base(objectInfo)
         {
             Parse(reader);
         }
-        public AssetsBeatmapLevelPackObject(AssetsObjectInfo objectInfo) : base(objectInfo)
+        public BeatmapLevelPackObject(ObjectInfo objectInfo) : base(objectInfo)
         { }
 
         public void UpdateTypes(AssetsMetadata metadata)
@@ -29,22 +29,19 @@ namespace BeatmapAssetMaker.BeatSaber
 
         public string PackName { get; set; }
 
-        public AssetsPtr CoverImage { get; set; }
+        public PPtr CoverImage { get; set; }
 
         public bool IsPackAlwaysOwned { get; set; }
 
-        public AssetsPtr BeatmapLevelCollection { get; set; }
+        public PPtr BeatmapLevelCollection { get; set; }
 
         public override void Write(AssetsWriter writer)
         {
             base.WriteBase(writer);
             writer.Write(PackID);
-            writer.AlignTo(4);
             writer.Write(PackName);
-            writer.AlignTo(4);
             CoverImage.Write(writer);
             writer.Write(IsPackAlwaysOwned);
-            writer.AlignTo(4);
             BeatmapLevelCollection.Write(writer);
         }
 
@@ -52,13 +49,10 @@ namespace BeatmapAssetMaker.BeatSaber
         {
             base.Parse(reader);
             PackID = reader.ReadString();
-            reader.AlignToObjectData(4);
             PackName = reader.ReadString();
-            reader.AlignToObjectData(4);
-            CoverImage = new AssetsPtr(reader);
+            CoverImage = new PPtr(reader);
             IsPackAlwaysOwned = reader.ReadBoolean();
-            reader.AlignTo(4);
-            BeatmapLevelCollection = new AssetsPtr(reader);
+            BeatmapLevelCollection = new PPtr(reader);
         }
 
         public override byte[] ScriptParametersData

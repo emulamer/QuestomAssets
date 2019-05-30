@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28010.2046
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BeatmapAssetMaker", "BeatMapAssetMaker\BeatmapAssetMaker.csproj", "{9FCD4D5E-8E64-49C5-A90A-0D17DD98C8A3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BeatmapAssetMaker", "BeatMapAssetMaker\BeatmapAssetMaker.csproj", "{9FCD4D5E-8E64-49C5-A90A-0D17DD98C8A3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assembly-CSharp", "Assembly-CSharp\Assembly-CSharp.csproj", "{0DAD5D23-076F-465D-9736-2CF0D28B6D47}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Assembly-CSharp", "Assembly-CSharp\Assembly-CSharp.csproj", "{0DAD5D23-076F-465D-9736-2CF0D28B6D47}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StbSharp.NETStandard", "StbSharp\StbSharp\StbSharp.NETStandard.csproj", "{99B9057C-3827-444A-8302-959F4CCA277B}"
 EndProject

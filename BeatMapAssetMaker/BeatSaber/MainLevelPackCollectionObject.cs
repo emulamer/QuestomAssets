@@ -8,17 +8,17 @@ using System.IO;
 
 namespace BeatmapAssetMaker.BeatSaber
 {
-    public sealed class AssetsMainLevelPackCollection : AssetsMonoBehaviourObject
+    public sealed class MainLevelPackCollectionObject : MonoBehaviourObject
     {
-        public AssetsMainLevelPackCollection(AssetsObjectInfo objectInfo, AssetsReader reader) : base(objectInfo)
+        public MainLevelPackCollectionObject(ObjectInfo objectInfo, AssetsReader reader) : base(objectInfo)
         {
             Parse(reader);
         }
 
-        public AssetsMainLevelPackCollection(AssetsObjectInfo objectInfo) : base(objectInfo)
+        public MainLevelPackCollectionObject(ObjectInfo objectInfo) : base(objectInfo)
         { }
 
-        public AssetsMainLevelPackCollection(AssetsMetadata metadata) : base(metadata, AssetsConstants.ScriptHash.MainLevelsCollectionHash, AssetsConstants.ScriptPtr.MainLevelsCollectionScriptPtr)
+        public MainLevelPackCollectionObject(AssetsMetadata metadata) : base(metadata, AssetsConstants.ScriptHash.MainLevelsCollectionHash, AssetsConstants.ScriptPtr.MainLevelsCollectionScriptPtr)
         { }
 
         public void UpdateTypes(AssetsMetadata metadata)
@@ -26,14 +26,14 @@ namespace BeatmapAssetMaker.BeatSaber
             base.UpdateType(metadata, AssetsConstants.ScriptHash.MainLevelsCollectionHash, AssetsConstants.ScriptPtr.MainLevelsCollectionScriptPtr);
         }
 
-        public List<AssetsPtr> BeatmapLevelPacks { get; set; } = new List<AssetsPtr>();
-        public List<AssetsPtr> PreviewBeatmapLevelPacks { get; set; } = new List<AssetsPtr>();
+        public List<PPtr> BeatmapLevelPacks { get; set; } = new List<PPtr>();
+        public List<PPtr> PreviewBeatmapLevelPacks { get; set; } = new List<PPtr>();
 
         protected override void Parse(AssetsReader reader)
         {
             base.Parse(reader);
-            BeatmapLevelPacks = reader.ReadArrayOf(x => new AssetsPtr(x));
-            PreviewBeatmapLevelPacks = reader.ReadArrayOf(x => new AssetsPtr(x));
+            BeatmapLevelPacks = reader.ReadArrayOf(x => new PPtr(x));
+            PreviewBeatmapLevelPacks = reader.ReadArrayOf(x => new PPtr(x));
         }
 
         public override void Write(AssetsWriter writer)

@@ -10,27 +10,27 @@ using System.Text;
 
 namespace BeatmapAssetMaker.BeatSaber
 {
-    public class BeatmapData: AssetsMonoBehaviourObject
+    public class BeatmapDataObject: MonoBehaviourObject
     {
-        public BeatmapData(AssetsObjectInfo objectInfo, AssetsReader reader) : base(objectInfo)
+        public BeatmapDataObject(ObjectInfo objectInfo, AssetsReader reader) : base(objectInfo)
         {
             Parse(reader);
         }
 
-        public BeatmapData(AssetsObjectInfo objectInfo) : base(objectInfo)
+        public BeatmapDataObject(ObjectInfo objectInfo) : base(objectInfo)
         { }
 
-        public BeatmapData(AssetsMetadata metadata) : base(metadata, AssetsConstants.ScriptHash.BeatmapDataHash, AssetsConstants.ScriptPtr.BeatmapDataScriptPtr)
+        public BeatmapDataObject(AssetsMetadata metadata) : base(metadata, AssetsConstants.ScriptHash.BeatmapDataHash, AssetsConstants.ScriptPtr.BeatmapDataScriptPtr)
         { }
 
         public void UpdateTypes(AssetsMetadata metadata)
         {
             base.UpdateType(metadata, AssetsConstants.ScriptHash.BeatmapDataHash, AssetsConstants.ScriptPtr.BeatmapDataScriptPtr);
         }
-        public BeatmapData()
+        public BeatmapDataObject()
         {  }
 
-        public BeatmapData(AssetsReader reader)
+        public BeatmapDataObject(AssetsReader reader)
         {
             Parse(reader);
         }
@@ -39,20 +39,16 @@ namespace BeatmapAssetMaker.BeatSaber
         {
             base.Parse(reader);
             JsonData = reader.ReadString();
-            reader.AlignToObjectData(4);
             SignatureBytes = reader.ReadArray();
-            reader.AlignToObjectData(4);
             ProjectedData = reader.ReadArray();
-            reader.AlignToObjectData(4);
+            reader.AlignTo(4);
         }
 
         public override void Write(AssetsWriter writer)
         {
             base.WriteBase(writer);
             writer.Write(JsonData);
-            writer.AlignTo(4);
             writer.WriteArray(SignatureBytes);
-            writer.AlignTo(4);
             writer.WriteArray(ProjectedData);
             writer.AlignTo(4);
         }

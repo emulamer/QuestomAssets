@@ -8,36 +8,14 @@ namespace BeatmapAssetMaker.AssetsChanger
 {
     public class AssetsReader : BinaryReader
     {
-        public int MetadataOffset { get; set; }
-
-        public int ObjectDataOffset { get; set; }
-
-        public AssetsReader(Stream s) : base(s, UTF8Encoding.UTF8, true)
-        { }
-
-        public void AlignToMetadata(int bytes)
+        private int _startPosition = 0;
+        private bool _align = true;
+        public AssetsReader(Stream s, bool align = true) : base(s, UTF8Encoding.UTF8, true)
         {
-            int count = bytes - ((Position - MetadataOffset) % bytes);
-            if (count > 0 && count < bytes)
-                ReadBytes(count);
+            _startPosition = (int)s.Position;
+            _align = align;
         }
-        public void AlignToObjectData(int bytes)
-        {
-            int count = bytes - ((Position - ObjectDataOffset) % bytes);
-            if (count > 0 && count < bytes)
-                ReadBytes(count);
-        }
-        public void AlignTo(int bytes)
-        {
-            int count = bytes - (Position % bytes);
-            if (count > 0 && count < bytes)
-                ReadBytes(count);
-        }
-        public bool IsDataAligned(int bytes)
-        {
-            return ((Position - ObjectDataOffset) % bytes) == 0;
-        }
-
+        
         public string ReadCStr()
         {
             List<byte> bytes = new List<byte>();
@@ -50,8 +28,16 @@ namespace BeatmapAssetMaker.AssetsChanger
             return System.Text.Encoding.UTF8.GetString(bytes.ToArray());
         }
 
+        public void AlignTo(int bytes = 0)
+        {
+            int count = bytes - (Position % bytes);
+            if (count > 0 && count < bytes)
+                ReadBytes(count);
+        }
         public Guid ReadGuid()
         {
+            if (_align)
+                AlignTo(4);
             var bytes = ReadBytes(16);
             return new Guid(bytes);
         }
@@ -63,26 +49,69 @@ namespace BeatmapAssetMaker.AssetsChanger
             return BitConverter.ToInt32(bytes, 0);
         }
 
-        public void SeekObjectData(int offset)
+        //public void SeekObjectData(int offset)
+        //{
+        //    BaseStream.Seek(ObjectDataOffset + offset, SeekOrigin.Begin);
+        //}
+        /// <summary>
+        /// Seeks to the position relative to the AssetReader
+        /// </summary>
+        public void Seek(int offset)
         {
-            BaseStream.Seek(ObjectDataOffset + offset, SeekOrigin.Begin);
+            BaseStream.Seek(_startPosition + offset, SeekOrigin.Begin);
         }
 
-        public int ObjectDataPosition
-        {
-            get { return Position - ObjectDataOffset; }
-        }
+        //public int ObjectDataPosition
+        //{
+        //    get { return Position - ObjectDataOffset; }
+        //}
 
+        /// <summary>
+        /// Gets the position relative to the AssetReader
+        /// </summary>
         public int Position
         {
-            get { return (int)BaseStream.Position; }
+            get { return (int)BaseStream.Position - _startPosition; }
         }
 
-        public new string ReadString()
+        public override string ReadString()
         {
             int length = ReadInt32();
             byte[] stringBytes = ReadBytes(length);
-            return System.Text.Encoding.UTF8.GetString(stringBytes);
+            AlignTo(4);
+            return System.Text.Encoding.UTF8.GetString(stringBytes);            
+        }
+
+
+        public override int ReadInt32()
+        {
+            //if (_align)
+            //    AlignTo(4);
+            return base.ReadInt32();
+        }
+
+        public override ulong ReadUInt64()
+        {
+            if (_align)
+                AlignTo(4);
+            return base.ReadUInt64();
+        }
+
+        public override float ReadSingle()
+        {
+            return base.ReadSingle();
+        }
+
+        public override uint ReadUInt32()
+        {
+            return base.ReadUInt32();
+        }
+
+        public override long ReadInt64()
+        {
+            if (_align)
+                AlignTo(4);
+            return base.ReadInt64();
         }
 
         public byte[] ReadArray()

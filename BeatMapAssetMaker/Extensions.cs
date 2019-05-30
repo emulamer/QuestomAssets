@@ -8,7 +8,7 @@ namespace BeatmapAssetMaker
 {
     public static class Extensions
     {
-        public static UPtr ToUPtr(this AssetsChanger.AssetsPtr ptr)
+        public static UPtr ToUPtr(this AssetsChanger.PPtr ptr)
         {
             return new UPtr()
             {
@@ -17,9 +17,9 @@ namespace BeatmapAssetMaker
             };
         }
 
-        public static AssetsChanger.AssetsPtr ToAssetsPtr(this UPtr ptr)
+        public static AssetsChanger.PPtr ToAssetsPtr(this UPtr ptr)
         {
-            return new AssetsChanger.AssetsPtr(ptr.FileID, ptr.PathID);
+            return new AssetsChanger.PPtr(ptr.FileID, ptr.PathID);
         }
     }
 }

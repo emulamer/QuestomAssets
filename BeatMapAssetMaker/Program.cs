@@ -370,22 +370,24 @@ namespace BeatmapAssetMaker
                 }
 
                 Dictionary<Guid, Type> scriptHashToTypes = new Dictionary<Guid, Type>();
-                scriptHashToTypes.Add(AssetsConstants.ScriptHash.BeatmapLevelPackScriptHash, typeof(BeatSaber.AssetsBeatmapLevelPackObject));
-                scriptHashToTypes.Add(AssetsConstants.ScriptHash.BeatmapLevelCollectionScriptHash, typeof(BeatSaber.AssetsBeatmapLevelCollectionObject));
-                scriptHashToTypes.Add(AssetsConstants.ScriptHash.MainLevelsCollectionHash, typeof(BeatSaber.AssetsMainLevelPackCollection));
-                scriptHashToTypes.Add(AssetsConstants.ScriptHash.BeatmapDataHash, typeof(BeatmapData));
-                scriptHashToTypes.Add(AssetsConstants.ScriptHash.BeatmapLevelDataHash, typeof(BeatmapLevelData));
+                scriptHashToTypes.Add(AssetsConstants.ScriptHash.BeatmapLevelPackScriptHash, typeof(BeatSaber.BeatmapLevelPackObject));
+                scriptHashToTypes.Add(AssetsConstants.ScriptHash.BeatmapLevelCollectionScriptHash, typeof(BeatSaber.BeatmapLevelCollectionObject));
+                scriptHashToTypes.Add(AssetsConstants.ScriptHash.MainLevelsCollectionHash, typeof(BeatSaber.MainLevelPackCollectionObject));
+                scriptHashToTypes.Add(AssetsConstants.ScriptHash.BeatmapDataHash, typeof(BeatmapDataObject));
+                scriptHashToTypes.Add(AssetsConstants.ScriptHash.BeatmapLevelDataHash, typeof(BeatmapLevelDataObject));
 
 
                 AssetsFile assetsFile = new AssetsFile(fileName17, scriptHashToTypes);
+                assetsFile.Write(@"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\arewritecomp\MYsharedassets17.assets");
+                return;
 
 
 
-                var levelCollection = assetsFile.Objects.FirstOrDefault(x => x is AssetsBeatmapLevelCollectionObject && ((AssetsBeatmapLevelCollectionObject)x).Name == "CustomSongsLevelPackCollection") as AssetsBeatmapLevelCollectionObject;
+                var levelCollection = assetsFile.Objects.FirstOrDefault(x => x is BeatmapLevelCollectionObject && ((BeatmapLevelCollectionObject)x).Name == "CustomSongsLevelPackCollection") as BeatmapLevelCollectionObject;
 
                 if (levelCollection == null)
                 {
-                    levelCollection = new AssetsBeatmapLevelCollectionObject(assetsFile.Metadata)
+                    levelCollection = new BeatmapLevelCollectionObject(assetsFile.Metadata)
                     { Name = "CustomSongsLevelPackCollection" };
                     assetsFile.AddObject(levelCollection, true);
                 }
@@ -410,7 +412,7 @@ namespace BeatmapAssetMaker
 
                         //copy audio file to the output
                         var oggSrc = Path.Combine(customSongFolder, level.SongFilename);
-                        var clip = assetsFile.Objects.First(x => x.ObjectInfo.ObjectID == level.AudioClip.PathID) as AssetsAudioClip;
+                        var clip = assetsFile.Objects.First(x => x.ObjectInfo.ObjectID == level.AudioClip.PathID) as AudioClipObject;
                         var oggDst = Path.Combine(outputAssetsFolder, clip.Resource.Source);
                         File.Copy(oggSrc, oggDst, true);
 
@@ -423,14 +425,14 @@ namespace BeatmapAssetMaker
                         return;
                     }
                 }
-                var levelPack = assetsFile.Objects.FirstOrDefault(x => x is AssetsBeatmapLevelPackObject && ((AssetsBeatmapLevelPackObject)x).Name == "CustomSongsLevelPack") as AssetsBeatmapLevelPackObject;
+                var levelPack = assetsFile.Objects.FirstOrDefault(x => x is BeatmapLevelPackObject && ((BeatmapLevelPackObject)x).Name == "CustomSongsLevelPack") as BeatmapLevelPackObject;
                 if (levelPack == null)
                 {
-                    levelPack = new BeatSaber.AssetsBeatmapLevelPackObject(assetsFile.Metadata)
+                    levelPack = new BeatSaber.BeatmapLevelPackObject(assetsFile.Metadata)
                     {
-                        CoverImage = moxie?CustomLevelLoader.LoadPackCover(assetsFile):new AssetsPtr(0, 45),
+                        CoverImage = moxie?CustomLevelLoader.LoadPackCover(assetsFile):new PPtr(0, 45),
                         Enabled = 1,
-                        GameObjectPtr = new AssetsPtr(),
+                        GameObjectPtr = new PPtr(),
                         IsPackAlwaysOwned = true,
                         PackID = "CustomSongs",
                         Name = "CustomSongsLevelPack",
@@ -445,9 +447,9 @@ namespace BeatmapAssetMaker
 
                 var extFile = file19.Metadata.ExternalFiles.First(x => x.FileName == "sharedassets17.assets");
                 var fileIndex = file19.Metadata.ExternalFiles.IndexOf(extFile) + 1;
-                var mainLevelPack = file19.Objects.First(x => x is BeatSaber.AssetsMainLevelPackCollection) as BeatSaber.AssetsMainLevelPackCollection;
+                var mainLevelPack = file19.Objects.First(x => x is BeatSaber.MainLevelPackCollectionObject) as BeatSaber.MainLevelPackCollectionObject;
                 if (!mainLevelPack.BeatmapLevelPacks.Any(x => x.FileID == fileIndex && x.PathID == levelPack.ObjectInfo.ObjectID))
-                    mainLevelPack.BeatmapLevelPacks.Add(new AssetsPtr(fileIndex, levelPack.ObjectInfo.ObjectID));
+                    mainLevelPack.BeatmapLevelPacks.Add(new PPtr(fileIndex, levelPack.ObjectInfo.ObjectID));
 
                 try
                 {

@@ -5,10 +5,10 @@ using System.Text;
 
 namespace BeatmapAssetMaker.AssetsChanger
 {
-    public class AssetsPtr
+    public class PPtr
     {
 
-        public AssetsPtr(UPtr uptr)
+        public PPtr(UPtr uptr)
         {
             FileID = uptr.FileID;
             PathID = uptr.PathID;
@@ -16,17 +16,17 @@ namespace BeatmapAssetMaker.AssetsChanger
         public int FileID { get; private set; }
         public Int64 PathID { get; private set; }
 
-        public static bool operator == (AssetsPtr a, AssetsPtr b)
+        public static bool operator == (PPtr a, PPtr b)
         {
             return AreEqual(a, b);
         }
 
-        public static bool operator != (AssetsPtr a, AssetsPtr b)
+        public static bool operator != (PPtr a, PPtr b)
         {
             return !AreEqual(a, b);
         }
 
-        private static bool AreEqual(AssetsPtr a, AssetsPtr b)
+        private static bool AreEqual(PPtr a, PPtr b)
         {
             if (object.ReferenceEquals(a, b))
                 return true;
@@ -35,17 +35,17 @@ namespace BeatmapAssetMaker.AssetsChanger
             return (a.PathID == b.PathID && a.FileID == b.FileID);
         }
 
-        public AssetsPtr() {
+        public PPtr() {
             FileID = 0;
             PathID = 0;
         }
-        public AssetsPtr(int fileID, Int64 pathID)
+        public PPtr(int fileID, Int64 pathID)
         {
             FileID = fileID;
             PathID = pathID;
         }
 
-        public AssetsPtr(AssetsReader reader)
+        public PPtr(AssetsReader reader)
         {
             Parse(reader);
         }
@@ -53,12 +53,14 @@ namespace BeatmapAssetMaker.AssetsChanger
         private void Parse(AssetsReader reader)
         {
             FileID = reader.ReadInt32();
+            reader.AlignTo(4);
             PathID = reader.ReadInt64();
         }
 
         public void Write(AssetsWriter writer)
         {
             writer.Write(FileID);
+            writer.AlignTo(4);
             writer.Write(PathID);
         }
     }

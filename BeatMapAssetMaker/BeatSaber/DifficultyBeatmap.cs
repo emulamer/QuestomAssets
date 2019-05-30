@@ -23,11 +23,11 @@ namespace BeatmapAssetMaker.BeatSaber
         public int NoteJumpStartBeatOffset { get; set; }
 
         [JsonProperty("_beatmapData")]
-        public BeatmapData BeatmapData { get; set; }
+        public BeatmapDataObject BeatmapData { get; set; }
 
         //unity assets format only
         [JsonIgnore]
-        public AssetsPtr BeatmapDataPtr { get; set; }
+        public PPtr BeatmapDataPtr { get; set; }
 
         //[JsonIgnore]
         //public BeatmapSaveData BeatmapSaveData { get; set; }
@@ -46,7 +46,7 @@ namespace BeatmapAssetMaker.BeatSaber
             DifficultyRank = reader.ReadInt32();
             NoteJumpMovementSpeed = reader.ReadSingle();
             NoteJumpStartBeatOffset = reader.ReadInt32();
-            BeatmapDataPtr = new AssetsPtr(reader);
+            BeatmapDataPtr = new PPtr(reader);
         }
 
         public void Write(AssetsWriter writer)

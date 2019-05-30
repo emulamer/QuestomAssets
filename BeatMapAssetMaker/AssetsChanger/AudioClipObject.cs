@@ -6,7 +6,7 @@ using System.Text;
 
 namespace BeatmapAssetMaker.AssetsChanger
 {
-    public class AssetsAudioClip : AssetsObject
+    public class AudioClipObject : AssetsObject
     {
         private string _name;
         private int _loadType;
@@ -54,22 +54,21 @@ namespace BeatmapAssetMaker.AssetsChanger
 
         public int CompressionFormat { get; set; }
         
-        public AssetsAudioClip(AssetsObjectInfo objectInfo) : base(objectInfo)
+        public AudioClipObject(ObjectInfo objectInfo) : base(objectInfo)
         { }
 
-        public AssetsAudioClip(AssetsObjectInfo objectInfo, AssetsReader reader) : base(objectInfo)
+        public AudioClipObject(ObjectInfo objectInfo, AssetsReader reader) : base(objectInfo)
         {
             Parse(reader);
         }
 
-        public AssetsAudioClip(AssetsMetadata metadata) : base(metadata, AssetsConstants.ClassID.AudioClipClassID)
+        public AudioClipObject(AssetsMetadata metadata) : base(metadata, AssetsConstants.ClassID.AudioClipClassID)
         { }
 
         protected override void Parse(AssetsReader reader)
         {
             base.Parse(reader);
             Name = reader.ReadString();
-            reader.AlignToObjectData(4);
             LoadType = reader.ReadInt32();
             Channels = reader.ReadInt32();
             Frequency = reader.ReadInt32();
@@ -77,22 +76,19 @@ namespace BeatmapAssetMaker.AssetsChanger
             Length = reader.ReadSingle();
             IsTrackerFormat = reader.ReadBoolean();
             Ambisonic = reader.ReadBoolean();
-            //it seems after a serias of booleans, it always aligns
-            reader.AlignToObjectData(4);
+            reader.AlignTo(4);
             SubsoundIndex = reader.ReadInt32();
             PreloadAudioData = reader.ReadBoolean();
             LoadInBackground = reader.ReadBoolean();
             Legacy3D = reader.ReadBoolean();
-            reader.AlignToObjectData(4);
+            reader.AlignTo(4);
             Resource = new StreamedResource(reader);
             CompressionFormat = reader.ReadInt32();
-            reader.AlignToObjectData(4);
         }
         public override void Write(AssetsWriter writer)
         {
             base.WriteBase(writer);
             writer.Write(Name);
-            writer.AlignTo(4);
             writer.Write(LoadType);
             writer.Write(Channels);
             writer.Write(Frequency);
@@ -108,7 +104,6 @@ namespace BeatmapAssetMaker.AssetsChanger
             writer.AlignTo(4);
             Resource.Write(writer);
             writer.Write(CompressionFormat);
-            writer.AlignTo(4);
         }
 
         

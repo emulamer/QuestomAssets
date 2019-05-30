@@ -9,12 +9,12 @@ using Newtonsoft.Json;
 
 namespace BeatmapAssetMaker.BeatSaber
 {
-    public sealed class AssetsBeatmapLevelCollectionObject : AssetsMonoBehaviourObject, INeedAssetsMetadata
+    public sealed class BeatmapLevelCollectionObject : MonoBehaviourObject, INeedAssetsMetadata
     {
-        public AssetsBeatmapLevelCollectionObject(AssetsMetadata metadata) : base(metadata, AssetsConstants.ScriptHash.BeatmapLevelCollectionScriptHash, AssetsConstants.ScriptPtr.BeatmapLevelCollectionScriptPtr)
+        public BeatmapLevelCollectionObject(AssetsMetadata metadata) : base(metadata, AssetsConstants.ScriptHash.BeatmapLevelCollectionScriptHash, AssetsConstants.ScriptPtr.BeatmapLevelCollectionScriptPtr)
         { }
 
-        public AssetsBeatmapLevelCollectionObject(AssetsObjectInfo objectInfo, AssetsReader reader) : base(objectInfo)
+        public BeatmapLevelCollectionObject(ObjectInfo objectInfo, AssetsReader reader) : base(objectInfo)
         {
             Parse(reader);
         }
@@ -24,7 +24,7 @@ namespace BeatmapAssetMaker.BeatSaber
             base.UpdateType(metadata, AssetsConstants.ScriptHash.BeatmapLevelCollectionScriptHash, AssetsConstants.ScriptPtr.BeatmapLevelCollectionScriptPtr);
         }
 
-        public List<AssetsPtr> BeatmapLevels { get; set; } = new List<AssetsPtr>();
+        public List<PPtr> BeatmapLevels { get; set; } = new List<PPtr>();
 
         protected override void Parse(AssetsReader reader)
         {
@@ -32,7 +32,7 @@ namespace BeatmapAssetMaker.BeatSaber
             int count = reader.ReadInt32();
             for (int i = 0; i < count; i++)
             {
-                BeatmapLevels.Add(new AssetsPtr(reader));
+                BeatmapLevels.Add(new PPtr(reader));
             }
         }
 

@@ -7,30 +7,30 @@ using System.Text;
 
 namespace BeatmapAssetMaker.AssetsChanger
 {
-    public class AssetsMonoBehaviourObject : AssetsObject
+    public class MonoBehaviourObject : AssetsObject
     {
-        public AssetsMonoBehaviourObject(AssetsMetadata metadata, Guid scriptHash, AssetsPtr monoscriptTypePtr) : base(metadata, scriptHash)
+        public MonoBehaviourObject(AssetsMetadata metadata, Guid scriptHash, PPtr monoscriptTypePtr) : base(metadata, scriptHash)
         {
             Enabled = 1;
             MonoscriptTypePtr = monoscriptTypePtr;
         }
 
-        public AssetsMonoBehaviourObject(AssetsObjectInfo objectInfo, AssetsReader reader) : base(objectInfo)
+        public MonoBehaviourObject(ObjectInfo objectInfo, AssetsReader reader) : base(objectInfo)
         {
             Parse(reader);
             ParseDetails(reader);
         }
 
-        protected void UpdateType(AssetsMetadata metadata, Guid scriptHash, AssetsPtr monoscriptTypePtr)
+        protected void UpdateType(AssetsMetadata metadata, Guid scriptHash, PPtr monoscriptTypePtr)
         {
             base.UpdateType(metadata, scriptHash);
             MonoscriptTypePtr = monoscriptTypePtr;           
         }
 
-        public AssetsMonoBehaviourObject()
+        public MonoBehaviourObject()
         { Enabled = 1; }
 
-        public AssetsMonoBehaviourObject(AssetsObjectInfo objectInfo) : base(objectInfo)
+        public MonoBehaviourObject(ObjectInfo objectInfo) : base(objectInfo)
         { Enabled = 1; }
 
         //public AssetsMonoBehaviourObject(AssetsObjectInfo objectInfo, AssetsReader reader) : base(objectInfo, reader)
@@ -39,13 +39,13 @@ namespace BeatmapAssetMaker.AssetsChanger
         private byte[] _scriptParametersData;
 
         [JsonIgnore]
-        public AssetsPtr GameObjectPtr { get; set; } = new AssetsPtr();
+        public PPtr GameObjectPtr { get; set; } = new PPtr();
 
         [JsonIgnore]
         public int Enabled { get; set; } = 1;
 
         [JsonIgnore]
-        public AssetsPtr MonoscriptTypePtr { get; set; }
+        public PPtr MonoscriptTypePtr { get; set; }
 
         [JsonIgnore]
         public string Name { get; set; }
@@ -79,17 +79,17 @@ namespace BeatmapAssetMaker.AssetsChanger
         protected override void Parse(AssetsReader reader)
         {
             base.Parse(reader);
-            GameObjectPtr = new AssetsPtr(reader);
+            GameObjectPtr = new PPtr(reader);
             Enabled = reader.ReadInt32();
-            MonoscriptTypePtr = new AssetsPtr(reader);
+            MonoscriptTypePtr = new PPtr(reader);
             Name = reader.ReadString();
-            reader.AlignToObjectData(4);
         }
 
         private void ParseDetails(AssetsReader reader)
         {
-            var readLength = ObjectInfo.DataSize - (reader.Position - (reader.ObjectDataOffset + ObjectInfo.DataOffset));  
+            var readLength = ObjectInfo.DataSize - (reader.Position - ObjectInfo.DataOffset);  
             ScriptParametersData = reader.ReadBytes(readLength);
+            reader.AlignTo(4);
         }
 
         protected override void WriteBase(AssetsWriter writer)
@@ -98,14 +98,14 @@ namespace BeatmapAssetMaker.AssetsChanger
             GameObjectPtr.Write(writer);
             writer.Write(Enabled);
             MonoscriptTypePtr.Write(writer);
-            writer.Write(Name);
-            writer.AlignTo(4);            
+            writer.Write(Name);      
         }
 
         public override void Write(AssetsWriter writer)
         {
-            base.WriteBase(writer);
+            WriteBase(writer);
             writer.Write(ScriptParametersData);
+            writer.AlignTo(4);
         } 
     }
 }

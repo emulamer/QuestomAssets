@@ -5,7 +5,7 @@ using System.Text;
 
 namespace BeatmapAssetMaker.AssetsChanger
 {
-    public class AssetsExternalFile
+    public class ExternalFile
     {
         public string AssetName { get; set; }
 
@@ -15,7 +15,7 @@ namespace BeatmapAssetMaker.AssetsChanger
         public string FileName { get; set; }
 
 
-        public AssetsExternalFile(AssetsReader reader)
+        public ExternalFile(AssetsReader reader)
         {
             Parse(reader);
         }

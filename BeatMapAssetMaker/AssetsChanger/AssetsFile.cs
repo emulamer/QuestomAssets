@@ -9,13 +9,19 @@ namespace BeatmapAssetMaker.AssetsChanger
     public class AssetsFile
     {
 
-        public AssetsHeader Header { get; set; }
+        public AssetsFileHeader Header { get; set; }
 
         public AssetsMetadata Metadata { get; set; }
 
         public List<AssetsObject> Objects { get; set; }
+
+        private Dictionary<Guid, Type> _scriptHashToTypes = new Dictionary<Guid, Type>();
+
+
+
         public AssetsFile(string fileName, Dictionary<Guid, Type> scriptHashToTypes)
         {
+            _scriptHashToTypes = scriptHashToTypes;
             Objects = new List<AssetsObject>();
 
             using (MemoryStream fullFileStream = new MemoryStream())
@@ -39,55 +45,65 @@ namespace BeatmapAssetMaker.AssetsChanger
                 }
                 fullFileStream.Seek(0, SeekOrigin.Begin);
 
-
+                using (AssetsReader reader = new AssetsReader(fullFileStream, false))
+                {
+                    Header = new AssetsFileHeader(reader);
+                }
+                using (AssetsReader reader = new AssetsReader(fullFileStream, false))
+                {
+                    Metadata = new AssetsMetadata(reader);
+                }
+                fullFileStream.Seek(Header.ObjectDataOffset, SeekOrigin.Begin);
                 using (AssetsReader reader = new AssetsReader(fullFileStream))
                 {
-                    Header = new AssetsHeader(reader);
-       
 
-                    Metadata = new AssetsMetadata(reader);
-
-                    //I think align to 16?  this is a guess based on how they're written
-                    reader.AlignTo(16);
                     //if (reader.BaseStream.Position != Header.ObjectDataOffset)
-                     //   throw new Exception("Object data isn't where the header says it should be!");
-           
+                    //   throw new Exception("Object data isn't where the header says it should be!");
+
                     foreach (var objectInfo in Metadata.ObjectInfos)
                     {
-                        AssetsObject assetsObject;
-                        var objectType = Metadata.Types[objectInfo.TypeIndex];
-                        switch (objectType.ClassID)
-                        {
-                            case AssetsConstants.ClassID.MonoBehaviourScriptType:
-                                if (scriptHashToTypes.ContainsKey(objectType.ScriptHash))
-                                {
-                                    Type assetObjectType = scriptHashToTypes[objectType.ScriptHash];
-                                    if (!assetObjectType.IsSubclassOf(typeof(AssetsMonoBehaviourObject)))
-                                    {
-                                        throw new ArgumentException("Types provided in scriptHashToTypes must be a subclass of AssetsMonoBehaviourObject.");
-                                    }
-                                    assetsObject = (AssetsObject)Activator.CreateInstance(assetObjectType, objectInfo, reader);
-                                }
-                                else
-                                {
-                                    assetsObject = new AssetsMonoBehaviourObject(objectInfo, reader);
-                                }
-                                break;
-                            case AssetsConstants.ClassID.AudioClipClassID:
-                                assetsObject = new AssetsAudioClip(objectInfo, reader);
-                                break;
-                            case AssetsConstants.ClassID.Texture2DClassID:
-                                assetsObject = new AssetsTexture2D(objectInfo, reader);
-                                break;
-                            default:
-                                assetsObject = new AssetsObject(objectInfo, reader);
-                                break;
-                        }
-                        reader.AlignToObjectData(8);
+                        AssetsObject assetsObject = ReadObject(reader, objectInfo);
                         Objects.Add(assetsObject);
                     }
                 }
+                
             }
+        }
+
+        private AssetsObject ReadObject(AssetsReader reader, ObjectInfo objectInfo)
+        {
+            AssetsObject assetsObject;
+            var objectType = Metadata.Types[objectInfo.TypeIndex];
+            switch (objectType.ClassID)
+            {
+                case AssetsConstants.ClassID.MonoBehaviourScriptType:
+                    if (_scriptHashToTypes.ContainsKey(objectType.ScriptHash))
+                    {
+                        Type assetObjectType = _scriptHashToTypes[objectType.ScriptHash];
+                        if (!assetObjectType.IsSubclassOf(typeof(MonoBehaviourObject)))
+                        {
+                            throw new ArgumentException("Types provided in scriptHashToTypes must be a subclass of AssetsMonoBehaviourObject.");
+                        }
+                        assetsObject = (AssetsObject)Activator.CreateInstance(assetObjectType, objectInfo, reader);
+                    }
+                    else
+                    {
+                        assetsObject = new MonoBehaviourObject(objectInfo, reader);
+                    }
+                    break;
+                case AssetsConstants.ClassID.AudioClipClassID:
+                    assetsObject = new AudioClipObject(objectInfo, reader);
+                    break;
+                case AssetsConstants.ClassID.Texture2DClassID:
+                    assetsObject = new Texture2DObject(objectInfo, reader);
+                    break;
+                default:
+                    assetsObject = new AssetsObject(objectInfo, reader);
+                    break;
+            }
+            // is this needed?
+            //reader.AlignToObjectData(8);
+            return assetsObject;
         }
 
 
@@ -98,12 +114,14 @@ namespace BeatmapAssetMaker.AssetsChanger
             MemoryStream metaMS = new MemoryStream();
             using (AssetsWriter writer = new AssetsWriter(objectsMS))
             {
+                int ctr = 0;
                 foreach (var obj in Objects)
                 {
-                    
+                    ctr++;
                     obj.ObjectInfo.DataOffset = (int)objectsMS.Position;
                     obj.Write(writer);
                     writer.Flush();
+                    var origSize = obj.ObjectInfo.DataSize;
                     obj.ObjectInfo.DataSize = (int)(objectsMS.Position - obj.ObjectInfo.DataOffset);
                     writer.AlignTo(8);
                 }
@@ -111,23 +129,21 @@ namespace BeatmapAssetMaker.AssetsChanger
             using (AssetsWriter writer = new AssetsWriter(metaMS))
             {
                 Metadata.Write(writer);
-                writer.AlignTo(2);
-                
-                
-
             }
-            //+4 because of the writing int0 hack
+
             Header.FileSize = Header.HeaderSize + (int)objectsMS.Length + (int)metaMS.Length;
             Header.ObjectDataOffset = Header.HeaderSize + (int)metaMS.Length;
-            int diff = (int)(objectsMS.Length + metaMS.Length) % 4;
-            if (diff > 0 && diff < 4)
+
+            int objectPad = 8;
+            int diff = (int)(Header.HeaderSize + metaMS.Length) % objectPad;
+            if (diff > 0 && diff < objectPad)
             {
                 Header.ObjectDataOffset += diff;
-                Header.FileSize += diff;
-                
+                Header.FileSize += diff;                
             }
+
             
-            Header.MetadataSize = (int)metaMS.Length;
+            Header.MetadataSize = (int)metaMS.Length ;
             objectsMS.Seek(0, SeekOrigin.Begin);
             metaMS.Seek(0, SeekOrigin.Begin);
             using (FileStream fs = File.Open(fileName, FileMode.Create))
@@ -139,10 +155,11 @@ namespace BeatmapAssetMaker.AssetsChanger
                 metaMS.CopyTo(fs);
 
 
-                if (diff > 0 && diff < 4)
+                if (diff > 0 && diff < objectPad)
                 {
                     fs.Write(new byte[diff], 0, diff);
                 }
+                
 
                 objectsMS.CopyTo(fs);
             }

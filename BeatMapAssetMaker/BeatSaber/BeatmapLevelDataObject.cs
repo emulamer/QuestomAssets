@@ -9,20 +9,20 @@ using BeatmapAssetMaker.AssetsChanger;
 
 namespace BeatmapAssetMaker.BeatSaber
 {
-    public sealed class BeatmapLevelData : AssetsMonoBehaviourObject, INeedAssetsMetadata
+    public sealed class BeatmapLevelDataObject : MonoBehaviourObject, INeedAssetsMetadata
     {
-        public BeatmapLevelData()
+        public BeatmapLevelDataObject()
         { }
 
-        public BeatmapLevelData(AssetsObjectInfo objectInfo) : base(objectInfo)
+        public BeatmapLevelDataObject(ObjectInfo objectInfo) : base(objectInfo)
         { }
 
-        public BeatmapLevelData(AssetsObjectInfo objectInfo, AssetsReader reader) : base(objectInfo)
+        public BeatmapLevelDataObject(ObjectInfo objectInfo, AssetsReader reader) : base(objectInfo)
         {
             Parse(reader);
         }
 
-        public BeatmapLevelData(AssetsMetadata metadata) : base(metadata, AssetsConstants.ScriptHash.BeatmapLevelDataHash, AssetsConstants.ScriptPtr.BeatmapLevelDataScriptPtr)
+        public BeatmapLevelDataObject(AssetsMetadata metadata) : base(metadata, AssetsConstants.ScriptHash.BeatmapLevelDataHash, AssetsConstants.ScriptPtr.BeatmapLevelDataScriptPtr)
         { }
 
         public void UpdateTypes(AssetsMetadata metadata)
@@ -108,13 +108,13 @@ namespace BeatmapAssetMaker.BeatSaber
 
         //unity asset format properties
         [JsonIgnore]
-        public AssetsPtr CoverImageTexture2D { get; set; }
+        public PPtr CoverImageTexture2D { get; set; }
 
         [JsonIgnore]
-        public AssetsPtr EnvironmentSceneInfo { get; set; }
+        public PPtr EnvironmentSceneInfo { get; set; }
 
         [JsonIgnore]
-        public AssetsPtr AudioClip { get; set; }
+        public PPtr AudioClip { get; set; }
 
 
         public override void Write(AssetsWriter writer)
@@ -125,7 +125,6 @@ namespace BeatmapAssetMaker.BeatSaber
             writer.Write(SongSubName);
             writer.Write(SongAuthorName);
             writer.Write(LevelAuthorName);
-            writer.AlignTo(4);
             AudioClip.Write(writer);
             writer.Write(BeatsPerMinute);
             writer.Write(SongTimeOffset);
@@ -150,17 +149,15 @@ namespace BeatmapAssetMaker.BeatSaber
             SongSubName = reader.ReadString();
             SongAuthorName = reader.ReadString();
             LevelAuthorName = reader.ReadString();
-            reader.AlignToObjectData(4);
-            //potentially align here?
-            AudioClip = new AssetsPtr(reader);
+            AudioClip = new PPtr(reader);
             BeatsPerMinute = reader.ReadSingle();
             SongTimeOffset = reader.ReadSingle();
             Shuffle = reader.ReadSingle();
             ShufflePeriod = reader.ReadSingle();
             PreviewStartTime = reader.ReadSingle();
             PreviewDuration = reader.ReadSingle();
-            CoverImageTexture2D = new AssetsPtr(reader);
-            EnvironmentSceneInfo = new AssetsPtr(reader);
+            CoverImageTexture2D = new PPtr(reader);
+            EnvironmentSceneInfo = new PPtr(reader);
             DifficultyBeatmapSets = reader.ReadArrayOf(x => new DifficultyBeatmapSet(x));
         }
 

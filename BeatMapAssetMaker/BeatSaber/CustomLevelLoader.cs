@@ -11,7 +11,7 @@ namespace BeatmapAssetMaker.BeatSaber
 {
     public class CustomLevelLoader
     {
-        public static BeatmapLevelData LoadSongFromPathToAsset(string songPath, AssetsFile assetsFile)
+        public static BeatmapLevelDataObject LoadSongFromPathToAsset(string songPath, AssetsFile assetsFile)
         {
             try
             {
@@ -22,10 +22,10 @@ namespace BeatmapAssetMaker.BeatSaber
 
                 string infoFile = Path.Combine(songPath, "Info.dat");
 
-                BeatmapLevelData bml = null;
+                BeatmapLevelDataObject bml = null;
                 using (var sr = new StreamReader(infoFile))
                 {
-                    bml = JsonConvert.DeserializeObject<BeatmapLevelData>(sr.ReadToEnd(), jsonSettings);
+                    bml = JsonConvert.DeserializeObject<BeatmapLevelDataObject>(sr.ReadToEnd(), jsonSettings);
                 }
 
                 bml.Name = $"{bml.LevelID}Level";
@@ -60,11 +60,11 @@ namespace BeatmapAssetMaker.BeatSaber
                         }
                         if (assetsFile != null)
                         {
-                            dm.BeatmapData = new BeatmapData(assetsFile.Metadata);
+                            dm.BeatmapData = new BeatmapDataObject(assetsFile.Metadata);
                         }
                         else
                         {
-                            dm.BeatmapData = new BeatmapData();
+                            dm.BeatmapData = new BeatmapDataObject();
                         }
 
                         dm.BeatmapData.Name = bml.LevelID + ((d.BeatmapCharacteristicName == Characteristic.Standard) ? "" : d.BeatmapCharacteristicName.ToString()) + dm.Difficulty.ToString() + "BeatmapData";
@@ -107,12 +107,7 @@ namespace BeatmapAssetMaker.BeatSaber
             }
         }
 
-        //public static AssetsAudioClip LoadSongAudioAsset(BeatmapLevelData levelData, AssetsFile assetsFile)
-        //{
-
-        //}
-
-            public static AssetsAudioClip LoadSongAudioAsset(string songPath, BeatmapLevelData levelData, AssetsFile assetsFile)
+        public static AudioClipObject LoadSongAudioAsset(string songPath, BeatmapLevelDataObject levelData, AssetsFile assetsFile)
         {
             string audioClipFile = Path.Combine(songPath, levelData.SongFilename);
             string outputFileName = levelData.LevelID + ".ogg";
@@ -144,7 +139,7 @@ namespace BeatmapAssetMaker.BeatSaber
                     pinnedArray.Free();
                 }
             }
-            var audioClip = new AssetsAudioClip(assetsFile.Metadata)
+            var audioClip = new AudioClipObject(assetsFile.Metadata)
             {
                 Name = levelData.LevelID,
                 LoadType = 1,
@@ -165,7 +160,7 @@ namespace BeatmapAssetMaker.BeatSaber
             return audioClip;
         }
 
-        public static AssetsTexture2D LoadSongCover(string songPath, BeatmapLevelData levelData, AssetsFile assetsFile)
+        public static Texture2DObject LoadSongCover(string songPath, BeatmapLevelDataObject levelData, AssetsFile assetsFile)
         {
             if (!string.IsNullOrWhiteSpace(levelData.CoverImageFilename) && File.Exists(Path.Combine(songPath, levelData.CoverImageFilename)))
             {
@@ -175,7 +170,7 @@ namespace BeatmapAssetMaker.BeatSaber
                     Bitmap coverImage = (Bitmap)Bitmap.FromFile(coverFile);
                     var imageBytes = ImageUtils.LoadToRGBAndSize(coverImage, 256, 256);
 
-                    var coverAsset = new AssetsTexture2D(assetsFile.Metadata)
+                    var coverAsset = new Texture2DObject(assetsFile.Metadata)
                     {
                         Name = levelData.LevelID + "Cover",
                         ForcedFallbackFormat = 4,
@@ -220,7 +215,7 @@ namespace BeatmapAssetMaker.BeatSaber
             return null;
         }
 
-        public static AssetsPtr LoadPackCover(AssetsFile assetsFile)
+        public static PPtr LoadPackCover(AssetsFile assetsFile)
         {
 
             //var extrasSprite = assetsFile.Objects.First(x => x.ObjectInfo.ObjectID == 45);
@@ -230,7 +225,7 @@ namespace BeatmapAssetMaker.BeatSaber
 
             var imageBytes = BeatmapAssetMaker.Resource1.CustomSongsCover;
 
-            var packCover = new AssetsTexture2D(assetsFile.Metadata)
+            var packCover = new Texture2DObject(assetsFile.Metadata)
             {
                 Name = "CustomSongsCover",
                 ForcedFallbackFormat = 4,
@@ -276,7 +271,7 @@ namespace BeatmapAssetMaker.BeatSaber
             }
             var nameBytes = System.Text.UTF8Encoding.UTF8.GetBytes("Custom");
             Array.Copy(nameBytes, 0, finalBytes, 4, nameBytes.Length);
-            AssetsObject coverAsset = new AssetsObject(new AssetsObjectInfo()
+            AssetsObject coverAsset = new AssetsObject(new ObjectInfo()
             {
                 TypeIndex = assetsFile.Metadata.GetTypeIndexFromClassID(AssetsConstants.ClassID.SpriteClassID)
             })

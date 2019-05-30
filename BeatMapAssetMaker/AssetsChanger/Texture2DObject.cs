@@ -6,27 +6,26 @@ using System.Text;
 
 namespace BeatmapAssetMaker.AssetsChanger
 {
-    public sealed class AssetsTexture2D : AssetsObject
+    public sealed class Texture2DObject : AssetsObject
     {
-        public AssetsTexture2D(AssetsObjectInfo objectInfo, AssetsReader reader) : base(objectInfo)
+        public Texture2DObject(ObjectInfo objectInfo, AssetsReader reader) : base(objectInfo)
         {
             Parse(reader);
         }
 
-        public AssetsTexture2D(AssetsObjectInfo objectInfo) : base(objectInfo)
+        public Texture2DObject(ObjectInfo objectInfo) : base(objectInfo)
         { }
 
-        public AssetsTexture2D(AssetsMetadata metadata) : base(metadata, AssetsConstants.ClassID.Texture2DClassID)
+        public Texture2DObject(AssetsMetadata metadata) : base(metadata, AssetsConstants.ClassID.Texture2DClassID)
         { }
 
         protected override void Parse(AssetsReader reader)
         {
             base.Parse(reader);
             Name = reader.ReadString();
-            reader.AlignToObjectData(4);
             ForcedFallbackFormat = reader.ReadInt32();
             DownscaleFallback = reader.ReadBoolean();
-            reader.AlignToObjectData(4);
+            reader.AlignTo(4);
             Width = reader.ReadInt32();
             Height = reader.ReadInt32();
             CompleteImageSize = reader.ReadInt32();
@@ -34,7 +33,7 @@ namespace BeatmapAssetMaker.AssetsChanger
             MipCount = reader.ReadInt32();
             IsReadable = reader.ReadBoolean();
             StreamingMipmaps = reader.ReadBoolean();
-            reader.AlignToObjectData(4);
+            reader.AlignTo(4);
             StreamingMipmapsPriority = reader.ReadInt32();
             ImageCount = reader.ReadInt32();
             TextureDimension = reader.ReadInt32();
@@ -43,14 +42,13 @@ namespace BeatmapAssetMaker.AssetsChanger
             ColorSpace = reader.ReadInt32();
             int imageDataSize = reader.ReadInt32();
             ImageData = reader.ReadBytes(imageDataSize);
-            reader.AlignToObjectData(4);
+            reader.AlignTo(4);
             StreamData = new StreamingInfo(reader);
         }
         public override void Write(AssetsWriter writer)
         {
             base.WriteBase(writer);
             writer.Write(Name);
-            writer.AlignTo(4);
             writer.Write(ForcedFallbackFormat);
             writer.Write(DownscaleFallback);
             writer.AlignTo(4);
