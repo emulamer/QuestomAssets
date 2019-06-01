@@ -13,10 +13,10 @@ namespace BeatmapAssetMaker.BeatSaber
             byte[] imageBytes;
             using (MemoryStream msCover = new MemoryStream())
             {
-                if (image.Width != width || image.Height != height)
-                {
-                    image = new Bitmap(image, new Size(width, height));
-                }
+                //if (image.Width != width || image.Height != height)
+                //{
+                //    image = new Bitmap(image, new Size(width, height));
+                //}
                 image.Save(msCover, System.Drawing.Imaging.ImageFormat.Bmp);
 
                 imageBytes = new byte[msCover.Length - 54];

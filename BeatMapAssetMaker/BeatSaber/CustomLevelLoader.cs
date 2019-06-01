@@ -11,7 +11,7 @@ namespace BeatmapAssetMaker.BeatSaber
 {
     public class CustomLevelLoader
     {
-        public static BeatmapLevelDataObject LoadSongFromPathToAsset(string songPath, AssetsFile assetsFile)
+        public static BeatmapLevelDataObject LoadSongFromPathToAsset(string songPath, AssetsFile assetsFile, bool includeCovers = true)
         {
             try
             {
@@ -80,10 +80,12 @@ namespace BeatmapAssetMaker.BeatSaber
                     }
                 }
 
-
-                var coverImage = LoadSongCover(songPath, bml, assetsFile);
                 //cover art
+                Texture2DObject coverImage = null;
+                if (includeCovers)
+                    coverImage = LoadSongCover(songPath, bml, assetsFile);
                 bml.CoverImageTexture2D = (coverImage?.ObjectInfo?.ObjectID == null) ? AssetsConstants.KnownObjects.BeatSaberCoverArt : coverImage.ObjectInfo.LocalPtrTo;
+
                 //audio
                 var audioAsset = LoadSongAudioAsset(songPath, bml, assetsFile);
                 if (audioAsset == null)
@@ -114,9 +116,10 @@ namespace BeatmapAssetMaker.BeatSaber
             int channels;
             int frequency;
             Single length;
+            byte[] oggBytes = File.ReadAllBytes(audioClipFile);
             unsafe
             {
-                byte[] oggBytes = File.ReadAllBytes(audioClipFile);
+                
                 GCHandle pinnedArray = GCHandle.Alloc(oggBytes, GCHandleType.Pinned);
                 try
                 {

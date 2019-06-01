@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using BeatmapAssetMaker.AssetsChanger;
-using System.Drawing;
 using BeatmapAssetMaker.BeatSaber;
-using System.Runtime.InteropServices;
 using System.Diagnostics;
+using Emulamer.Utils;
 
 namespace BeatmapAssetMaker
 {
@@ -14,7 +13,7 @@ namespace BeatmapAssetMaker
     {
         static bool IMPORT_COVERS = false;
 
-
+        const string ASSETS_ROOT_PATH = "assets/bin/Data/";
 
 
         /// <summary>
@@ -211,8 +210,78 @@ namespace BeatmapAssetMaker
 
         //}
 
+        static bool Patch(Apkifier apk)
+        {
+            string binaryFile = "lib/armeabi-v7a/libil2cpp.so";
+            if (!apk.FileExists(binaryFile))
+            {
+                Console.WriteLine("Binary file to patch doesn't exist in the APK!");
+                return false;
+            }
+            byte[] binaryBytes = apk.Read(binaryFile);
+            if (binaryBytes.Length != 27041992)
+            {
+                Console.WriteLine("Binary file to patch is the wrong length!");
+                return false;
+            }
+            Console.WriteLine("Patching binary...");
+            using (MemoryStream msBinary = new MemoryStream(binaryBytes))
+            {
+                msBinary.Seek(0x0109D074, SeekOrigin.Begin);
+                byte[] readVals = new byte[4];
+                msBinary.Read(readVals, 0, 4);
+                if (readVals[0] != 0x8B || readVals[1] != 0xD8 || readVals[2] != 0xFE || readVals[3] != 0xEB)
+                {
+                    if (readVals[0] == 0x01 && readVals[1] == 0x00 && readVals[2] == 0xA0 && readVals[3] == 0xE3)
+                    {
+                        Console.WriteLine("It already appears to be patched.");
+                        return true;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Can't patch this binary, the code at the patch location doesn't look familiar...");
+                        return false;
+                    }
+                }
+                msBinary.Seek(0x0109D074, SeekOrigin.Begin);
+                msBinary.Write(new byte[] { 0x01, 0x00, 0xA0, 0xE3 }, 0, 4);
+                msBinary.Seek(0, SeekOrigin.Begin);
+                byte[] binaryOutData = msBinary.ToArray();
+                apk.Write(msBinary, binaryFile, true, true);
+            }
+            Console.WriteLine("Done patching binary!");
+            return true;
+        }
+
+        static MemoryStream ReadCombinedAssets(Apkifier apk, string assetsFilePath)
+        {
+            List<string> assetFiles = new List<string>();
+            if (assetsFilePath.ToLower().EndsWith("split0"))
+            {
+                assetFiles.AddRange(apk.FindFiles(assetsFilePath.Replace(".split0", ".split*"))
+                    .OrderBy(x => Convert.ToInt32(x.Split(new string[] { ".split" }, StringSplitOptions.None).Last())));
+            }
+            else
+            {
+                assetFiles.Add(assetsFilePath);
+            }
+            MemoryStream msFullFile = new MemoryStream();
+            foreach (string assetsFile in assetFiles)
+            {
+                byte[] fileBytes = apk.Read(assetsFile);
+                msFullFile.Write(fileBytes, 0, fileBytes.Length);
+            }
+
+            return msFullFile;
+        }
+
         static void Main(string[] args)
         {
+
+            bool covers = true;
+            bool patch = true;
+
+
 
             //string playlist = @"C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\Playlists\SongBrowserPluginFavorites.json";
             //string customSongsFolder2 = @"C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\CustomSongs";
@@ -244,81 +313,40 @@ namespace BeatmapAssetMaker
 
             try
             {
-                if (args != null && args.Length == 2 && args[0].ToLower() == "--patch")
+
+                if (args == null || args.Length < 2)
                 {
-                    if (!File.Exists(args[1]))
-                    {
-                        Console.WriteLine("Binary file to patch doesn't exist!");
-                        Environment.ExitCode = -1;
-                        return;
-                    }
-                    if (new FileInfo(args[1]).Length != 27041992)
-                    {
-                        Console.WriteLine("Binary file to patch is the wrong length!");
-                        Environment.ExitCode = -1;
-                        return;
-                    }
-                    Console.WriteLine("Patching binary...");
-                    using (var fs = File.Open(args[1], FileMode.Open))
-                    {
-                        fs.Seek(0x0109D074, SeekOrigin.Begin);
-                        byte[] readVals = new byte[4];
-                        fs.Read(readVals, 0, 4);
-                        if (readVals[0] != 0x8B || readVals[1] != 0xD8 || readVals[2] != 0xFE || readVals[3] != 0xEB)
-                        {
-                            if (readVals[0] == 0x01 && readVals[1] == 0x00 && readVals[2] == 0xA0 && readVals[3] == 0xE3)
-                            {
-                                Console.WriteLine("It already appears to be patched.");
-                            }
-                            else
-                            {
-                                Console.WriteLine("Can't patch this binary, the code at the patch location doesn't look familiar...");
-                            }
-                            Environment.ExitCode = -1;
-                            return;
-                        }
-                        fs.Seek(0x0109D074, SeekOrigin.Begin);
-                        fs.Write(new byte[] { 0x01, 0x00, 0xA0, 0xE3 }, 0, 4);
-                    }
-                    Console.WriteLine("Done!");
-                    Environment.ExitCode = 0;
-                    return;
-                }
-                if (args == null || args.Length < 3)
-                {
-                    Console.WriteLine("Usage: BeatmapAssetMaker assetsFolder outputAssetsFolder customSongsFolder [covers] [nomoxie]");
-                    Console.WriteLine("\tassetsFolder: the name/path to where the assets files are. ");
-                    Console.WriteLine("\toutputAssetsFolder: the output folder for the assets ");
+                    Console.WriteLine("Usage: BeatmapAssetMaker apkFile customSongsFolder [nocovers] [nopatch]");
+                    Console.WriteLine("\tapkFile: the path to the APK.");
                     Console.WriteLine("\tcustomSongsFolder: the folder that contains folders of custom songs in the new native beatsaber format, or a folder with a single song that contains an Info.dat file");
-                    Console.WriteLine("\tIf you want covers (they will run slow) then add \"covers\" as the last parameter.  If you don't want the dog pack cover, add \"nomoxie\"");
-                    Console.WriteLine("");
-                    Console.WriteLine("OR");
-                    Console.WriteLine("BeatmapAssetMaker --patch pathToBeatSaberBinary (i.e. libil2spp.so)");
+                    Console.WriteLine("\tIf you want to skip importing covers then add \"nocovers\" at the end.");
+                    Console.WriteLine("\tIf you want to skip patching the binary to allow custom songs, add \"nopatch\" at the end.");
                     return;
                 }
 
-                string inputAssetsFile = args[0];
-                string outputAssetsFolder = args[1];
-                string customSongsFolder = args[2];
+                string apkFile = args[0];
+                string customSongsFolder = args[1];
                 bool moxie = true;
-                if (args.Length > 3)
+                if (args.Length > 2)
                 {
-                    for (int i = 3; i < args.Length; i++)
+                    for (int i = 2; i < args.Length; i++)
                     {
-                        if (args[i].ToLower() == "covers")
-                            IMPORT_COVERS = true;
-                        if (args[i].ToLower() == "nomoxie")
-                            moxie = false;
+                        if (args[i].ToLower() == "nocovers")
+                            covers = false;
+                        if (args[i].ToLower() == "nopatch")
+                            patch = false;
                     }
                 }
 
-                //string inputAssetsFile = @"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\aaoriginalbase\assets\bin\Data\sharedassets17.assets"; ;
-                //string outputAssetsFile = @"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\dist\assets\sharedassets17.assets";
-                //string customSongsFolder = @"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\dist\ToConvert";
-
-                if (!Directory.Exists(outputAssetsFolder))
+                if (!File.Exists(apkFile))
                 {
-                    Console.WriteLine("outputAssetsFile directory doesn't exist!");
+                    Console.WriteLine("apkFile doesn't exist!");
+                    Environment.ExitCode = -1;
+                    return;
+                }
+                if (!Directory.Exists(customSongsFolder))
+                {
+                    Console.WriteLine("customSongsFolder doesn't exist!");
                     Environment.ExitCode = -1;
                     return;
                 }
@@ -344,124 +372,190 @@ namespace BeatmapAssetMaker
                     Environment.ExitCode = -1;
                     return;
                 }
-
-
-
-                string fileName17 = Path.Combine(inputAssetsFile, "sharedassets17.assets");
-                if (!File.Exists(fileName17))
-                    fileName17 += ".split0";
-
-                if (!File.Exists(fileName17))
+                List<Tuple<string, string>> fileFromTo = new List<Tuple<string, string>>();
+                Console.Write("Opening APK...");
+                using (Apkifier apk = new Apkifier(apkFile))
                 {
-                    Console.WriteLine("Couldn't find sharedassets17.assets(.split0) in the assetsFolder.");
-                    Environment.ExitCode = -1;
-                    return;
-                }
+                    Console.WriteLine("..opened!");                   
 
-                string fileName19 = Path.Combine(inputAssetsFile, "sharedassets19.assets");
-                if (!File.Exists(fileName19))
-                    fileName19 += ".split0";
+                    string fileName17 = ASSETS_ROOT_PATH + "sharedassets17.assets";
+                    if (!apk.FileExists(fileName17))
+                        fileName17 += ".split0";
 
-                if (!File.Exists(fileName19))
-                {
-                    Console.WriteLine("Couldn't find sharedassets19.assets(.split0) in the assetsFolder.");
-                    Environment.ExitCode = -1;
-                    return;
-                }
-
-                Dictionary<Guid, Type> scriptHashToTypes = new Dictionary<Guid, Type>();
-                scriptHashToTypes.Add(AssetsConstants.ScriptHash.BeatmapLevelPackScriptHash, typeof(BeatSaber.BeatmapLevelPackObject));
-                scriptHashToTypes.Add(AssetsConstants.ScriptHash.BeatmapLevelCollectionScriptHash, typeof(BeatSaber.BeatmapLevelCollectionObject));
-                scriptHashToTypes.Add(AssetsConstants.ScriptHash.MainLevelsCollectionHash, typeof(BeatSaber.MainLevelPackCollectionObject));
-                scriptHashToTypes.Add(AssetsConstants.ScriptHash.BeatmapDataHash, typeof(BeatmapDataObject));
-                scriptHashToTypes.Add(AssetsConstants.ScriptHash.BeatmapLevelDataHash, typeof(BeatmapLevelDataObject));
-
-
-                AssetsFile assetsFile = new AssetsFile(fileName17, scriptHashToTypes);
-                assetsFile.Write(@"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\arewritecomp\MYsharedassets17.assets");
-                return;
-
-
-
-                var levelCollection = assetsFile.Objects.FirstOrDefault(x => x is BeatmapLevelCollectionObject && ((BeatmapLevelCollectionObject)x).Name == "CustomSongsLevelPackCollection") as BeatmapLevelCollectionObject;
-
-                if (levelCollection == null)
-                {
-                    levelCollection = new BeatmapLevelCollectionObject(assetsFile.Metadata)
-                    { Name = "CustomSongsLevelPackCollection" };
-                    assetsFile.AddObject(levelCollection, true);
-                }
-                int totalSongs = customSongsFolders.Count;
-                Console.WriteLine($"Found {totalSongs} custom song folders to convert...");
-                Stopwatch sw = new Stopwatch();
-                sw.Start();
-                int songCount = 0;
-
-                foreach (var customSongFolder in customSongsFolders)
-                {
-                    songCount++;
-                    if (songCount % 20 == 0)
-                        Console.WriteLine($"{songCount.ToString().PadLeft(5)} of {totalSongs}... (+{(int)sw.Elapsed.TotalSeconds} seconds, {String.Format("{0:n0}", GC.GetTotalMemory(false))} bytes of memory used");
-
-                    try
+                    if (!apk.FileExists(fileName17))
                     {
-                        var level = CustomLevelLoader.LoadSongFromPathToAsset(customSongFolder, assetsFile);
-
-                        if (level == null)
-                            continue;
-
-                        //copy audio file to the output
-                        var oggSrc = Path.Combine(customSongFolder, level.SongFilename);
-                        var clip = assetsFile.Objects.First(x => x.ObjectInfo.ObjectID == level.AudioClip.PathID) as AudioClipObject;
-                        var oggDst = Path.Combine(outputAssetsFolder, clip.Resource.Source);
-                        File.Copy(oggSrc, oggDst, true);
-
-                        levelCollection.BeatmapLevels.Add(level.ObjectInfo.LocalPtrTo);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine("Error injecting {0}: {1}, {2}", customSongFolder, ex.Message, ex.StackTrace);
+                        Console.WriteLine("Couldn't find sharedassets17.assets(.split0) in the APK.");
                         Environment.ExitCode = -1;
                         return;
                     }
-                }
-                var levelPack = assetsFile.Objects.FirstOrDefault(x => x is BeatmapLevelPackObject && ((BeatmapLevelPackObject)x).Name == "CustomSongsLevelPack") as BeatmapLevelPackObject;
-                if (levelPack == null)
-                {
-                    levelPack = new BeatSaber.BeatmapLevelPackObject(assetsFile.Metadata)
+
+                    string fileName19 = ASSETS_ROOT_PATH + "sharedassets19.assets";
+                    if (!apk.FileExists(fileName19))
+                        fileName19 += ".split0";
+
+                    if (!apk.FileExists(fileName19))
                     {
-                        CoverImage = moxie?CustomLevelLoader.LoadPackCover(assetsFile):new PPtr(0, 45),
-                        Enabled = 1,
-                        GameObjectPtr = new PPtr(),
-                        IsPackAlwaysOwned = true,
-                        PackID = "CustomSongs",
-                        Name = "CustomSongsLevelPack",
-                        PackName = "Custom Songs",
-                        BeatmapLevelCollection = levelCollection.ObjectInfo.LocalPtrTo
-                    };
-                    assetsFile.AddObject(levelPack, true);
-                }
-                levelPack.BeatmapLevelCollection = levelCollection.ObjectInfo.LocalPtrTo;
-                AssetsFile file19 = new AssetsFile(fileName19, scriptHashToTypes);
+                        Console.WriteLine("Couldn't find sharedassets19.assets(.split0) in the APK.");
+                        Environment.ExitCode = -1;
+                        return;
+                    }
+
+                    Dictionary<Guid, Type> scriptHashToTypes = new Dictionary<Guid, Type>();
+                    scriptHashToTypes.Add(AssetsConstants.ScriptHash.BeatmapLevelPackScriptHash, typeof(BeatSaber.BeatmapLevelPackObject));
+                    scriptHashToTypes.Add(AssetsConstants.ScriptHash.BeatmapLevelCollectionScriptHash, typeof(BeatSaber.BeatmapLevelCollectionObject));
+                    scriptHashToTypes.Add(AssetsConstants.ScriptHash.MainLevelsCollectionHash, typeof(BeatSaber.MainLevelPackCollectionObject));
+                    scriptHashToTypes.Add(AssetsConstants.ScriptHash.BeatmapDataHash, typeof(BeatmapDataObject));
+                    scriptHashToTypes.Add(AssetsConstants.ScriptHash.BeatmapLevelDataHash, typeof(BeatmapLevelDataObject));
+
+                    AssetsFile assetsFile17;
+                    using (MemoryStream msFile17 = ReadCombinedAssets(apk, fileName17))
+                    {
+                        assetsFile17 = new AssetsFile(msFile17, scriptHashToTypes);
+                    }
+                      
+                    var levelCollection = assetsFile17.Objects.FirstOrDefault(x => x is BeatmapLevelCollectionObject && ((BeatmapLevelCollectionObject)x).Name == "CustomSongsLevelPackCollection") as BeatmapLevelCollectionObject;
+
+                    if (levelCollection == null)
+                    {
+                        levelCollection = new BeatmapLevelCollectionObject(assetsFile17.Metadata)
+                        { Name = "CustomSongsLevelPackCollection" };
+                        assetsFile17.AddObject(levelCollection, true);
+                    }
+                    int totalSongs = customSongsFolders.Count;
+                    Console.WriteLine($"Found {totalSongs} custom song folders to convert...");
+                    Stopwatch sw = new Stopwatch();
+                    sw.Start();
+                    int songCount = 0;
+
+                    foreach (var customSongFolder in customSongsFolders)
+                    {
+                        songCount++;
+                        if (songCount % 20 == 0)
+                            Console.WriteLine($"{songCount.ToString().PadLeft(5)} of {totalSongs}... (+{(int)sw.Elapsed.TotalSeconds} seconds, {String.Format("{0:n0}", GC.GetTotalMemory(false))} bytes of memory used");
+
+                        try
+                        {
+                            var level = CustomLevelLoader.LoadSongFromPathToAsset(customSongFolder, assetsFile17, covers);
+
+                            if (level == null)
+                                continue;
+
+                            //copy audio file to the output
+                            var oggSrc = Path.Combine(customSongFolder, level.SongFilename);
+                            var clip = assetsFile17.Objects.First(x => x.ObjectInfo.ObjectID == level.AudioClip.PathID) as AudioClipObject;
+                            fileFromTo.Add(new Tuple<string, string>(oggSrc, ASSETS_ROOT_PATH + clip.Resource.Source));
+
+                            levelCollection.BeatmapLevels.Add(level.ObjectInfo.LocalPtrTo);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("Error injecting {0}: {1}, {2}", customSongFolder, ex.Message, ex.StackTrace);
+                            Environment.ExitCode = -1;
+                            return;
+                        }
+                    }
+                    Console.WriteLine($"{songCount.ToString().PadLeft(5)} of {totalSongs}... (+{(int)sw.Elapsed.TotalSeconds} seconds, {String.Format("{0:n0}", GC.GetTotalMemory(false))} bytes of memory used");
+                    var levelPack = assetsFile17.Objects.FirstOrDefault(x => x is BeatmapLevelPackObject && ((BeatmapLevelPackObject)x).Name == "CustomSongsLevelPack") as BeatmapLevelPackObject;
+                    if (levelPack == null)
+                    {
+                        levelPack = new BeatSaber.BeatmapLevelPackObject(assetsFile17.Metadata)
+                        {
+                            CoverImage = moxie ? CustomLevelLoader.LoadPackCover(assetsFile17) : new PPtr(0, 45),
+                            Enabled = 1,
+                            GameObjectPtr = new PPtr(),
+                            IsPackAlwaysOwned = true,
+                            PackID = "CustomSongs",
+                            Name = "CustomSongsLevelPack",
+                            PackName = "Custom Songs",
+                            BeatmapLevelCollection = levelCollection.ObjectInfo.LocalPtrTo
+                        };
+                        assetsFile17.AddObject(levelPack, true);
+                    }
+                    levelPack.BeatmapLevelCollection = levelCollection.ObjectInfo.LocalPtrTo;
+                    AssetsFile assetsFile19;
+                    using (MemoryStream msFile19 = ReadCombinedAssets(apk, fileName19))
+                    {
+                        assetsFile19 = new AssetsFile(msFile19, scriptHashToTypes);
+                    }
 
 
-                var extFile = file19.Metadata.ExternalFiles.First(x => x.FileName == "sharedassets17.assets");
-                var fileIndex = file19.Metadata.ExternalFiles.IndexOf(extFile) + 1;
-                var mainLevelPack = file19.Objects.First(x => x is BeatSaber.MainLevelPackCollectionObject) as BeatSaber.MainLevelPackCollectionObject;
-                if (!mainLevelPack.BeatmapLevelPacks.Any(x => x.FileID == fileIndex && x.PathID == levelPack.ObjectInfo.ObjectID))
-                    mainLevelPack.BeatmapLevelPacks.Add(new PPtr(fileIndex, levelPack.ObjectInfo.ObjectID));
+                    var extFile = assetsFile19.Metadata.ExternalFiles.First(x => x.FileName == "sharedassets17.assets");
+                    var fileIndex = assetsFile19.Metadata.ExternalFiles.IndexOf(extFile) + 1;
+                    var mainLevelPack = assetsFile19.Objects.First(x => x is BeatSaber.MainLevelPackCollectionObject) as BeatSaber.MainLevelPackCollectionObject;
+                    if (!mainLevelPack.BeatmapLevelPacks.Any(x => x.FileID == fileIndex && x.PathID == levelPack.ObjectInfo.ObjectID))
+                        mainLevelPack.BeatmapLevelPacks.Add(new PPtr(fileIndex, levelPack.ObjectInfo.ObjectID));
 
-                try
-                {
-                    assetsFile.Write(Path.Combine(outputAssetsFolder, "sharedassets17.assets"));
-                    file19.Write(Path.Combine(outputAssetsFolder, "sharedassets19.assets"));
+                    if (fileName17.EndsWith(".split0"))
+                    {
+                        fileName17 = fileName17.Replace(".split0", "");
+                    }
+                    if (fileName19.EndsWith(".split0"))
+                    {
+                        fileName19 = fileName19.Replace(".split0", "");
+                    }                   
+
+                    try
+                    {
+                        apk.Delete(fileName17+".split*");
+                        apk.Delete(fileName19+".split*");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("Error deleting old assets files: {0} {1}", ex.Message, ex.StackTrace);
+                        Environment.ExitCode = -1;
+                        return;
+                    }
+                    try
+                    {
+
+                        using (MemoryStream msOutputBuffer = new MemoryStream())
+                        {
+                            assetsFile17.Write(msOutputBuffer);
+                            msOutputBuffer.Seek(0, SeekOrigin.Begin);
+                            apk.Write(msOutputBuffer, fileName17, true, true);
+                        }
+
+
+                        using (MemoryStream msOutputBuffer = new MemoryStream())
+                        {
+                            assetsFile19.Write(msOutputBuffer);
+                            msOutputBuffer.Seek(0, SeekOrigin.Begin);
+                            apk.Write(msOutputBuffer, fileName19, true, true);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("Error writing output files: {0} {1}", ex.Message, ex.StackTrace);
+                        Environment.ExitCode = -1;
+                        return;
+                    }
+                    try
+                    {
+                        Console.Write("Adding ogg files...");
+                        foreach (var fromTo in fileFromTo)
+                        {
+                            apk.Write(fromTo.Item1, fromTo.Item2, true, false);
+                        }
+                        Console.WriteLine("..done!");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("Error copying ogg files: {0} {1}", ex.Message, ex.StackTrace);
+                        Environment.ExitCode = -1;
+                        return;
+                    }
+
+                    if (patch)
+                    {
+                        if (!Patch(apk))
+                        {
+                            Environment.ExitCode = -1;
+                            return;
+                        }
+                    }
+                    Console.Write("Closing and signing apk...");
                 }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Error writing output files: {0} {1}", ex.Message, ex.StackTrace);
-                    Environment.ExitCode = -1;
-                    return;
-                }
+                Console.WriteLine("..done!");
             }
             catch (Exception ex)
             {

@@ -17,56 +17,29 @@ namespace BeatmapAssetMaker.AssetsChanger
 
         private Dictionary<Guid, Type> _scriptHashToTypes = new Dictionary<Guid, Type>();
 
-
-
-        public AssetsFile(string fileName, Dictionary<Guid, Type> scriptHashToTypes)
+        public AssetsFile(Stream assetsFileStream, Dictionary<Guid, Type> scriptHashToTypes)
         {
             _scriptHashToTypes = scriptHashToTypes;
             Objects = new List<AssetsObject>();
 
-            using (MemoryStream fullFileStream = new MemoryStream())
+            assetsFileStream.Seek(0, SeekOrigin.Begin);
+
+            using (AssetsReader reader = new AssetsReader(assetsFileStream, false))
             {
-
-                List<string> assetFiles = new List<string>();
-                if (fileName.ToLower().EndsWith("split0"))
+                Header = new AssetsFileHeader(reader);
+            }
+            using (AssetsReader reader = new AssetsReader(assetsFileStream, false))
+            {
+                Metadata = new AssetsMetadata(reader);
+            }
+            assetsFileStream.Seek(Header.ObjectDataOffset, SeekOrigin.Begin);
+            using (AssetsReader reader = new AssetsReader(assetsFileStream))
+            {
+                foreach (var objectInfo in Metadata.ObjectInfos)
                 {
-                    assetFiles.AddRange(Directory.EnumerateFiles(Path.GetDirectoryName(fileName), Path.GetFileNameWithoutExtension(fileName) + ".split*").OrderBy(x => Convert.ToInt32(x.Split(new string[] { ".split" }, StringSplitOptions.None).Last())));
+                    AssetsObject assetsObject = ReadObject(reader, objectInfo);
+                    Objects.Add(assetsObject);
                 }
-                else
-                {
-                    assetFiles.Add(fileName);
-                }
-                foreach (string assetFile in assetFiles)
-                {
-                    using (Stream fileStream = File.OpenRead(assetFile))
-                    {
-                        fileStream.CopyTo(fullFileStream);
-                    }
-                }
-                fullFileStream.Seek(0, SeekOrigin.Begin);
-
-                using (AssetsReader reader = new AssetsReader(fullFileStream, false))
-                {
-                    Header = new AssetsFileHeader(reader);
-                }
-                using (AssetsReader reader = new AssetsReader(fullFileStream, false))
-                {
-                    Metadata = new AssetsMetadata(reader);
-                }
-                fullFileStream.Seek(Header.ObjectDataOffset, SeekOrigin.Begin);
-                using (AssetsReader reader = new AssetsReader(fullFileStream))
-                {
-
-                    //if (reader.BaseStream.Position != Header.ObjectDataOffset)
-                    //   throw new Exception("Object data isn't where the header says it should be!");
-
-                    foreach (var objectInfo in Metadata.ObjectInfos)
-                    {
-                        AssetsObject assetsObject = ReadObject(reader, objectInfo);
-                        Objects.Add(assetsObject);
-                    }
-                }
-                
             }
         }
 
@@ -108,7 +81,7 @@ namespace BeatmapAssetMaker.AssetsChanger
 
 
 
-        public void Write(string fileName)
+        public void Write(Stream outputStream)
         {
             MemoryStream objectsMS = new MemoryStream();
             MemoryStream metaMS = new MemoryStream();
@@ -134,36 +107,30 @@ namespace BeatmapAssetMaker.AssetsChanger
             Header.FileSize = Header.HeaderSize + (int)objectsMS.Length + (int)metaMS.Length;
             Header.ObjectDataOffset = Header.HeaderSize + (int)metaMS.Length;
 
-            int objectPad = 8;
+            int objectPad = 4;
             int diff = (int)(Header.HeaderSize + metaMS.Length) % objectPad;
             if (diff > 0 && diff < objectPad)
             {
                 Header.ObjectDataOffset += diff;
-                Header.FileSize += diff;                
+                Header.FileSize += diff;
             }
 
-            
-            Header.MetadataSize = (int)metaMS.Length ;
+            Header.MetadataSize = (int)metaMS.Length;
             objectsMS.Seek(0, SeekOrigin.Begin);
             metaMS.Seek(0, SeekOrigin.Begin);
-            using (FileStream fs = File.Open(fileName, FileMode.Create))
+
+            using (AssetsWriter writer = new AssetsWriter(outputStream))
             {
-                using (AssetsWriter writer = new AssetsWriter(fs))
-                {
-                    Header.Write(writer);
-                }
-                metaMS.CopyTo(fs);
+                Header.Write(writer);
+            }
+            metaMS.CopyTo(outputStream);
 
-
-                if (diff > 0 && diff < objectPad)
-                {
-                    fs.Write(new byte[diff], 0, diff);
-                }
-                
-
-                objectsMS.CopyTo(fs);
+            if (diff > 0 && diff < objectPad)
+            {
+                outputStream.Write(new byte[diff], 0, diff);
             }
 
+            objectsMS.CopyTo(outputStream);
         }
 
         public long GetNextObjectID()

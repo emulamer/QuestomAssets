@@ -4,3 +4,6 @@
 [submodule "ETCPACK"]
 	path = ETCPACK
 	url = https://github.com/Ericsson/ETCPACK.git
+[submodule "Apkifier"]
+	path = Apkifier
+	url = https://github.com/emulamer/Apkifier.git

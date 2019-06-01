@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Assembly-CSharp", "Assembly
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StbSharp.NETStandard", "StbSharp\StbSharp\StbSharp.NETStandard.csproj", "{99B9057C-3827-444A-8302-959F4CCA277B}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Apkifier", "Apkifier\Apkifier.csproj", "{3D09AC7C-BB50-4632-B3B3-5DA4769E473E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,6 +57,18 @@ Global
 		{99B9057C-3827-444A-8302-959F4CCA277B}.Release|x64.Build.0 = Release|Any CPU
 		{99B9057C-3827-444A-8302-959F4CCA277B}.Release|x86.ActiveCfg = Release|Any CPU
 		{99B9057C-3827-444A-8302-959F4CCA277B}.Release|x86.Build.0 = Release|Any CPU
+		{3D09AC7C-BB50-4632-B3B3-5DA4769E473E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D09AC7C-BB50-4632-B3B3-5DA4769E473E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3D09AC7C-BB50-4632-B3B3-5DA4769E473E}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{3D09AC7C-BB50-4632-B3B3-5DA4769E473E}.Debug|x64.Build.0 = Debug|Any CPU
+		{3D09AC7C-BB50-4632-B3B3-5DA4769E473E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{3D09AC7C-BB50-4632-B3B3-5DA4769E473E}.Debug|x86.Build.0 = Debug|Any CPU
+		{3D09AC7C-BB50-4632-B3B3-5DA4769E473E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3D09AC7C-BB50-4632-B3B3-5DA4769E473E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3D09AC7C-BB50-4632-B3B3-5DA4769E473E}.Release|x64.ActiveCfg = Release|Any CPU
+		{3D09AC7C-BB50-4632-B3B3-5DA4769E473E}.Release|x64.Build.0 = Release|Any CPU
+		{3D09AC7C-BB50-4632-B3B3-5DA4769E473E}.Release|x86.ActiveCfg = Release|Any CPU
+		{3D09AC7C-BB50-4632-B3B3-5DA4769E473E}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
