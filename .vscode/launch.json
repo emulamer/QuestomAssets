@@ -11,7 +11,7 @@
             "request": "launch",
             "preLaunchTask": "build",
             "program": "${workspaceFolder}/BeatmapAssetMaker/bin/Debug/netstandard2/BeatmapAssetMaker.dll",
-            "args": ["C:\\Users\\VR\\Desktop\\platform-tools_r28.0.3-windows\\apk\\base\\assets\\bin\\Data", "C:\\Users\\VR\\Desktop\\platform-tools_r28.0.3-windows\\dist\\assets", "C:\\Users\\VR\\Desktop\\platform-tools_r28.0.3-windows\\dist\\ToConvert"],
+            "args": ["C:\\Users\\VR\\Desktop\\platform-tools_r28.0.3-windows\\base.apk", "C:\\Users\\VR\\Desktop\\platform-tools_r28.0.3-windows\\dist\\ToConvert"],
             "cwd": "${workspaceFolder}",
             "console": "internalConsole",
             "stopAtEntry": false

@@ -6,7 +6,7 @@ using System.IO;
 
 namespace BeatmapAssetMaker.AssetsChanger
 { 
-    public class AssetsHeader
+    public class AssetsFileHeader
     {
         /// <summary>
         /// Return the size of the header which is a constant value
@@ -29,7 +29,7 @@ namespace BeatmapAssetMaker.AssetsChanger
         public bool IsBigEndian { get; set; }
 
 
-        public AssetsHeader(AssetsReader reader)
+        public AssetsFileHeader(AssetsReader reader)
         {
             Parse(reader);
         }
@@ -43,8 +43,6 @@ namespace BeatmapAssetMaker.AssetsChanger
             IsBigEndian = reader.ReadBoolean();
             //padding apparently
             reader.ReadBytes(3);
-            reader.ObjectDataOffset = ObjectDataOffset;
-            reader.MetadataOffset = HeaderSize;
         }
 
         public void Write(AssetsWriter writer)

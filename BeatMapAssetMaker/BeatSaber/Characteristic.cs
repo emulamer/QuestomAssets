@@ -5,7 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-
+namespace BeatmapAssetMaker.BeatSaber
+{
     [JsonConverter(typeof(StringEnumConverter))]
     public enum Characteristic
     {
@@ -13,4 +14,5 @@ using System.Text;
         OneSaber,
         NoArrows
     }
+}
 

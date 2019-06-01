@@ -5,12 +5,12 @@ using System.Text;
 
 namespace BeatmapAssetMaker.AssetsChanger
 {
-    public class AssetsStreamingInfo
+    public class StreamingInfo
     {
-        public AssetsStreamingInfo()
+        public StreamingInfo()
         { }
 
-        public AssetsStreamingInfo(AssetsReader reader)
+        public StreamingInfo(AssetsReader reader)
         {
             Parse(reader);
         }
@@ -20,8 +20,6 @@ namespace BeatmapAssetMaker.AssetsChanger
             offset = reader.ReadUInt32();
             size = reader.ReadUInt32();
             path = reader.ReadString();
-            //maybe?  assuming it needs to be aligned?
-            reader.AlignToObjectData(4);
         }
 
         public void Write(AssetsWriter writer)
@@ -29,7 +27,6 @@ namespace BeatmapAssetMaker.AssetsChanger
             writer.Write(offset);
             writer.Write(size);
             writer.Write(path);
-            writer.AlignTo(4);
         }
         public UInt32 offset { get; set; }
         public UInt32 size { get; set; }

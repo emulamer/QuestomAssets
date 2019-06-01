@@ -5,16 +5,16 @@ using System.Text;
 
 namespace BeatmapAssetMaker.AssetsChanger
 {
-    public class AssetsStreamedResource
+    public class StreamedResource
     {
-        public AssetsStreamedResource(string source, UInt64 offset, UInt64 size)
+        public StreamedResource(string source, UInt64 offset, UInt64 size)
         {
             Source = source;
             Offset = offset;
             Size = size;
         }
 
-        public AssetsStreamedResource(AssetsReader reader)
+        public StreamedResource(AssetsReader reader)
         {
             Parse(reader);
         }
@@ -22,7 +22,6 @@ namespace BeatmapAssetMaker.AssetsChanger
         private void Parse(AssetsReader reader)
         {
             Source = reader.ReadString();
-            reader.AlignToObjectData(4);
             Offset = reader.ReadUInt64();
             Size = reader.ReadUInt64();
         }
@@ -30,7 +29,6 @@ namespace BeatmapAssetMaker.AssetsChanger
         public void Write(AssetsWriter writer)
         {
             writer.Write(Source);
-            writer.AlignTo(4);
             writer.Write(Offset);
             writer.Write(Size);
         }

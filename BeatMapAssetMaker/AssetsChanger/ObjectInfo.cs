@@ -6,24 +6,23 @@ using System.Text;
 
 namespace BeatmapAssetMaker.AssetsChanger
 {
-    public class AssetsObjectInfo
+    public class ObjectInfo
     {
         public Int64 ObjectID { get; set; }
         public Int32 DataOffset { get; set; }
         public Int32 DataSize { get; set; }
         public Int32 TypeIndex { get; set; }
 
-        public AssetsObjectInfo()
+        public ObjectInfo()
         { }
 
-        public AssetsObjectInfo(AssetsReader reader)
+        public ObjectInfo(AssetsReader reader)
         {
             Parse(reader);
         }
 
         private void Parse(AssetsReader reader)
         {
-            reader.AlignToMetadata(4);
             ObjectID = reader.ReadInt64();
             DataOffset = reader.ReadInt32();
             DataSize = reader.ReadInt32();
@@ -32,18 +31,17 @@ namespace BeatmapAssetMaker.AssetsChanger
 
         public void Write(AssetsWriter writer)
         {
-            writer.AlignTo(4);
             writer.Write(ObjectID);
             writer.Write(DataOffset);
             writer.Write(DataSize);
             writer.Write(TypeIndex);
         }
 
-        public AssetsPtr LocalPtrTo
+        public PPtr LocalPtrTo
         {
             get
             {
-                return new AssetsPtr(0, ObjectID);
+                return new PPtr(0, ObjectID);
             }
         }
     }

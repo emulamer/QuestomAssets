@@ -5,12 +5,12 @@ using System.Text;
 
 namespace BeatmapAssetMaker.AssetsChanger
 {
-    public class AssetsGLTextureSettings
+    public class GLTextureSettings
     {
-        public AssetsGLTextureSettings()
+        public GLTextureSettings()
         { }
 
-        public AssetsGLTextureSettings(AssetsReader reader)
+        public GLTextureSettings(AssetsReader reader)
         {
             Parse(reader);
         }

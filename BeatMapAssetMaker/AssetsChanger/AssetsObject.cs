@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -8,25 +9,62 @@ namespace BeatmapAssetMaker.AssetsChanger
 {
     public class AssetsObject
     {
+        [JsonIgnore]
         public virtual byte[] Data { get; set; }
 
-        public AssetsObjectInfo ObjectInfo { get; set; }
+        [JsonIgnore]
+        public ObjectInfo ObjectInfo { get; set; }
 
-        public AssetsObject(AssetsObjectInfo objectInfo)
+        public AssetsObject()
+        { }
+
+        protected void UpdateType(AssetsMetadata metadata, Guid scriptHash)
+        {
+            ObjectInfo = new ObjectInfo()
+            {
+                TypeIndex = metadata.GetTypeIndexFromScriptHash(scriptHash)
+            };
+        }
+
+        public AssetsObject(AssetsMetadata metadata, int classID)
+        {
+            ObjectInfo = new ObjectInfo()
+            {
+                TypeIndex = metadata.Types.IndexOf(metadata.Types.First(x => x.ClassID == classID))
+            };
+        }
+            
+
+        public AssetsObject(AssetsMetadata metadata, Guid scriptHash)
+        {
+            UpdateType(metadata, scriptHash);
+        }
+
+        public AssetsObject(ObjectInfo objectInfo)
         {
             ObjectInfo = objectInfo;
         }
 
-        public AssetsObject(AssetsObjectInfo objectInfo, AssetsReader reader)
+        public AssetsObject(ObjectInfo objectInfo, AssetsReader reader)
         {
             ObjectInfo = objectInfo;
             Parse(reader);
+            ParseDetails(reader);
         }
 
         protected virtual void Parse(AssetsReader reader)
         {
-            reader.SeekObjectData(ObjectInfo.DataOffset);
+            reader.Seek(ObjectInfo.DataOffset);
+        }
+
+        private void ParseDetails(AssetsReader reader)
+        {
             Data = reader.ReadBytes(ObjectInfo.DataSize);
+        }
+        
+        protected virtual void WriteBase(AssetsWriter writer)
+        {
+
         }
 
         public virtual void Write(AssetsWriter writer)
@@ -45,8 +83,5 @@ namespace BeatmapAssetMaker.AssetsChanger
                 return (int)ms.Length;
             }
         }
-
-
-        
     }
 }

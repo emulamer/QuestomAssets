@@ -8,14 +8,12 @@ namespace BeatmapAssetMaker.AssetsChanger
 {
     public class AssetsType
     {
-        
-
         public Int32 ClassID { get; set; }
         public SByte Unknown1 { get; set; }
         public Int16 Unknown2 { get; set; }
         public bool IsScriptType
         {
-            get { return ClassID == AssetsConstants.MonoBehaviourScriptType; }
+            get { return ClassID == AssetsConstants.ClassID.MonoBehaviourScriptType; }
         }
         private Guid _scriptHash;
         public Guid ScriptHash

@@ -8,10 +8,12 @@ namespace BeatmapAssetMaker.AssetsChanger
 {
     public class AssetsWriter : BinaryWriter
     {
-        //public int MetadataStartOffset { get; set; }
-       // public int ObjectDataOffset { get; set; }
+        private int _startPosition = 0;
+
         public AssetsWriter(Stream s) : base(s, UTF8Encoding.UTF8, true)
-        { }
+        {
+            _startPosition = (int)s.Position;
+        }
 
         public void AlignTo(int bytes)
         {
@@ -43,6 +45,32 @@ namespace BeatmapAssetMaker.AssetsChanger
                 byte[] bytes = System.Text.Encoding.UTF8.GetBytes(value);
                 Write(bytes);
             }
+            AlignTo(4);
+        }
+
+        public override void Write(Int32 value)
+        {
+            base.Write(value);
+        }
+
+        public override void Write(float value)
+        {
+            base.Write(value);
+        }
+
+        public override void Write(uint value)
+        {
+            base.Write(value);
+        }
+
+        public override void Write(ulong value)
+        {
+            base.Write(value);
+        }
+
+        public override void Write(long value)
+        {
+            base.Write(value);
         }
         public void Write(Guid value)
         {
@@ -66,19 +94,24 @@ namespace BeatmapAssetMaker.AssetsChanger
             Array.Reverse(bytes);
             Write(bytes);
         }
-
-        //public void SeekObjectData(int offset)
-        //{
-        //    BaseStream.Seek(ObjectDataOffset + offset, SeekOrigin.Begin);
-        //}
-
+        public void WriteArray(byte[] bytes)
+        {
+            Write(bytes.Length);
+            Write(bytes);
+        }
         public int Position
         {
             get
             {
                 Flush();
-                return (int)BaseStream.Position;
+                return (int)BaseStream.Position - _startPosition;
             }
         }
+
+        public override long Seek(int offset, SeekOrigin origin)
+        {
+            return base.Seek(offset - _startPosition, origin);
+        }
+
     }
 }
