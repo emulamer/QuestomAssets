@@ -38,12 +38,13 @@ namespace BeatmapAssetMaker.AssetsChanger
 
         public Guid TypeHash { get; set; }
 
+        public TypeTree TypeTree { get; set; }
+
+        private bool _hasTypetrees = false;
+
         public AssetsType(AssetsReader reader, bool hasTypeTrees = false)
         {
-            if (hasTypeTrees == true)
-                throw new NotImplementedException("Type Trees aren't supported!");
-
-            Parse(reader);
+            Parse(reader, hasTypeTrees);
         }
 
         public void Write(AssetsWriter writer)
@@ -56,10 +57,13 @@ namespace BeatmapAssetMaker.AssetsChanger
                 writer.Write(ScriptHash);                
             }
             writer.Write(TypeHash);
+
+            if (TypeTree != null)
+                TypeTree.Write(writer);
                 
         }       
 
-        private void Parse(AssetsReader reader)
+        private void Parse(AssetsReader reader, bool hasTypeTree)
         {
             ClassID = reader.ReadInt32();
             Unknown1 = reader.ReadSByte();
@@ -69,12 +73,89 @@ namespace BeatmapAssetMaker.AssetsChanger
                 ScriptHash = reader.ReadGuid();
             }
             TypeHash = reader.ReadGuid();
-            //type trees would go here
+            if (hasTypeTree)
+            {
+                TypeTree = new TypeTree(reader);
+            }
+        }
+    }
+
+    /// <summary>
+    /// I'll make it a tree later if I need to
+    /// </summary>
+    public class TypeTree
+    {
+        public List<TypeTreeEntry> Entries { get; } = new List<TypeTreeEntry>();
+
+        public TypeTree(AssetsReader reader)
+        {
+            Parse(reader);
         }
 
-       
+        private void Parse(AssetsReader reader)
+        {
+            int numTreeNodes = reader.ReadInt32();
+            int stringBufferSize = reader.ReadInt32();
+            for (int i = 0; i < numTreeNodes; i++)
+            {
+                Entries.Add(new TypeTreeEntry(reader));
+            }
+            StringBuffer = new String(reader.ReadChars(stringBufferSize));
+        }
 
+        public void Write(AssetsWriter writer)
+        {
+            writer.Write(Entries.Count());
+            writer.Write(StringBuffer.Length);
+            foreach (var entry in Entries)
+            {
+                entry.Write(writer);
+            }
+            writer.WriteChars(StringBuffer);
+        }
+
+        public string StringBuffer { get; set; }
+        public class TypeTreeEntry
+        {
+            public Int16 Version { get; set; }
+            public SByte Depth { get; set; }
+            public bool IsArray { get; set; }
+            public int TypeOffset { get; set; }
+            public int NameOffset { get; set; }
+            public int Size { get; set; }
+            public int Index { get; set; }
+            public int Flags { get; set; }
+            public TypeTreeEntry(AssetsReader reader)
+            {
+                Parse(reader);
+            }
+
+            private void Parse(AssetsReader reader)
+            {
+                Version = reader.ReadInt16();
+                Depth = reader.ReadSByte();
+                IsArray = reader.ReadBoolean();
+                TypeOffset = reader.ReadInt32();
+                NameOffset = reader.ReadInt32();
+                Size = reader.ReadInt32();
+                Index = reader.ReadInt32();
+                Flags = reader.ReadInt32();
+            }
+
+            public void Write(AssetsWriter writer)
+            {
+                writer.Write(Version);
+                writer.Write(Depth);
+                writer.Write(IsArray);
+                writer.Write(TypeOffset);
+                writer.Write(NameOffset);
+                writer.Write(Size);
+                writer.Write(Index);
+                writer.Write(Flags);
+            }
+        }
     }
+    
 
     
 

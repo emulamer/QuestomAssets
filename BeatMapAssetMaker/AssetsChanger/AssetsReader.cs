@@ -49,6 +49,34 @@ namespace BeatmapAssetMaker.AssetsChanger
             return BitConverter.ToInt32(bytes, 0);
         }
 
+        public UInt32 ReadBEUInt32()
+        {
+            var bytes = ReadBytes(4);
+            Array.Reverse(bytes);
+            return BitConverter.ToUInt32(bytes, 0);
+        }
+
+        public Int64 ReadBEInt64()
+        {
+            var bytes = ReadBytes(8);
+            Array.Reverse(bytes);
+            return BitConverter.ToInt64(bytes, 0);
+        }
+
+        public Int16 ReadBEInt16()
+        {
+            var bytes = ReadBytes(2);
+            Array.Reverse(bytes);
+            return BitConverter.ToInt16(bytes, 0);
+        }
+
+        public UInt16 ReadBEUInt16()
+        {
+            var bytes = ReadBytes(2);
+            Array.Reverse(bytes);
+            return BitConverter.ToUInt16(bytes, 0);
+        }
+
         //public void SeekObjectData(int offset)
         //{
         //    BaseStream.Seek(ObjectDataOffset + offset, SeekOrigin.Begin);
@@ -78,15 +106,14 @@ namespace BeatmapAssetMaker.AssetsChanger
         {
             int length = ReadInt32();
             byte[] stringBytes = ReadBytes(length);
-            AlignTo(4);
+            if (_align)
+                AlignTo(4);
             return System.Text.Encoding.UTF8.GetString(stringBytes);            
         }
 
 
         public override int ReadInt32()
         {
-            //if (_align)
-            //    AlignTo(4);
             return base.ReadInt32();
         }
 

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28010.2046
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28922.388
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BeatmapAssetMaker", "BeatMapAssetMaker\BeatmapAssetMaker.csproj", "{9FCD4D5E-8E64-49C5-A90A-0D17DD98C8A3}"
 EndProject
@@ -10,6 +10,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StbSharp.NETStandard", "StbSharp\StbSharp\StbSharp.NETStandard.csproj", "{99B9057C-3827-444A-8302-959F4CCA277B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Apkifier", "Apkifier\Apkifier.csproj", "{3D09AC7C-BB50-4632-B3B3-5DA4769E473E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuestomAssets", "QuestomAssets\QuestomAssets.csproj", "{DDA3F1E8-AD66-4ECD-920D-38A2D619E1C9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -69,6 +71,18 @@ Global
 		{3D09AC7C-BB50-4632-B3B3-5DA4769E473E}.Release|x64.Build.0 = Release|Any CPU
 		{3D09AC7C-BB50-4632-B3B3-5DA4769E473E}.Release|x86.ActiveCfg = Release|Any CPU
 		{3D09AC7C-BB50-4632-B3B3-5DA4769E473E}.Release|x86.Build.0 = Release|Any CPU
+		{DDA3F1E8-AD66-4ECD-920D-38A2D619E1C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DDA3F1E8-AD66-4ECD-920D-38A2D619E1C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DDA3F1E8-AD66-4ECD-920D-38A2D619E1C9}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{DDA3F1E8-AD66-4ECD-920D-38A2D619E1C9}.Debug|x64.Build.0 = Debug|Any CPU
+		{DDA3F1E8-AD66-4ECD-920D-38A2D619E1C9}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{DDA3F1E8-AD66-4ECD-920D-38A2D619E1C9}.Debug|x86.Build.0 = Debug|Any CPU
+		{DDA3F1E8-AD66-4ECD-920D-38A2D619E1C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DDA3F1E8-AD66-4ECD-920D-38A2D619E1C9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DDA3F1E8-AD66-4ECD-920D-38A2D619E1C9}.Release|x64.ActiveCfg = Release|Any CPU
+		{DDA3F1E8-AD66-4ECD-920D-38A2D619E1C9}.Release|x64.Build.0 = Release|Any CPU
+		{DDA3F1E8-AD66-4ECD-920D-38A2D619E1C9}.Release|x86.ActiveCfg = Release|Any CPU
+		{DDA3F1E8-AD66-4ECD-920D-38A2D619E1C9}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

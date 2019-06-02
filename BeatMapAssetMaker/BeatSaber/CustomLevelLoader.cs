@@ -6,6 +6,7 @@ using System.Drawing;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Linq;
 
 namespace BeatmapAssetMaker.BeatSaber
 {
@@ -29,6 +30,26 @@ namespace BeatmapAssetMaker.BeatSaber
                 }
 
                 bml.Name = $"{bml.LevelID}Level";
+                if (assetsFile.Objects.Any(x=> x is BeatmapLevelDataObject && ((BeatmapLevelDataObject)x).LevelID == bml.LevelID))
+                {
+                    Console.WriteLine($"Level ID {bml.LevelID} is already in the assets, skipping it.");
+                    return null;
+                }
+
+                //cover art
+                Texture2DObject coverImage = null;
+                if (includeCovers)
+                {
+                    coverImage = LoadSongCover(songPath, bml, assetsFile);
+                }
+
+                //audio
+                var audioAsset = LoadSongAudioAsset(songPath, bml, assetsFile);
+                if (audioAsset == null)
+                {
+                    Console.WriteLine("ERROR: failed to get audio for song at path {0}", songPath);
+                    return null;
+                }
 
                 foreach (var d in bml.DifficultyBeatmapSets)
                 {
@@ -44,14 +65,15 @@ namespace BeatmapAssetMaker.BeatSaber
                             d.BeatmapCharacteristic = AssetsConstants.KnownObjects.StandardCharacteristic;
                             break;
                     }
+                    List<DifficultyBeatmap> toRemove = new List<DifficultyBeatmap>();
                     foreach (var dm in d.DifficultyBeatmaps)
                     {
                         var dataFile = Path.Combine(songPath, $"{dm.Difficulty.ToString()}.dat");
                         if (!File.Exists(dataFile))
                         {
-                            //oh no!
-                            Console.WriteLine(dataFile + " is missing, skipping song");
-                            return null;
+                            Console.WriteLine(dataFile + " is missing, skipping this difficulty");
+                            toRemove.Add(dm);
+                            continue;
                         }
                         string jsonData;
                         using (var sr = new StreamReader(dataFile))
@@ -78,22 +100,23 @@ namespace BeatmapAssetMaker.BeatSaber
                         assetsFile.AddObject(dm.BeatmapData, true);
                         dm.BeatmapDataPtr = dm.BeatmapData.ObjectInfo.LocalPtrTo;                        
                     }
+                    toRemove.ForEach(x=>d.DifficultyBeatmaps.Remove(x));
+                    if (d.DifficultyBeatmaps.Count < 1)
+                    {
+                        Console.WriteLine($"Song at path {songPath} has no valid beatmaps for any difficulty, skipping song");
+                        return null;
+                    }
                 }
 
-                //cover art
-                Texture2DObject coverImage = null;
-                if (includeCovers)
-                    coverImage = LoadSongCover(songPath, bml, assetsFile);
-                bml.CoverImageTexture2D = (coverImage?.ObjectInfo?.ObjectID == null) ? AssetsConstants.KnownObjects.BeatSaberCoverArt : coverImage.ObjectInfo.LocalPtrTo;
 
-                //audio
-                var audioAsset = LoadSongAudioAsset(songPath, bml, assetsFile);
-                if (audioAsset == null)
+                assetsFile.AddObject(audioAsset, true);
+                if (coverImage != null)
                 {
-                    Console.WriteLine("ERROR: failed to get audio for song at path {0}", songPath);
-                    return null;
+                    assetsFile.AddObject(coverImage);
                 }
+
                 bml.AudioClip = audioAsset.ObjectInfo.LocalPtrTo;
+                bml.CoverImageTexture2D = (coverImage?.ObjectInfo?.ObjectID == null) ? AssetsConstants.KnownObjects.BeatSaberCoverArt : coverImage.ObjectInfo.LocalPtrTo;
 
                 //default environment for now
                 bml.EnvironmentSceneInfo = AssetsConstants.KnownObjects.DefaultEnvironment;
@@ -159,7 +182,6 @@ namespace BeatmapAssetMaker.BeatSaber
                 Length = (Single)length,
                 Resource = new StreamedResource(outputFileName, 0, Convert.ToUInt64(new FileInfo(audioClipFile).Length))
             };
-            assetsFile.AddObject(audioClip, true);
             return audioClip;
         }
 
@@ -171,7 +193,8 @@ namespace BeatmapAssetMaker.BeatSaber
                 {
                     string coverFile = Path.Combine(songPath, levelData.CoverImageFilename);
                     Bitmap coverImage = (Bitmap)Bitmap.FromFile(coverFile);
-                    var imageBytes = ImageUtils.LoadToRGBAndSize(coverImage, 256, 256);
+                    int mips;
+                    var imageBytes = ImageUtils.LoadToRGBAndMipmap(coverImage, 256, 256, 6, out mips);
 
                     var coverAsset = new Texture2DObject(assetsFile.Metadata)
                     {
@@ -182,7 +205,7 @@ namespace BeatmapAssetMaker.BeatSaber
                         Height = coverImage.Height,
                         CompleteImageSize = imageBytes.Length,
                         TextureFormat = 3,
-                        MipCount = 1,
+                        MipCount = mips,
                         IsReadable = false,
                         StreamingMipmaps = false,
                         StreamingMipmapsPriority = 0,
@@ -207,7 +230,6 @@ namespace BeatmapAssetMaker.BeatSaber
                             path = ""
                         }
                     };
-                    assetsFile.AddObject(coverAsset, true);
                     return coverAsset;
                 }
                 catch (Exception ex)

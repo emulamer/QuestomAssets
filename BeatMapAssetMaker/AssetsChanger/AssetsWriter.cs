@@ -99,6 +99,12 @@ namespace BeatmapAssetMaker.AssetsChanger
             Write(bytes.Length);
             Write(bytes);
         }
+
+        public void WriteChars(string chars)
+        {
+            base.Write(System.Text.Encoding.UTF8.GetBytes(chars));
+        }
+
         public int Position
         {
             get

@@ -79,8 +79,6 @@ namespace BeatmapAssetMaker.AssetsChanger
             return assetsObject;
         }
 
-
-
         public void Write(Stream outputStream)
         {
             MemoryStream objectsMS = new MemoryStream();
@@ -107,9 +105,22 @@ namespace BeatmapAssetMaker.AssetsChanger
             Header.FileSize = Header.HeaderSize + (int)objectsMS.Length + (int)metaMS.Length;
             Header.ObjectDataOffset = Header.HeaderSize + (int)metaMS.Length;
 
-            int objectPad = 4;
-            int diff = (int)(Header.HeaderSize + metaMS.Length) % objectPad;
-            if (diff > 0 && diff < objectPad)
+            int diff = 0;
+            int alignment = 16; //or 32, I don't know which
+            //data has to be at least 4096 inward from the start of the file
+            if (Header.ObjectDataOffset < 4096)
+            {
+                diff = 4096 - Header.ObjectDataOffset;
+            }
+            else
+            {
+                diff = alignment - (Header.ObjectDataOffset % alignment);
+                if (diff == alignment)
+                    diff = 0;
+            }
+            
+
+            if (diff > 0)
             {
                 Header.ObjectDataOffset += diff;
                 Header.FileSize += diff;
@@ -119,13 +130,16 @@ namespace BeatmapAssetMaker.AssetsChanger
             objectsMS.Seek(0, SeekOrigin.Begin);
             metaMS.Seek(0, SeekOrigin.Begin);
 
+            
+
             using (AssetsWriter writer = new AssetsWriter(outputStream))
             {
                 Header.Write(writer);
             }
             metaMS.CopyTo(outputStream);
+            
 
-            if (diff > 0 && diff < objectPad)
+            if (diff > 0)
             {
                 outputStream.Write(new byte[diff], 0, diff);
             }
