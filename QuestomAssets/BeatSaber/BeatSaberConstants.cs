@@ -57,5 +57,14 @@ namespace QuestomAssets.BeatSaber
             scriptHashToTypes.Add(ScriptHash.BeatmapLevelDataHash, typeof(BeatmapLevelDataObject));
             return scriptHashToTypes;
         }
+
+        public static List<string> KnownLevelPackNames { get; } = new List<string>() {
+            "OstVol1LevelPack",
+            "OstVol2LevelPack",
+            "ExtrasLevelPack",
+            "MonstercatPreviewBeatmapLevelPack"
+        };
+
+
     }
 }

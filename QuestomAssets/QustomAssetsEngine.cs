@@ -28,7 +28,8 @@ namespace QuestomAssets
         {
             if (_openAssetsFiles.ContainsKey(assetsFilename))
                 return _openAssetsFiles[assetsFilename];
-            AssetsFile assetsFile = new AssetsFile(_apk.Read(assetsFilename).ToStream(), BeatSaberConstants.GetAssetTypeMap());
+            var realFileName = _apk.FindFirstOfSplit(assetsFilename);
+            AssetsFile assetsFile = new AssetsFile(_apk.Read(realFileName).ToStream(), BeatSaberConstants.GetAssetTypeMap());
             _openAssetsFiles.Add(assetsFilename, assetsFile);
             return assetsFile;
         }
@@ -49,6 +50,9 @@ namespace QuestomAssets
                     Log.LogErr($"Level pack with path ID {packPtr} was not found in {BeatSaberConstants.KnownFiles.SongsAssetsFilename}!");
                     continue;
                 }
+                //don't include stock packs in this
+                if (BeatSaberConstants.KnownLevelPackNames.Contains(pack.Name))
+                    continue;
                 //TODO: cover art, ETC pack and all that
                 var packModel = new BeatSaberPlaylist() { PlaylistName = pack.PackName, PlaylistID = pack.Name, LevelPackPathID = pack.ObjectInfo.ObjectID };
                 //TODO: check file ref?
@@ -81,10 +85,17 @@ namespace QuestomAssets
                     };
                     //TODO: cover art here, easier but still a hassle
 
+                    packModel.SongList.Add(songModel);
                 }
 
+                config.Playlists.Add(packModel);
             }
+            return config;
+        }
 
+        public void UpdateConfig(BeatSaberQustomConfig config)
+        {
+            throw new NotImplementedException();
         }
 
 

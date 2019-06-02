@@ -11,7 +11,7 @@ namespace QuestomAssets.BeatSaber
 {
     public sealed class BeatmapLevelCollectionObject : MonoBehaviourObject, INeedAssetsMetadata
     {
-        public BeatmapLevelCollectionObject(AssetsMetadata metadata) : base(metadata, AssetsConstants.ScriptHash.BeatmapLevelCollectionScriptHash, AssetsConstants.ScriptPtr.BeatmapLevelCollectionScriptPtr)
+        public BeatmapLevelCollectionObject(AssetsMetadata metadata) : base(metadata, BeatSaberConstants.ScriptHash.BeatmapLevelCollectionScriptHash, BeatSaberConstants.ScriptPtr.BeatmapLevelCollectionScriptPtr)
         { }
 
         public BeatmapLevelCollectionObject(ObjectInfo objectInfo, AssetsReader reader) : base(objectInfo)
@@ -21,7 +21,7 @@ namespace QuestomAssets.BeatSaber
 
         public void UpdateTypes(AssetsMetadata metadata)
         {
-            base.UpdateType(metadata, AssetsConstants.ScriptHash.BeatmapLevelCollectionScriptHash, AssetsConstants.ScriptPtr.BeatmapLevelCollectionScriptPtr);
+            base.UpdateType(metadata, BeatSaberConstants.ScriptHash.BeatmapLevelCollectionScriptHash, BeatSaberConstants.ScriptPtr.BeatmapLevelCollectionScriptPtr);
         }
 
         public List<PPtr> BeatmapLevels { get; set; } = new List<PPtr>();

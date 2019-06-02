@@ -10,7 +10,7 @@ namespace QuestomAssets.BeatSaber
 {
     public sealed class BeatmapLevelPackObject : MonoBehaviourObject, INeedAssetsMetadata
     {
-        public BeatmapLevelPackObject(AssetsMetadata metadata) : base(metadata, AssetsConstants.ScriptHash.BeatmapLevelPackScriptHash, AssetsConstants.ScriptPtr.BeatmapLevelPackScriptPtr)
+        public BeatmapLevelPackObject(AssetsMetadata metadata) : base(metadata, BeatSaberConstants.ScriptHash.BeatmapLevelPackScriptHash, BeatSaberConstants.ScriptPtr.BeatmapLevelPackScriptPtr)
         { }
 
         public BeatmapLevelPackObject(ObjectInfo objectInfo, AssetsReader reader) : base(objectInfo)
@@ -22,7 +22,7 @@ namespace QuestomAssets.BeatSaber
 
         public void UpdateTypes(AssetsMetadata metadata)
         {
-            base.UpdateType(metadata, AssetsConstants.ScriptHash.BeatmapLevelPackScriptHash, AssetsConstants.ScriptPtr.BeatmapLevelPackScriptPtr);
+            base.UpdateType(metadata, BeatSaberConstants.ScriptHash.BeatmapLevelPackScriptHash, BeatSaberConstants.ScriptPtr.BeatmapLevelPackScriptPtr);
         }
 
         public string PackID { get; set; }

@@ -57,13 +57,13 @@ namespace QuestomAssets.BeatSaber
                     switch (d.BeatmapCharacteristicName)
                     {
                         case Characteristic.OneSaber:
-                            d.BeatmapCharacteristic = AssetsConstants.KnownObjects.OneSaberCharacteristic;
+                            d.BeatmapCharacteristic = BeatSaberConstants.KnownObjects.OneSaberCharacteristic;
                             break;
                         case Characteristic.NoArrows:
-                            d.BeatmapCharacteristic = AssetsConstants.KnownObjects.NoArrowsCharacteristic;
+                            d.BeatmapCharacteristic = BeatSaberConstants.KnownObjects.NoArrowsCharacteristic;
                             break;
                         case Characteristic.Standard:
-                            d.BeatmapCharacteristic = AssetsConstants.KnownObjects.StandardCharacteristic;
+                            d.BeatmapCharacteristic = BeatSaberConstants.KnownObjects.StandardCharacteristic;
                             break;
                     }
                     List<DifficultyBeatmap> toRemove = new List<DifficultyBeatmap>();
@@ -117,10 +117,10 @@ namespace QuestomAssets.BeatSaber
                 }
 
                 bml.AudioClip = audioAsset.ObjectInfo.LocalPtrTo;
-                bml.CoverImageTexture2D = (coverImage?.ObjectInfo?.ObjectID == null) ? AssetsConstants.KnownObjects.BeatSaberCoverArt : coverImage.ObjectInfo.LocalPtrTo;
+                bml.CoverImageTexture2D = (coverImage?.ObjectInfo?.ObjectID == null) ? BeatSaberConstants.KnownObjects.BeatSaberCoverArt : coverImage.ObjectInfo.LocalPtrTo;
 
                 //default environment for now
-                bml.EnvironmentSceneInfo = AssetsConstants.KnownObjects.DefaultEnvironment;
+                bml.EnvironmentSceneInfo = BeatSaberConstants.KnownObjects.DefaultEnvironment;
 
                 assetsFile.AddObject(bml, true);
                 

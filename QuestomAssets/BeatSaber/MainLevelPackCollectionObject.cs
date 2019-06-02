@@ -18,12 +18,12 @@ namespace QuestomAssets.BeatSaber
         public MainLevelPackCollectionObject(ObjectInfo objectInfo) : base(objectInfo)
         { }
 
-        public MainLevelPackCollectionObject(AssetsMetadata metadata) : base(metadata, AssetsConstants.ScriptHash.MainLevelsCollectionHash, AssetsConstants.ScriptPtr.MainLevelsCollectionScriptPtr)
+        public MainLevelPackCollectionObject(AssetsMetadata metadata) : base(metadata, BeatSaberConstants.ScriptHash.MainLevelsCollectionHash, BeatSaberConstants.ScriptPtr.MainLevelsCollectionScriptPtr)
         { }
 
         public void UpdateTypes(AssetsMetadata metadata)
         {
-            base.UpdateType(metadata, AssetsConstants.ScriptHash.MainLevelsCollectionHash, AssetsConstants.ScriptPtr.MainLevelsCollectionScriptPtr);
+            base.UpdateType(metadata, BeatSaberConstants.ScriptHash.MainLevelsCollectionHash, BeatSaberConstants.ScriptPtr.MainLevelsCollectionScriptPtr);
         }
 
         public List<PPtr> BeatmapLevelPacks { get; set; } = new List<PPtr>();

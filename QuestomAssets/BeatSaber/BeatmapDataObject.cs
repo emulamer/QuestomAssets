@@ -20,12 +20,12 @@ namespace QuestomAssets.BeatSaber
         public BeatmapDataObject(ObjectInfo objectInfo) : base(objectInfo)
         { }
 
-        public BeatmapDataObject(AssetsMetadata metadata) : base(metadata, AssetsConstants.ScriptHash.BeatmapDataHash, AssetsConstants.ScriptPtr.BeatmapDataScriptPtr)
+        public BeatmapDataObject(AssetsMetadata metadata) : base(metadata, BeatSaberConstants.ScriptHash.BeatmapDataHash, BeatSaberConstants.ScriptPtr.BeatmapDataScriptPtr)
         { }
 
         public void UpdateTypes(AssetsMetadata metadata)
         {
-            base.UpdateType(metadata, AssetsConstants.ScriptHash.BeatmapDataHash, AssetsConstants.ScriptPtr.BeatmapDataScriptPtr);
+            base.UpdateType(metadata, BeatSaberConstants.ScriptHash.BeatmapDataHash, BeatSaberConstants.ScriptPtr.BeatmapDataScriptPtr);
         }
         public BeatmapDataObject()
         {  }

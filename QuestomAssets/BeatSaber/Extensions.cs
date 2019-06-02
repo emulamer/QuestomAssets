@@ -11,16 +11,21 @@ namespace QuestomAssets.BeatSaber
         {
             int lastDot = assetsFile.LastIndexOf('.');
             string afterDot = assetsFile.Substring(lastDot, assetsFile.Length - lastDot);
-            if (afterDot.ToLower().StartsWith("split"))
+            string noSplit;
+            if (afterDot.ToLower().StartsWith(".split"))
             {
-                var noSplit = assetsFile.Substring(0, lastDot);
+                noSplit = assetsFile.Substring(0, lastDot);
                 if (apk.FileExists(noSplit))
                     return noSplit;
-                var split0 = noSplit + ".split0";
-                if (apk.FileExists(split0))
-                    return split0;
+                
             }
-            
+            else
+            {
+                noSplit = assetsFile;
+            }
+            var split0 = noSplit + ".split0";
+            if (apk.FileExists(split0))
+                return split0;
             if (apk.FileExists(assetsFile))
             {
                 return assetsFile;

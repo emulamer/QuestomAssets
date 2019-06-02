@@ -2,12 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
-using QuestomAssets.AssetsChanger;
-using QuestomAssets.BeatSaber;
 using System.Diagnostics;
 using Emulamer.Utils;
+using QuestomAssets;
 
-namespace QuestomAssets
+namespace BeatmapAssetMaker
 {
     class Program
     {
@@ -25,7 +24,9 @@ namespace QuestomAssets
 
         static void Main(string[] args)
         {
-
+            QustomAssetsEngine q = new QustomAssetsEngine(@"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\base.apk");
+            var cfg = q.GetCurrentConfig();
+            var cfg2 = cfg;
             //using (FileStream fs = File.Open(@"C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\CustomSabers\Neo Katanas.saber", FileMode.Open, FileAccess.Read))
             //{
             //    BundleFile u = new BundleFile(fs);
@@ -33,7 +34,7 @@ namespace QuestomAssets
             //    AssetsFile file = new AssetsFile(u.Entries[0].Data.ToStream(), MiscUtils.GetKnownAssetTypes());
             //}
             //return;
-
+/*
 
             Stopwatch sw = new Stopwatch();
 
@@ -391,7 +392,7 @@ namespace QuestomAssets
                 return;
             }
             Environment.ExitCode = 0;
-            return;
+            return;*/
         }
     }
 }
