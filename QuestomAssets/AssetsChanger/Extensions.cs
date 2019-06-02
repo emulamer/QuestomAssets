@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Emulamer.Utils;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -34,5 +35,7 @@ namespace QuestomAssets.AssetsChanger
             stream.Read(bytes, 0, count);
             return bytes;
         }
+
+        
     }
 }

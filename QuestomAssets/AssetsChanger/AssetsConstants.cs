@@ -13,6 +13,8 @@ namespace QuestomAssets.AssetsChanger
             public const int AudioClipClassID = 83;
             public const int Texture2DClassID = 28;
             public const int SpriteClassID = 213;
+            public const int GameObjectClassID = 1;
         }
+
     }
 }

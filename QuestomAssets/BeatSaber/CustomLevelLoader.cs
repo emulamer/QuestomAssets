@@ -119,11 +119,36 @@ namespace QuestomAssets.BeatSaber
                 bml.AudioClip = audioAsset.ObjectInfo.LocalPtrTo;
                 bml.CoverImageTexture2D = (coverImage?.ObjectInfo?.ObjectID == null) ? BeatSaberConstants.KnownObjects.BeatSaberCoverArt : coverImage.ObjectInfo.LocalPtrTo;
 
-                //default environment for now
-                bml.EnvironmentSceneInfo = BeatSaberConstants.KnownObjects.DefaultEnvironment;
+                switch (bml.EnvironmentName)
+                {
+                    case "DefaultEnvironment":
+                        bml.EnvironmentSceneInfo = KnownObjects.File17.DefaultEnvironment;
+                        break;
+                    case "MonstercatEnvironment":
+                        bml.EnvironmentSceneInfo = KnownObjects.File17.MonstercatEnvironment;
+                        break;
+                    case "TriangleEnvironment":
+                        bml.EnvironmentSceneInfo = KnownObjects.File17.TriangleEnvironment;
+                        break;
+                    case "NiceEnvironment":
+                        bml.EnvironmentSceneInfo = KnownObjects.File17.NiceEnvironment;
+                        break;
+                    case "BigMirrorEnvironment":
+                        bml.EnvironmentSceneInfo = KnownObjects.File17.BigMirrorEnvironment;
+                        break;
+                    case "KDAEnvironment":
+                        bml.EnvironmentSceneInfo = KnownObjects.File17.KDAEnvironment;
+                        break;
+                    case "CrabRaveEnvironment":
+                        bml.EnvironmentSceneInfo = KnownObjects.File17.CrabRaveEnvironment;
+                        break;
+                    default:
+                        Log.LogMsg($"Unknown environment name '{bml.EnvironmentName}' on '{bml.SongName}', falling back to default.");
+                        bml.EnvironmentSceneInfo = KnownObjects.File17.DefaultEnvironment;
+                        break;
+                }               
 
-                assetsFile.AddObject(bml, true);
-                
+                assetsFile.AddObject(bml, true);               
 
                 return bml;
             } catch(Exception ex)

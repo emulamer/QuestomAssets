@@ -4,16 +4,15 @@ using System.Text;
 
 namespace QuestomAssets
 {
-    public class CustomSaber
+    public class SaberModel
     {
-        public bool IsStockSaber { get; private set; }
+        //this will map to the Name minus "Saber".  the default is "Basic"
+        public string ID { get; set; }
 
         public string SaberBladeDatFile { get; set; }
 
         public string SaberGlowingEdgesDatFile { get; set; }
 
         public string SaberHandleDatFile { get; set; }
-
-        public static CustomSaber StockSaber { get; } = new CustomSaber() { IsStockSaber = true };
     }
 }

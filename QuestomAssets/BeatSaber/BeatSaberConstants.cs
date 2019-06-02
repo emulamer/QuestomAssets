@@ -10,23 +10,24 @@ namespace QuestomAssets.BeatSaber
 
         public static class KnownFiles
         {
+            public const string File19 = "sharedassets19.assets";
+            public const string File17 = "sharedassets17.assets";
+            public const string File11 = "sharedassets11.assets";
+            public const string File14 = "sharedassets14.assets";
+
+            public const string FullFile19Path = AssetsRootPath + File19;
+            public const string FullFile17Path = AssetsRootPath + File17;
+            public const string FullFile11Path = AssetsRootPath + File11;
+            public const string FullFile14Path = AssetsRootPath + File14;
+
             public const string AssetsRootPath = "assets/bin/Data/";
-            public const string SaberAssetsFilename = "sharedassets11.assets";
-            public const string SongsAssetsFilename = "sharedassets17.assets";
-            public const string MainCollectionAssetsFilename = "sharedassets19.assets";
+            public const string SaberAssetsFilename = File11;
+            public const string SongsAssetsFilename = File17;
+            public const string MainCollectionAssetsFilename = File19;
 
-            public const string SaberAssetsFullPath = "assets/bin/Data/" + SaberAssetsFilename;
-            public const string SongsAssetsFullPath = "assets/bin/Data/" + SongsAssetsFilename;
-            public const string MainCollectionAssetsFullPath = "assets/bin/Data/" + MainCollectionAssetsFilename;
-        }
-
-        public static class KnownObjects
-        {
-            public static PPtr DefaultEnvironment { get { return new PPtr(20, 1); } }
-            public static PPtr BeatSaberCoverArt { get { return new PPtr(0, 19); } }
-            public static PPtr OneSaberCharacteristic { get { return new PPtr(19, 1); } }
-            public static PPtr NoArrowsCharacteristic { get { return new PPtr(6, 1); } }
-            public static PPtr StandardCharacteristic { get { return new PPtr(22, 1); } }
+            public const string FullSaberAssetsPath = AssetsRootPath + SaberAssetsFilename;
+            public const string FullSongsAssetsPath = AssetsRootPath + SongsAssetsFilename;
+            public const string FullMainCollectionAssetsPath = AssetsRootPath + MainCollectionAssetsFilename;
         }
 
         public static class ScriptHash
@@ -64,7 +65,5 @@ namespace QuestomAssets.BeatSaber
             "ExtrasLevelPack",
             "MonstercatPreviewBeatmapLevelPack"
         };
-
-
     }
 }

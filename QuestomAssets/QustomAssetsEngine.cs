@@ -4,6 +4,7 @@ using System.IO;
 using QuestomAssets.AssetsChanger;
 using QuestomAssets.BeatSaber;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuestomAssets
 {
@@ -11,15 +12,18 @@ namespace QuestomAssets
     {
         private string _apkFilename;
         private Apkifier _apk;
+        private bool _readOnly;
+
         /// <summary>
         /// Create a new instance of the class and open the apk file
         /// </summary>
         /// <param name="apkFilename">The path to the Beat Saber APK file</param>
         /// <param name="pemCertificateData">The contents of the PEM certificate that will be used to sign the APK.  If omitted, a new self signed cert will be generated.</param>
-        public QustomAssetsEngine(string apkFilename, string pemCertificateData = null)
+        public QustomAssetsEngine(string apkFilename, string pemCertificateData = null, bool readOnly = false)
         {
+            _readOnly = readOnly;
             _apkFilename = apkFilename;
-            _apk = new Apkifier(apkFilename, true, pemCertificateData);
+            _apk = new Apkifier(apkFilename, !readOnly, readOnly?null:pemCertificateData, readOnly);
         }
 
         private Dictionary<string, AssetsFile> _openAssetsFiles = new Dictionary<string, AssetsFile>();
@@ -28,8 +32,7 @@ namespace QuestomAssets
         {
             if (_openAssetsFiles.ContainsKey(assetsFilename))
                 return _openAssetsFiles[assetsFilename];
-            var realFileName = _apk.FindFirstOfSplit(assetsFilename);
-            AssetsFile assetsFile = new AssetsFile(_apk.Read(realFileName).ToStream(), BeatSaberConstants.GetAssetTypeMap());
+            AssetsFile assetsFile = new AssetsFile(_apk.ReadCombinedAssets(assetsFilename), BeatSaberConstants.GetAssetTypeMap());
             _openAssetsFiles.Add(assetsFilename, assetsFile);
             return assetsFile;
         }
@@ -37,8 +40,8 @@ namespace QuestomAssets
         public BeatSaberQustomConfig GetCurrentConfig()
         {
             BeatSaberQustomConfig config = new BeatSaberQustomConfig();
-            var file19 = OpenFile(BeatSaberConstants.KnownFiles.MainCollectionAssetsFullPath);
-            var file17 = OpenFile(BeatSaberConstants.KnownFiles.SongsAssetsFullPath);
+            var file19 = OpenFile(BeatSaberConstants.KnownFiles.FullMainCollectionAssetsPath);
+            var file17 = OpenFile(BeatSaberConstants.KnownFiles.FullSongsAssetsPath);
             var mainPack = GetMainLevelPack();
             foreach (var packPtr in mainPack.BeatmapLevelPacks)
             {
@@ -95,13 +98,16 @@ namespace QuestomAssets
 
         public void UpdateConfig(BeatSaberQustomConfig config)
         {
+            if (_readOnly)
+                throw new InvalidOperationException("Cannot update in read only mode.");
+            UpdateKnownObjects();
             throw new NotImplementedException();
         }
 
 
         private MainLevelPackCollectionObject GetMainLevelPack()
         {
-            var file19 = OpenFile(BeatSaberConstants.KnownFiles.MainCollectionAssetsFullPath);
+            var file19 = OpenFile(BeatSaberConstants.KnownFiles.FullMainCollectionAssetsPath);
             var mainLevelPack = file19.FindAsset<MainLevelPackCollectionObject>();
             if (mainLevelPack == null)
                 throw new Exception("Unable to find the main level pack collection object!");
@@ -113,7 +119,27 @@ namespace QuestomAssets
             return Utils.Patcher.PatchBeatmapSigCheck(_apk);
         }
 
+        //this is crap, I need to load all files and resolve file pointers properly
+        private void UpdateKnownObjects()
+        {
+            var songsFile = OpenFile(BeatSaber.BeatSaberConstants.KnownFiles.FullSongsAssetsPath);
+            if (!songsFile.Metadata.ExternalFiles.Any(x => x.FileName == BeatSaberConstants.KnownFiles.File19))
+            {
+                songsFile.Metadata.ExternalFiles.Add(new ExternalFile()
+                {
+                    FileName = BeatSaberConstants.KnownFiles.File19,
+                    AssetName = "",
+                    ID = Guid.Empty,
+                    Type = 0
+                });
+            }
+            int file19 = songsFile.GetFileIDForFilename(BeatSaberConstants.KnownFiles.File19);
+            KnownObjects.File17.MonstercatEnvironment = new PPtr(file19, KnownObjects.File17.MonstercatEnvironment.PathID);
+        }
 
+        #region Helper Functions
+
+        #endregion
 
         #region IDisposable Support
         private bool disposedValue = false; // To detect redundant calls

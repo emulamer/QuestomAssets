@@ -9,7 +9,6 @@ namespace QuestomAssets.AssetsChanger
 {
     public class AssetsFile
     {
-
         public AssetsFileHeader Header { get; set; }
 
         public AssetsMetadata Metadata { get; set; }
@@ -71,6 +70,9 @@ namespace QuestomAssets.AssetsChanger
                 case AssetsConstants.ClassID.Texture2DClassID:
                     assetsObject = new Texture2DObject(objectInfo, reader);
                     break;
+                case AssetsConstants.ClassID.GameObjectClassID:
+                    assetsObject = new GameObject(objectInfo, reader);
+                    break;
                 default:
                     assetsObject = new AssetsObject(objectInfo, reader);
                     break;
@@ -119,7 +121,7 @@ namespace QuestomAssets.AssetsChanger
                 if (diff == alignment)
                     diff = 0;
             }
-            
+
 
             if (diff > 0)
             {
@@ -131,14 +133,14 @@ namespace QuestomAssets.AssetsChanger
             objectsMS.Seek(0, SeekOrigin.Begin);
             metaMS.Seek(0, SeekOrigin.Begin);
 
-            
+
 
             using (AssetsWriter writer = new AssetsWriter(outputStream))
             {
                 Header.Write(writer);
             }
             metaMS.CopyTo(outputStream);
-            
+
 
             if (diff > 0)
             {
@@ -176,6 +178,14 @@ namespace QuestomAssets.AssetsChanger
             return Metadata.ExternalFiles[fileID].FileName;
         }
 
+        public int GetFileIDForFilename(string filename)
+        {
+            var file = Metadata.ExternalFiles.First(x => x.FileName == filename);
+            if (file == null)
+                throw new Exception($"Filename {filename} does not exist in the file list!");
+            return Metadata.ExternalFiles.IndexOf(file);
+        }
+
         public T FindAsset<T>(string name = null) where T: AssetsObject
         {
             return Objects.FirstOrDefault(x => x as T != null && (name == null || ((x as IHaveName)?.Name == name))) as T;
@@ -186,26 +196,6 @@ namespace QuestomAssets.AssetsChanger
             return (T)Objects.FirstOrDefault(x => x.ObjectInfo.ObjectID == objectID);               
         }
 
-        public static MemoryStream ReadCombinedAssets(Apkifier apk, string assetsFilePath)
-        {
-            List<string> assetFiles = new List<string>();
-            if (assetsFilePath.ToLower().EndsWith("split0"))
-            {
-                assetFiles.AddRange(apk.FindFiles(assetsFilePath.Replace(".split0", ".split*"))
-                    .OrderBy(x => Convert.ToInt32(x.Split(new string[] { ".split" }, StringSplitOptions.None).Last())));
-            }
-            else
-            {
-                assetFiles.Add(assetsFilePath);
-            }
-            MemoryStream msFullFile = new MemoryStream();
-            foreach (string assetsFile in assetFiles)
-            {
-                byte[] fileBytes = apk.Read(assetsFile);
-                msFullFile.Write(fileBytes, 0, fileBytes.Length);
-            }
-
-            return msFullFile;
-        }
+        
     }
 }

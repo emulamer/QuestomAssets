@@ -8,12 +8,12 @@ namespace QuestomAssets.AssetsChanger
     public class ExternalFile
     {
         public string AssetName { get; set; }
-
         public Guid ID { get; set; }
         public Int32 Type { get; set; }
-
         public string FileName { get; set; }
 
+        public ExternalFile()
+        { }
 
         public ExternalFile(AssetsReader reader)
         {

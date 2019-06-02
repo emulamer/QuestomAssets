@@ -5,7 +5,8 @@ using System.IO;
 using System.Diagnostics;
 using Emulamer.Utils;
 using QuestomAssets;
-
+using QuestomAssets.AssetsChanger;
+using QuestomAssets.BeatSaber;
 namespace BeatmapAssetMaker
 {
     class Program
@@ -24,6 +25,26 @@ namespace BeatmapAssetMaker
 
         static void Main(string[] args)
         {
+            using (Apkifier apk = new Apkifier(@"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\base.apk"))
+            {
+                
+                AssetsFile f = new AssetsFile(apk.ReadCombinedAssets(BeatSaberConstants.KnownFiles.FullSongsAssetsPath), BeatSaberConstants.GetAssetTypeMap());
+                int file11 = f.GetFileIDForFilename(BeatSaberConstants.KnownFiles.File11);
+                int file14 = f.GetFileIDForFilename(BeatSaberConstants.KnownFiles.File14);
+                if (!f.Metadata.ExternalFiles.Any(x=>x.FileName == BeatSaberConstants.KnownFiles.File19))
+                {
+                    f.Metadata.ExternalFiles.Add(new ExternalFile()
+                    {
+                        FileName = BeatSaberConstants.KnownFiles.File19,
+                        AssetName = "",
+                        ID = Guid.Empty,
+                        Type = 0
+                    });
+                }
+                int file19 = f.GetFileIDForFilename(BeatSaberConstants.KnownFiles.File19);
+                KnownObjects.MonstercatEnvironment = new PPtr(file19, KnownObjects.MonstercatEnvironment.PathID);
+            }
+
             QustomAssetsEngine q = new QustomAssetsEngine(@"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\base.apk");
             var cfg = q.GetCurrentConfig();
             var cfg2 = cfg;
