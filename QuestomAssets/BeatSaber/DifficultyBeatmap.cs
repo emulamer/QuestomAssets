@@ -1,0 +1,62 @@
+﻿using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using QuestomAssets.AssetsChanger;
+
+namespace QuestomAssets.BeatSaber
+{
+    public class DifficultyBeatmap
+    {
+        [JsonProperty("_difficulty")]
+        public Difficulty Difficulty { get; set; }
+
+        [JsonProperty("_difficultyRank")]
+        public int DifficultyRank { get; set; }
+
+        [JsonProperty("_noteJumpMovementSpeed")]
+        public Single NoteJumpMovementSpeed { get; set; }
+
+        [JsonProperty("_noteJumpStartBeatOffset")]
+        public int NoteJumpStartBeatOffset { get; set; }
+
+        [JsonProperty("_beatmapData")]
+        public BeatmapDataObject BeatmapData { get; set; }
+
+        //unity assets format only
+        [JsonIgnore]
+        public PPtr BeatmapDataPtr { get; set; }
+
+        //[JsonIgnore]
+        //public BeatmapSaveData BeatmapSaveData { get; set; }
+
+        public DifficultyBeatmap()
+        { }
+
+        public DifficultyBeatmap(AssetsReader reader)
+        {
+            Parse(reader);
+        }
+
+        private void Parse(AssetsReader reader)
+        {
+            Difficulty = (Difficulty)reader.ReadInt32();
+            DifficultyRank = reader.ReadInt32();
+            NoteJumpMovementSpeed = reader.ReadSingle();
+            NoteJumpStartBeatOffset = reader.ReadInt32();
+            BeatmapDataPtr = new PPtr(reader);
+        }
+
+        public void Write(AssetsWriter writer)
+        {
+            writer.Write((int)Difficulty);
+            writer.Write(DifficultyRank);
+            writer.Write(NoteJumpMovementSpeed);
+            writer.Write(NoteJumpStartBeatOffset);
+            BeatmapDataPtr.Write(writer);            
+        }
+    }
+
+}

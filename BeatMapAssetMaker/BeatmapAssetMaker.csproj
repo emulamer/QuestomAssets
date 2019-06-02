@@ -33,22 +33,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Update="Resource1.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resource1.resx</DependentUpon>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Resources\CustomSongsCover.ETC_RGB4" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Apkifier\Apkifier.csproj" />
-    <ProjectReference Include="..\Assembly-CSharp\Assembly-CSharp.csproj" />
-    <ProjectReference Include="..\StbSharp\StbSharp\StbSharp.NETStandard.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Mox.png" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="BeatmapData.cs" />
@@ -59,7 +44,6 @@
     <Compile Remove="BeatmapObjectData.cs" />
     <Compile Remove="BeatmapObjectType.cs" />
     <Compile Remove="BeatmapSaveData.cs" />
-    <Compile Remove="BeatSaber\AssetsBeatMapLevelDataObject.cs" />
     <Compile Remove="NoteCutDirection.cs" />
     <Compile Remove="NoteData.cs" />
     <Compile Remove="NoteLineLayer.cs" />
@@ -69,10 +53,10 @@
     <Compile Remove="ObstacleType.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\QuestomAssets\QuestomAssets.csproj" />
+  </ItemGroup>
+  <ItemGroup>
     <None Update="BeatmapAssetMaker.runtimeconfig.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="etcpack.exe">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
