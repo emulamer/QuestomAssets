@@ -181,7 +181,9 @@ namespace BeatmapAssetMaker
                             //write to file
                             outWriter = new StreamWriter(new FileStream(args.OutputFile, FileMode.Create));
                         }
-                        new JsonSerializer().Serialize(outWriter, cfg);
+                        var ser = new JsonSerializer();
+                        ser.Formatting = Formatting.Indented;
+                        ser.Serialize(outWriter, cfg);
 
                         if (string.IsNullOrWhiteSpace(args.OutputFile))
                         {

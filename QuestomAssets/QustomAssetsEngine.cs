@@ -132,7 +132,7 @@ namespace QuestomAssets
 
         private void UpdatePlaylistConfig(BeatSaberPlaylist playlist)
         {
-            Log.LogMsg("Starting update of config...");
+            Log.LogMsg($"Processing playlist ID {playlist.PlaylistID}...");
             var songsAssetFile = OpenAssets(BSConst.KnownFiles.SongsAssetsFilename);
             BeatmapLevelPackObject levelPack = null;
             BeatmapLevelCollectionObject levelCollection = null;
@@ -187,22 +187,34 @@ namespace QuestomAssets
 
             //clear out any levels, we'll add them back
             levelCollection.BeatmapLevels.Clear();
-
+            int songCount = 0;
+            Log.LogMsg($"Processing songs for playlist ID {playlist.PlaylistID}...");
+            var totalSongs = playlist.SongList.Count();
+            var songMod = Math.Ceiling((double)totalSongs / (double)10);
+            if (songMod < 1)
+                songMod = 1;
             foreach (var song in playlist.SongList.ToList())
             {
+                songCount++;
+                if (songCount % songMod == 0)
+                    Console.WriteLine($"{songCount.ToString().PadLeft(5)} of {totalSongs}...");
+
                 if (UpdateSongConfig(song))
                 {
                     if (playlist.LevelCollection.BeatmapLevels.Any(x => x.PathID == song.LevelData.ObjectInfo.ObjectID))
                     {
                         Log.LogErr($"Playlist ID '{playlist.PlaylistID}' already contains song ID '{song.SongID}' once, removing the second link");
                     }
-
-                    playlist.LevelCollection.BeatmapLevels.Add(song.LevelData.ObjectInfo.LocalPtrTo);
-                    continue;
+                    else
+                    {
+                        playlist.LevelCollection.BeatmapLevels.Add(song.LevelData.ObjectInfo.LocalPtrTo);
+                        continue;
+                    }
                 }
                 
                 playlist.SongList.Remove(song);
             }
+            Console.WriteLine($"Proccessed {totalSongs} for playlist ID {playlist.PlaylistID}");
         }
 
         private bool UpdateSongConfig(BeatSaberSong song)
@@ -220,6 +232,7 @@ namespace QuestomAssets
                         Log.LogMsg($"Song ID {song.SongID} exists already and won't be loaded");
                     level = levels.First();
                     song.LevelData = level;
+                    return true;
                 }
                 else
                 {
@@ -401,6 +414,11 @@ namespace QuestomAssets
             //don't allow removal of the actual tracks or level packs that are built in, although you can unlink them from the main list
             var removeSongs = oldSongs.Where(x => !newSongs.Contains(x) && !BSConst.KnownLevelIDs.Contains(x.LevelID)).Distinct().ToList();
 
+            var addedSongs = newSongs.Where(x => !oldSongs.Contains(x));
+
+            var removedPlaylistCount = originalConfig.Playlists.Where(x => !config.Playlists.Any(y => y.PlaylistID == x.PlaylistID)).Count();
+            var newPlaylistCount = config.Playlists.Where(x => !originalConfig.Playlists.Any(y => y.PlaylistID == x.PlaylistID)).Count();
+
             List<string> audioFilesToDelete = new List<string>();
             removeSongs.ForEach(x => RemoveLevelAssets(x, audioFilesToDelete));
             packsToRemove.ForEach(x => RemoveLevelPackAssets(x));
@@ -408,10 +426,12 @@ namespace QuestomAssets
             levelPackPointersToUnlink.ForEach(x => mainLevelPack.BeatmapLevelPacks.Remove(x));
 
             //relink all the level packs in order
-            mainLevelPack.BeatmapLevelPacks.AddRange(config.Playlists.Select(x => new PPtr(file17Index, x.LevelPackObject.ObjectInfo.ObjectID)));
+            var addPacks = config.Playlists.Select(x => new PPtr(file17Index, x.LevelPackObject.ObjectInfo.ObjectID));
+            mainLevelPack.BeatmapLevelPacks.AddRange(addPacks);
 
             //do a first loop to guess at the file size
-            Int64 sizeGuess = new FileInfo(_apkFilename).Length;
+            Int64 originalApkSize = new FileInfo(_apkFilename).Length;
+            Int64 sizeGuess = originalApkSize;
             foreach (var pl in config.Playlists)
             {
                 foreach (var sng in pl.SongList)
@@ -427,6 +447,20 @@ namespace QuestomAssets
             {
                 sizeGuess -= _apk.GetFileSize(BSConst.KnownFiles.AssetsRootPath + toDelete);
             }
+
+            Log.LogMsg("");
+            Log.LogMsg("Playlists:");
+            Log.LogMsg($"  Added:   {newPlaylistCount}");
+            Log.LogMsg($"  Removed: {removedPlaylistCount}");
+            Log.LogMsg("");
+            Log.LogMsg("Songs:");
+            Log.LogMsg($"  Added:   {addedSongs.Count()}");
+            Log.LogMsg($"  Removed: {removeSongs.Count()}");
+            Log.LogMsg("");
+            Log.LogMsg($"Original APK size:     {originalApkSize:n0}");
+            Log.LogMsg($"Guesstimated new size: {sizeGuess:n0}");
+            Log.LogMsg("");
+            
 
             if (sizeGuess > Int32.MaxValue)
             {
@@ -456,12 +490,17 @@ namespace QuestomAssets
                 }
             }
 
-            foreach (var toDelete in audioFilesToDelete)
+            if (audioFilesToDelete.Count > 0)
             {
-                Log.LogMsg($"Deleting audio file {toDelete}");
-                _apk.Delete(BSConst.KnownFiles.AssetsRootPath + toDelete);
+                Log.LogMsg($"Deleting {audioFilesToDelete.ToString()} audio files");
+                foreach (var toDelete in audioFilesToDelete)
+                {
+                    //Log.LogMsg($"Deleting audio file {toDelete}");
+                    _apk.Delete(BSConst.KnownFiles.AssetsRootPath + toDelete);
+                }
             }
 
+            Log.LogMsg("Serializing all assets...");
             WriteAllOpenAssets();
         }
 
