@@ -27,6 +27,9 @@
     <PackageReference Include="System.IO.Compression.ZipFile" Version="4.3.0" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\ETCPACK\vc9\Release\etcpack.exe" Link="etcpack.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Resources\CustomSongsCover.ETC_RGB4" />
   </ItemGroup>
   <ItemGroup>

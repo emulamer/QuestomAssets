@@ -10,7 +10,7 @@ namespace QuestomAssets.AssetsChanger
     {
         private int _startPosition = 0;
         private bool _align = true;
-        public AssetsReader(Stream s, bool align = true) : base(s, UTF8Encoding.UTF8, true)
+        public AssetsReader(Stream s, bool align = true) : base(s, UTF8Encoding.ASCII, true)
         {
             _startPosition = (int)s.Position;
             _align = align;
@@ -108,7 +108,7 @@ namespace QuestomAssets.AssetsChanger
             byte[] stringBytes = ReadBytes(length);
             if (_align)
                 AlignTo(4);
-            return System.Text.Encoding.UTF8.GetString(stringBytes);            
+            return System.Text.Encoding.ASCII.GetString(stringBytes);            
         }
 
 

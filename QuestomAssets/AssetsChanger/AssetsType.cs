@@ -40,8 +40,6 @@ namespace QuestomAssets.AssetsChanger
 
         public TypeTree TypeTree { get; set; }
 
-        private bool _hasTypetrees = false;
-
         public AssetsType(AssetsReader reader, bool hasTypeTrees = false)
         {
             Parse(reader, hasTypeTrees);

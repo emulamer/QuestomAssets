@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using Emulamer.Utils;
+using System.Reflection;
 
 namespace QuestomAssets.AssetsChanger
 {
@@ -175,7 +176,7 @@ namespace QuestomAssets.AssetsChanger
 
         public string GetFilenameForFileID(int fileID)
         {
-            return Metadata.ExternalFiles[fileID].FileName;
+            return Metadata.ExternalFiles[fileID-1].FileName;
         }
 
         public int GetFileIDForFilename(string filename)
@@ -183,7 +184,7 @@ namespace QuestomAssets.AssetsChanger
             var file = Metadata.ExternalFiles.First(x => x.FileName == filename);
             if (file == null)
                 throw new Exception($"Filename {filename} does not exist in the file list!");
-            return Metadata.ExternalFiles.IndexOf(file);
+            return Metadata.ExternalFiles.IndexOf(file)+1;
         }
 
         public T FindAsset<T>(string name = null) where T: AssetsObject
@@ -191,9 +192,52 @@ namespace QuestomAssets.AssetsChanger
             return Objects.FirstOrDefault(x => x as T != null && (name == null || ((x as IHaveName)?.Name == name))) as T;
         }
 
+        public List<T> FindAssets<T>(Func<T, bool> filter) where T: AssetsObject
+        {
+            return Objects.Where(x => x as T != null && filter(x as T)).Cast<T>().ToList();
+        }
+
         public T GetAssetByID<T>(long objectID) where T : AssetsObject
         {
             return (T)Objects.FirstOrDefault(x => x.ObjectInfo.ObjectID == objectID);               
+        }
+
+        public void DeleteObject(AssetsObject assetsObject)
+        {
+            Objects.Remove(assetsObject);
+            Metadata.ObjectInfos.Remove(assetsObject.ObjectInfo);
+            //TODO: IDs need to be shored up at all?  reflection loop through all objects looking for refs?
+        }
+
+        /// <summary>
+        /// This is REALLY unsafe, as it can break lots of things if it guesses they aren't in use but they are referenced from another file
+        /// </summary>
+        public void DeleteObjectRecursive(AssetsObject assetsObject)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// This is unsafe and will only validate against objects in this file that have known/parsed types
+        /// </summary>
+        public bool ObjectInUseInFile(PPtr objectPtr)
+        {
+            //this is probably going to be slow
+            foreach (AssetsObject obj in Objects)
+            {
+                foreach (var prop in obj.GetType().GetProperties().Where(x=>x.PropertyType == typeof(PPtr)))
+                {
+                    var ptr = prop.GetValue(obj, null) as PPtr;
+                    if (ptr == null)
+                        continue;
+                    //if the pointer doesn't point to this file, skip it
+                    if (ptr.FileID != 0)
+                        continue;
+                    if (ptr.PathID == objectPtr.PathID)
+                        return true;
+                }
+            }
+            return false;
         }
 
         

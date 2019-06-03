@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="Resources\CustomSongsCover.ETC_RGB4" />
+    <Resource Include="Resources\CustomSongsCover.ETC_RGB4" />
   </ItemGroup>
 
   <ItemGroup>
@@ -39,5 +39,18 @@
       <AutoGen>True</AutoGen>
     </Compile>
   </ItemGroup>
+
+<ItemGroup>
+    <EmbeddedResource Update="Resource1.resx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resource1.Designer.cs</LastGenOutput>
+      <CustomToolNamespace>Resources</CustomToolNamespace>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resources1.resx">
+        <Generator>ResXFileCodeGenerator</Generator>
+        <LastGenOutput>Resources1.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+</ItemGroup>
 
 </Project>

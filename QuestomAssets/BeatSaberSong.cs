@@ -3,27 +3,27 @@ using System.Collections.Generic;
 using System.Text;
 using System.Drawing;
 using QuestomAssets.AssetsChanger;
+using QuestomAssets.BeatSaber;
+using Newtonsoft.Json;
 
 namespace QuestomAssets
 {
     public class BeatSaberSong
     {
-        internal BeatSaberSong()
+        public BeatSaberSong()
         { }
 
-        public BeatSaberSong(string customSongFolder)
-        {
-            CustomSongFolder = customSongFolder;
-        }
-        internal long LevelPathID { get; set; }
+        [JsonIgnore]
+        internal BeatmapLevelDataObject LevelData { get; set; }
 
-        public string LevelID { get; internal set; }
+        [JsonIgnore]
+        internal string SourceOgg { get; set; }
+
+        public string SongID { get; set; }
 
         public string SongName { get; internal set; }
 
-        public Bitmap CoverArt { get; internal set; }
-
-        internal PPtr CoverArtPtr { get; set; }
+        public string CoverArtBase64PNG { get; internal set; }
 
         public string CoverArtFile { get; internal set; }
         
@@ -33,11 +33,6 @@ namespace QuestomAssets
                 
         public string LevelAuthorName { get; internal set; }
 
-        public string CustomSongFolder { get; internal set; }
-
-        private void LoadCustomSong()
-        {
-
-        }
+        public string CustomSongFolder { get;  set; }
     }
 }

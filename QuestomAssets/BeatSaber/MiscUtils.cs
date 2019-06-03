@@ -22,7 +22,7 @@ namespace QuestomAssets.BeatSaber
         //    string songPath = Path.Combine(customSongsFolder2, key) +"\\";
         //    if (!Directory.Exists(songPath))
         //    {
-        //        Console.WriteLine($"Missing custom song: {songPath}");
+        //        Log.LogErr($"Missing custom song: {songPath}");
         //        continue;
         //    }
         //    try
@@ -30,7 +30,7 @@ namespace QuestomAssets.BeatSaber
         //        new Microsoft.VisualBasic.Devices.Computer().FileSystem.CopyDirectory(songPath, copyToFolder);
         //    } catch
         //    {
-        //        Console.WriteLine($"Error copying {songPath}");
+        //        Log.LogErr($"Error copying {songPath}");
         //    }
         //}
         //return;

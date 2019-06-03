@@ -7,6 +7,19 @@ namespace QuestomAssets.AssetsChanger
 {
     public class PPtr
     {
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+                return false;
+            if (!(obj is PPtr))
+                return false;
+            return this == (PPtr)obj;
+        }
+
+        public override int GetHashCode()
+        {
+            return FileID.GetHashCode() ^ PathID.GetHashCode();
+        }
 
         public PPtr(UPtr uptr)
         {

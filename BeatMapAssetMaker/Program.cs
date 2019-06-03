@@ -7,6 +7,8 @@ using Emulamer.Utils;
 using QuestomAssets;
 using QuestomAssets.AssetsChanger;
 using QuestomAssets.BeatSaber;
+using System.Drawing;
+
 namespace BeatmapAssetMaker
 {
     class Program
@@ -25,29 +27,69 @@ namespace BeatmapAssetMaker
 
         static void Main(string[] args)
         {
-            using (Apkifier apk = new Apkifier(@"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\base.apk"))
-            {
-                
-                AssetsFile f = new AssetsFile(apk.ReadCombinedAssets(BeatSaberConstants.KnownFiles.FullSongsAssetsPath), BeatSaberConstants.GetAssetTypeMap());
-                int file11 = f.GetFileIDForFilename(BeatSaberConstants.KnownFiles.File11);
-                int file14 = f.GetFileIDForFilename(BeatSaberConstants.KnownFiles.File14);
-                if (!f.Metadata.ExternalFiles.Any(x=>x.FileName == BeatSaberConstants.KnownFiles.File19))
-                {
-                    f.Metadata.ExternalFiles.Add(new ExternalFile()
-                    {
-                        FileName = BeatSaberConstants.KnownFiles.File19,
-                        AssetName = "",
-                        ID = Guid.Empty,
-                        Type = 0
-                    });
-                }
-                int file19 = f.GetFileIDForFilename(BeatSaberConstants.KnownFiles.File19);
-                KnownObjects.MonstercatEnvironment = new PPtr(file19, KnownObjects.MonstercatEnvironment.PathID);
-            }
+            //var b = new Bitmap(@"C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\CustomLevels\Jaroslav Beck - Beat Saber (Built in)\cover.png");
+            //int actualMips;
+            //var bytes = QuestomAssets.Utils.ImageUtils.LoadToRGBAndMipmap(b, 256, 256, 9, out actualMips);
+            //return;
 
-            QustomAssetsEngine q = new QustomAssetsEngine(@"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\base.apk");
-            var cfg = q.GetCurrentConfig();
-            var cfg2 = cfg;
+
+
+            using (QuestomAssetsEngine q = new QuestomAssetsEngine(@"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\base.apk"))
+            {
+                QuestomAssets.Log.SetLogSink(new ConsoleSink());
+                var cfg = q.GetCurrentConfig();
+          
+                var customSongsFolder = @"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\dist\ToConvert";
+                List<string> customSongsFolders = new List<string>();
+
+                if (File.Exists(Path.Combine(customSongsFolder, "Info.dat")))
+                {
+                    //do one
+                    Log.LogErr("Found Info.dat in customSongsFolder, injecting one custom song.");
+                    customSongsFolders.Add(customSongsFolder);
+                }
+                else
+                {
+                    //do many
+                    List<string> foundSongs = Directory.EnumerateDirectories(customSongsFolder).Where(y => File.Exists(Path.Combine(y, "Info.dat"))).ToList();
+                    Log.LogErr($"Found {foundSongs.Count()} custom songs to inject");
+                    customSongsFolders.AddRange(foundSongs);
+                }
+                if (customSongsFolders.Count < 1)
+                {
+                    Log.LogErr("No custom songs found!");
+                    Environment.ExitCode = -1;
+                    return;
+                }
+
+                var playlist = new BeatSaberPlaylist()
+                {
+                    PlaylistID = "CustomSongs",
+                    PlaylistName = "Custom Songs"
+                };
+                cfg.Playlists.Add(playlist);
+                int ct = 1;
+                foreach (var cs in customSongsFolders)
+                {
+                    if (ct % 50 == 0)
+                    {
+                        playlist = new BeatSaberPlaylist()
+                        {
+                            PlaylistID = playlist.PlaylistID + ((int)(ct / 50)).ToString(),
+                            PlaylistName = "Custom Songs " + ((int)(ct / 50)).ToString()
+                        };
+                        cfg.Playlists.Add(playlist);
+                    }
+                    playlist.SongList.Add(new BeatSaberSong()
+                    {
+                        CustomSongFolder = cs
+                    });
+                    ct++;
+                }
+                q.ApplyBeatmapSignaturePatch();
+                q.UpdateConfig(cfg);
+              //  var cfg2 = cfg;
+            }
             //using (FileStream fs = File.Open(@"C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\CustomSabers\Neo Katanas.saber", FileMode.Open, FileAccess.Read))
             //{
             //    BundleFile u = new BundleFile(fs);
@@ -83,7 +125,7 @@ namespace BeatmapAssetMaker
                     }
                     else
                     {
-                        Console.WriteLine($"Unknown option: {arg}");
+                        Log.LogErr($"Unknown option: {arg}");
                         Environment.ExitCode = -1;
                         return;
                     }
@@ -107,13 +149,13 @@ namespace BeatmapAssetMaker
 
                 if (!File.Exists(apkFile))
                 {
-                    Console.WriteLine("apkFile doesn't exist!");
+                    Log.LogErr("apkFile doesn't exist!");
                     Environment.ExitCode = -1;
                     return;
                 }
                 if (!Directory.Exists(customSongsFolder))
                 {
-                    Console.WriteLine("customSongsFolder doesn't exist!");
+                    Log.LogErr("customSongsFolder doesn't exist!");
                     Environment.ExitCode = -1;
                     return;
                 }
@@ -123,7 +165,7 @@ namespace BeatmapAssetMaker
                 }
                 if (Path.GetDirectoryName(pemFile) != "" && !Directory.Exists(Path.GetDirectoryName(pemFile)))
                 {
-                    Console.WriteLine("Directory for pemFile doesn't exist!");
+                    Log.LogErr("Directory for pemFile doesn't exist!");
                     Environment.ExitCode = -1;
                     return;
                 }
@@ -132,12 +174,12 @@ namespace BeatmapAssetMaker
 
                 if (File.Exists(pemFile))
                 {
-                    Console.WriteLine($"Using existing certificate from {pemFile}");
+                    Log.LogErr($"Using existing certificate from {pemFile}");
                     pemData = File.ReadAllText(pemFile);
                 }
                 else
                 {
-                    Console.WriteLine($"PEM file not found, one will be saved to {pemFile}");
+                    Log.LogErr($"PEM file not found, one will be saved to {pemFile}");
                 }
 
                 List<string> customSongsFolders = new List<string>();
@@ -145,19 +187,19 @@ namespace BeatmapAssetMaker
                 if (File.Exists(Path.Combine(customSongsFolder, "Info.dat")))
                 {
                     //do one
-                    Console.WriteLine("Found Info.dat in customSongsFolder, injecting one custom song.");
+                    Log.LogErr("Found Info.dat in customSongsFolder, injecting one custom song.");
                     customSongsFolders.Add(customSongsFolder);
                 }
                 else
                 {
                     //do many
                     List<string> foundSongs = Directory.EnumerateDirectories(customSongsFolder).Where(y => File.Exists(Path.Combine(y, "Info.dat"))).ToList();
-                    Console.WriteLine($"Found {foundSongs.Count()} custom songs to inject");
+                    Log.LogErr($"Found {foundSongs.Count()} custom songs to inject");
                     customSongsFolders.AddRange(foundSongs);
                 }
                 if (customSongsFolders.Count < 1)
                 {
-                    Console.WriteLine("No custom songs found!");
+                    Log.LogErr("No custom songs found!");
                     Environment.ExitCode = -1;
                     return;
                 }
@@ -165,7 +207,7 @@ namespace BeatmapAssetMaker
                 Console.Write("Opening APK...");
                 using (Apkifier apk = new Apkifier(apkFile, true, pemData))
                 {
-                    Console.WriteLine("..opened!");
+                    Log.LogErr("..opened!");
 
 
                     do
@@ -204,7 +246,7 @@ namespace BeatmapAssetMaker
 
                         if (!apk.FileExists(fileName17))
                         {
-                            Console.WriteLine("Couldn't find sharedassets17.assets(.split0) in the APK.");
+                            Log.LogErr("Couldn't find sharedassets17.assets(.split0) in the APK.");
                             Environment.ExitCode = -1;
                             return;
                         }
@@ -215,7 +257,7 @@ namespace BeatmapAssetMaker
 
                         if (!apk.FileExists(fileName19))
                         {
-                            Console.WriteLine("Couldn't find sharedassets19.assets(.split0) in the APK.");
+                            Log.LogErr("Couldn't find sharedassets19.assets(.split0) in the APK.");
                             Environment.ExitCode = -1;
                             return;
                         }
@@ -234,11 +276,11 @@ namespace BeatmapAssetMaker
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine("Error: {0} {1}", ex.Message, ex.StackTrace);
+                            Log.LogErr("Error: {0} {1}", ex.Message, ex.StackTrace);
                             Environment.ExitCode = -1;
                             return;
                         }
-                        Console.WriteLine($"..done! (+{ (int)sw.Elapsed.TotalSeconds} seconds, { String.Format("{0:n0}", GC.GetTotalMemory(false))} bytes of memory used)");
+                        Log.LogErr($"..done! (+{ (int)sw.Elapsed.TotalSeconds} seconds, { String.Format("{0:n0}", GC.GetTotalMemory(false))} bytes of memory used)");
 
                         var levelCollection = assetsFile17.Objects.FirstOrDefault(x => x is BeatmapLevelCollectionObject && ((BeatmapLevelCollectionObject)x).Name == "CustomSongsLevelPackCollection") as BeatmapLevelCollectionObject;
 
@@ -249,7 +291,7 @@ namespace BeatmapAssetMaker
                             assetsFile17.AddObject(levelCollection, true);
                         }
                         int totalSongs = customSongsFolders.Count;
-                        Console.WriteLine($"Found {totalSongs} custom song folders, starting import...");
+                        Log.LogErr($"Found {totalSongs} custom song folders, starting import...");
 
                         int songCount = 0;
 
@@ -257,7 +299,7 @@ namespace BeatmapAssetMaker
                         {
                             songCount++;
                             if (songCount % 20 == 0)
-                                Console.WriteLine($"{songCount.ToString().PadLeft(5)} of {totalSongs}... (+{(int)sw.Elapsed.TotalSeconds} seconds, {String.Format("{0:n0}", GC.GetTotalMemory(false))} bytes of memory used)");
+                                Log.LogErr($"{songCount.ToString().PadLeft(5)} of {totalSongs}... (+{(int)sw.Elapsed.TotalSeconds} seconds, {String.Format("{0:n0}", GC.GetTotalMemory(false))} bytes of memory used)");
 
                             try
                             {
@@ -275,12 +317,12 @@ namespace BeatmapAssetMaker
                             }
                             catch (Exception ex)
                             {
-                                Console.WriteLine("Error injecting {0}: {1}, {2}", customSongFolder, ex.Message, ex.StackTrace);
+                                Log.LogErr("Error injecting {0}: {1}, {2}", customSongFolder, ex.Message, ex.StackTrace);
                                 Environment.ExitCode = -1;
                                 return;
                             }
                         }
-                        Console.WriteLine($"{songCount.ToString().PadLeft(5)} of {totalSongs}... (+{(int)sw.Elapsed.TotalSeconds} seconds, {String.Format("{0:n0}", GC.GetTotalMemory(false))} bytes of memory used)");
+                        Log.LogErr($"{songCount.ToString().PadLeft(5)} of {totalSongs}... (+{(int)sw.Elapsed.TotalSeconds} seconds, {String.Format("{0:n0}", GC.GetTotalMemory(false))} bytes of memory used)");
                         var levelPack = assetsFile17.Objects.FirstOrDefault(x => x is BeatmapLevelPackObject && ((BeatmapLevelPackObject)x).Name == "CustomSongsLevelPack") as BeatmapLevelPackObject;
                         if (levelPack == null)
                         {
@@ -300,7 +342,7 @@ namespace BeatmapAssetMaker
                         }
                         levelPack.BeatmapLevelCollection = levelCollection.ObjectInfo.LocalPtrTo;
                         AssetsFile assetsFile19 = null;
-                        Console.WriteLine($"Loading {fileName19}...");
+                        Log.LogErr($"Loading {fileName19}...");
                         try
                         {
                             using (MemoryStream msFile19 = ReadCombinedAssets(apk, fileName19))
@@ -310,11 +352,11 @@ namespace BeatmapAssetMaker
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine("Error: {0} {1}", ex.Message, ex.StackTrace);
+                            Log.LogErr("Error: {0} {1}", ex.Message, ex.StackTrace);
                             Environment.ExitCode = -1;
                             return;
                         }
-                        Console.WriteLine($"..done! (+{ (int)sw.Elapsed.TotalSeconds} seconds, { String.Format("{0:n0}", GC.GetTotalMemory(false))} bytes of memory used)");
+                        Log.LogErr($"..done! (+{ (int)sw.Elapsed.TotalSeconds} seconds, { String.Format("{0:n0}", GC.GetTotalMemory(false))} bytes of memory used)");
 
 
                         var extFile = assetsFile19.Metadata.ExternalFiles.First(x => x.FileName == "sharedassets17.assets");
@@ -336,11 +378,11 @@ namespace BeatmapAssetMaker
                         {
                             apk.Delete(fileName17 + ".split*");
                             apk.Delete(fileName19 + ".split*");
-                            Console.WriteLine($"..done! (+{ (int)sw.Elapsed.TotalSeconds} seconds, { String.Format("{0:n0}", GC.GetTotalMemory(false))} bytes of memory used)");
+                            Log.LogErr($"..done! (+{ (int)sw.Elapsed.TotalSeconds} seconds, { String.Format("{0:n0}", GC.GetTotalMemory(false))} bytes of memory used)");
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine("Error deleting old assets files: {0} {1}", ex.Message, ex.StackTrace);
+                            Log.LogErr("Error deleting old assets files: {0} {1}", ex.Message, ex.StackTrace);
                             Environment.ExitCode = -1;
                             return;
                         }
@@ -355,11 +397,11 @@ namespace BeatmapAssetMaker
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine("Error writing output files: {0} {1}", ex.Message, ex.StackTrace);
+                            Log.LogErr("Error writing output files: {0} {1}", ex.Message, ex.StackTrace);
                             Environment.ExitCode = -1;
                             return;
                         }
-                        Console.WriteLine($"..done! (+{ (int)sw.Elapsed.TotalSeconds} seconds, { String.Format("{0:n0}", GC.GetTotalMemory(false))} bytes of memory used)");
+                        Log.LogErr($"..done! (+{ (int)sw.Elapsed.TotalSeconds} seconds, { String.Format("{0:n0}", GC.GetTotalMemory(false))} bytes of memory used)");
                         try
                         {
                             Console.Write("Adding ogg files...");
@@ -367,11 +409,11 @@ namespace BeatmapAssetMaker
                             {
                                 apk.Write(fromTo.Item1, fromTo.Item2, true, false);
                             }
-                            Console.WriteLine($"..done! (+{ (int)sw.Elapsed.TotalSeconds} seconds, { String.Format("{0:n0}", GC.GetTotalMemory(false))} bytes of memory used)");
+                            Log.LogErr($"..done! (+{ (int)sw.Elapsed.TotalSeconds} seconds, { String.Format("{0:n0}", GC.GetTotalMemory(false))} bytes of memory used)");
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine("Error copying ogg files: {0} {1}", ex.Message, ex.StackTrace);
+                            Log.LogErr("Error copying ogg files: {0} {1}", ex.Message, ex.StackTrace);
                             Environment.ExitCode = -1;
                             return;
                         }
@@ -388,27 +430,27 @@ namespace BeatmapAssetMaker
                     {
                         if (!File.Exists(pemFile))
                         {
-                            Console.WriteLine($"Writing new certificate to {pemFile}");
+                            Log.LogErr($"Writing new certificate to {pemFile}");
                             File.WriteAllText(pemFile, apk.PemData);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"Warning: could not save certificate to {pemFile}: {0} {1}", ex.Message, ex.StackTrace);
+                        Log.LogErr($"Warning: could not save certificate to {pemFile}: {0} {1}", ex.Message, ex.StackTrace);
                     }
                     Console.Write("Closing and signing apk...");
                 }
-                Console.WriteLine($"..done! (+{ (int)sw.Elapsed.TotalSeconds} seconds, { String.Format("{0:n0}", GC.GetTotalMemory(false))} bytes of memory used)");
+                Log.LogErr($"..done! (+{ (int)sw.Elapsed.TotalSeconds} seconds, { String.Format("{0:n0}", GC.GetTotalMemory(false))} bytes of memory used)");
             }
             catch (System.Security.SecurityException sex)
             {
-                Console.WriteLine("There was some sort of certificate problem: {0}, {1}", sex.Message, sex.StackTrace);
+                Log.LogErr("There was some sort of certificate problem: {0}, {1}", sex.Message, sex.StackTrace);
                 Environment.ExitCode = -1;
                 return;
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Something went horribly wrong: {0} {1}", ex.Message, ex.StackTrace);
+                Log.LogErr("Something went horribly wrong: {0} {1}", ex.Message, ex.StackTrace);
                 Environment.ExitCode = -1;
                 return;
             }

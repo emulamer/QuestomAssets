@@ -10,7 +10,7 @@ namespace QuestomAssets.AssetsChanger
     {
         private int _startPosition = 0;
 
-        public AssetsWriter(Stream s) : base(s, UTF8Encoding.UTF8, true)
+        public AssetsWriter(Stream s) : base(s, ASCIIEncoding.ASCII, true)
         {
             _startPosition = (int)s.Position;
         }
@@ -42,7 +42,7 @@ namespace QuestomAssets.AssetsChanger
             else
             {
                 Write(value.Length);
-                byte[] bytes = System.Text.Encoding.UTF8.GetBytes(value);
+                byte[] bytes = System.Text.Encoding.ASCII.GetBytes(value);
                 Write(bytes);
             }
             AlignTo(4);
@@ -82,7 +82,7 @@ namespace QuestomAssets.AssetsChanger
         {
             if (!string.IsNullOrEmpty(value))
             {
-                byte[] bytes = System.Text.Encoding.UTF8.GetBytes(value);
+                byte[] bytes = System.Text.Encoding.ASCII.GetBytes(value);
                 Write(bytes);
             }
             Write((byte)0);
@@ -102,7 +102,7 @@ namespace QuestomAssets.AssetsChanger
 
         public void WriteChars(string chars)
         {
-            base.Write(System.Text.Encoding.UTF8.GetBytes(chars));
+            base.Write(System.Text.Encoding.ASCII.GetBytes(chars));
         }
 
         public int Position

@@ -38,13 +38,13 @@ namespace QuestomAssets
             }
         }
 
-        public static void LogErr(string message, params object[] args)
+        public static void LogErr(string message)
         {
             if (_logSink != null)
             {
                 try
                 {
-                    _logSink.LogErr(message, args);
+                    _logSink.LogErr(message);
                 }
                 catch
                 { }

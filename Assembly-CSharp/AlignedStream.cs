@@ -22,7 +22,7 @@ public class AlignedStream
         }
         else
         {
-            byte[] strBytes = System.Text.UTF8Encoding.UTF8.GetBytes(str);
+            byte[] strBytes = System.Text.ASCIIEncoding.ASCII.GetBytes(str);
             _Stream.Write(BitConverter.GetBytes(strBytes.Length), 0, 4);
             _Stream.Write(strBytes, 0, strBytes.Length);
             //_Stream.WriteByte(0);

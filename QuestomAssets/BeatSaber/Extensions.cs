@@ -36,6 +36,15 @@ namespace QuestomAssets.BeatSaber
             throw new ArgumentException("The file doesn't exist in the APK with any name!");
         }
 
+        public static void WriteCombinedAssets(this Apkifier apk, AssetsFile assetsFile, string assetsFilePath)
+        {
+            if (assetsFilePath.EndsWith("split0"))
+                throw new ArgumentException("Don't pass in filenames with split0, pass in the original.");
+            apk.Delete(assetsFilePath + ".split*");
+            using (var ws = apk.GetWriteStream(assetsFilePath, true, true))
+                assetsFile.Write(ws);            
+        }
+
         public static Stream ReadCombinedAssets(this Apkifier apk, string assetsFilePath)
         {
             string actualName = apk.FindFirstOfSplit(assetsFilePath);

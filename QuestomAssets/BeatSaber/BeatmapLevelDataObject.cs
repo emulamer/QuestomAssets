@@ -22,12 +22,12 @@ namespace QuestomAssets.BeatSaber
             Parse(reader);
         }
 
-        public BeatmapLevelDataObject(AssetsMetadata metadata) : base(metadata, BeatSaberConstants.ScriptHash.BeatmapLevelDataHash, BeatSaberConstants.ScriptPtr.BeatmapLevelDataScriptPtr)
+        public BeatmapLevelDataObject(AssetsMetadata metadata) : base(metadata, BSConst.ScriptHash.BeatmapLevelDataHash, BSConst.ScriptPtr.BeatmapLevelDataScriptPtr)
         { }
 
         public void UpdateTypes(AssetsMetadata metadata)
         {
-            base.UpdateType(metadata, BeatSaberConstants.ScriptHash.BeatmapLevelDataHash, BeatSaberConstants.ScriptPtr.BeatmapLevelDataScriptPtr);
+            base.UpdateType(metadata, BSConst.ScriptHash.BeatmapLevelDataHash, BSConst.ScriptPtr.BeatmapLevelDataScriptPtr);
         }
 
 
