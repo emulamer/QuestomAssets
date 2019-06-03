@@ -403,6 +403,32 @@ namespace QuestomAssets
             //relink all the level packs in order
             mainLevelPack.BeatmapLevelPacks.AddRange(config.Playlists.Select(x => new PPtr(file17Index, x.LevelPackObject.ObjectInfo.ObjectID)));
 
+            //do a first loop to guess at the file size
+            Int64 sizeGuess = new FileInfo(_apkFilename).Length;
+            foreach (var pl in config.Playlists)
+            {
+                foreach (var sng in pl.SongList)
+                {
+                    if (sng.SourceOgg != null)
+                    {
+                        var clip = songsAssetFile.GetAssetByID<AudioClipObject>(sng.LevelData.AudioClip.PathID);
+                        sizeGuess += new FileInfo(sng.SourceOgg).Length;
+                    }
+                }
+            }
+            foreach (var toDelete in audioFilesToDelete)
+            {
+                sizeGuess -= _apk.GetFileSize(BSConst.KnownFiles.AssetsRootPath + toDelete);
+            }
+
+            if (sizeGuess > Int32.MaxValue)
+            {
+                Log.LogErr("***************ERROR*****************");
+                Log.LogErr($"Guesstimating a file size around {sizeGuess / (Int64)1000000}MB , this will crash immediately upon launch.");
+                Log.LogErr($"The file size MUST be less than {Int32.MaxValue / (int)1000000}MB");
+                Log.LogErr("***************ERROR*****************");
+                Log.LogErr($"Proceeding anyways, but you've been warned");
+            }
 
             ////////START WRITING DATA
             foreach (var pl in config.Playlists)

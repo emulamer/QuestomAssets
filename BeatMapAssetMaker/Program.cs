@@ -15,11 +15,9 @@ namespace BeatmapAssetMaker
     {
         static void Usage()
         {
-            Console.WriteLine("Usage: BeatmapAssetMaker [-nocovers] [-nopatch] <apkFile> <customSongsFolder> [pemFile]");
-           // Console.WriteLine("or     BeatmapAssetMaker patchasset <apkFile> <apkAssetName> <pathIDToReplace> <newAssetDataFile> [pemFile]");
+            Console.WriteLine("Usage: BeatmapAssetMaker [-nocovers] [-nopatch] <apkFile> <customSongsFolder>");
             Console.WriteLine("\tapkFile: the path to the APK.");
             Console.WriteLine("\tcustomSongsFolder: the folder that contains folders of custom songs in the new native beatsaber format, or a folder with a single song that contains an Info.dat file");
-            Console.WriteLine("\tpemFile: the name of the PEM certificate file to load or create.  If not specified, BS.pem will be used as a default.");
             Console.WriteLine("\tIf you want to skip importing covers then add \"nocovers\" at the end.");
             Console.WriteLine("\tIf you want to skip patching the binary to allow custom songs, add \"nopatch\" at the end.");
             return;
