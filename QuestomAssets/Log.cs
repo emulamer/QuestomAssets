@@ -6,7 +6,7 @@ namespace QuestomAssets
 {
     public static class Log
     {
-        private static ILog _logSink = new ConsoleSink();
+        private static ILog _logSink = null;
         public static void SetLogSink(ILog logSink)
         {
             _logSink = logSink;

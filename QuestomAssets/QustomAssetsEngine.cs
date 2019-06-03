@@ -21,8 +21,9 @@ namespace QuestomAssets
         /// Create a new instance of the class and open the apk file
         /// </summary>
         /// <param name="apkFilename">The path to the Beat Saber APK file</param>
+        /// <param name="readOnly">True to open the APK read only</param>
         /// <param name="pemCertificateData">The contents of the PEM certificate that will be used to sign the APK.  If omitted, a new self signed cert will be generated.</param>
-        public QuestomAssetsEngine(string apkFilename, string pemCertificateData = BSConst.DebugCertificatePEM, bool readOnly = false)
+        public QuestomAssetsEngine(string apkFilename, bool readOnly = false, string pemCertificateData = BSConst.DebugCertificatePEM)
         {
             _readOnly = readOnly;
             _apkFilename = apkFilename;
@@ -58,7 +59,7 @@ namespace QuestomAssets
             }
         }
 
-        public BeatSaberQuestomConfig GetCurrentConfig()
+        public BeatSaberQuestomConfig GetCurrentConfig(bool suppressImages = false)
         {
             BeatSaberQuestomConfig config = new BeatSaberQuestomConfig();
             var file19 = OpenAssets(BSConst.KnownFiles.MainCollectionAssetsFilename);
@@ -114,7 +115,8 @@ namespace QuestomAssets
                         }
                         else
                         {
-                            songModel.CoverArtBase64PNG = songCover.ToBase64PNG();
+                            if (!suppressImages)
+                                songModel.CoverArtBase64PNG = songCover.ToBase64PNG();
                         }
                     }
                     catch (Exception ex)
@@ -189,9 +191,17 @@ namespace QuestomAssets
             foreach (var song in playlist.SongList.ToList())
             {
                 if (UpdateSongConfig(song))
+                {
+                    if (playlist.LevelCollection.BeatmapLevels.Any(x => x.PathID == song.LevelData.ObjectInfo.ObjectID))
+                    {
+                        Log.LogErr($"Playlist ID '{playlist.PlaylistID}' already contains song ID '{song.SongID}' once, removing the second link");
+                    }
+
                     playlist.LevelCollection.BeatmapLevels.Add(song.LevelData.ObjectInfo.LocalPtrTo);
-                else
-                    playlist.SongList.Remove(song);
+                    continue;
+                }
+                
+                playlist.SongList.Remove(song);
             }
         }
 
@@ -390,9 +400,6 @@ namespace QuestomAssets
                         
             //don't allow removal of the actual tracks or level packs that are built in, although you can unlink them from the main list
             var removeSongs = oldSongs.Where(x => !newSongs.Contains(x) && !BSConst.KnownLevelIDs.Contains(x.LevelID)).Distinct().ToList();
-
-
-
 
             List<string> audioFilesToDelete = new List<string>();
             removeSongs.ForEach(x => RemoveLevelAssets(x, audioFilesToDelete));

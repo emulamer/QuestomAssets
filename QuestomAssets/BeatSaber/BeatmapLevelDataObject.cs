@@ -51,7 +51,7 @@ namespace QuestomAssets.BeatSaber
             {
                 if (_levelID == null)
                 {
-                    _levelID = new string(SongName.Where(c => char.IsLetter(c)).ToArray());
+                    _levelID = MiscUtils.GetLevelID(SongName);
                 }
                 //this probably isn't safe to use as a songID
                 return _levelID;

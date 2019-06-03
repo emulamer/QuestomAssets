@@ -2,12 +2,17 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
 
 namespace QuestomAssets.BeatSaber
 {
-    class MiscUtils
+    public class MiscUtils
     {
 
+        public static string GetLevelID(string songName)
+        {
+            return new string(songName.Where(c => char.IsLetter(c)).ToArray());
+        }
         //string playlist = @"C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\Playlists\SongBrowserPluginFavorites.json";
         //string customSongsFolder2 = @"C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\CustomSongs";
         //string copyToFolder = @"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\dist\ToConvert";
