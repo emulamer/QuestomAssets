@@ -25,10 +25,10 @@ namespace QuestomAssets.BeatSaber
         public BeatmapLevelDataObject(AssetsMetadata metadata) : base(metadata, BSConst.ScriptHash.BeatmapLevelDataHash, BSConst.ScriptPtr.BeatmapLevelDataScriptPtr)
         { }
 
-        public void UpdateTypes(AssetsMetadata metadata)
-        {
-            base.UpdateType(metadata, BSConst.ScriptHash.BeatmapLevelDataHash, BSConst.ScriptPtr.BeatmapLevelDataScriptPtr);
-        }
+        //public void UpdateTypes(AssetsMetadata metadata)
+        //{
+        //    base.UpdateType(metadata, BSConst.ScriptHash.BeatmapLevelDataHash, BSConst.ScriptPtr.BeatmapLevelDataScriptPtr);
+        //}
 
 
         public override byte[] ScriptParametersData

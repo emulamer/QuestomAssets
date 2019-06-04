@@ -6,8 +6,14 @@ using QuestomAssets.BeatSaber;
 using System.Collections.Generic;
 using System.Linq;
 
+
 namespace QuestomAssets
 {
+    [SmartPtrAware]
+    public class Test : AssetsObject
+    {
+        public SmartPtr<MonoBehaviourObject> mo { get; set; }
+    }
     public class QuestomAssetsEngine : IDisposable
     {
         private string _apkFilename;
@@ -25,6 +31,8 @@ namespace QuestomAssets
         /// <param name="pemCertificateData">The contents of the PEM certificate that will be used to sign the APK.  If omitted, a new self signed cert will be generated.</param>
         public QuestomAssetsEngine(string apkFilename, bool readOnly = false, string pemCertificateData = BSConst.DebugCertificatePEM)
         {
+            Test t = new Test();
+            //t.mo = new SmartPtr<MonoBehaviourObject>();
             _readOnly = readOnly;
             _apkFilename = apkFilename;
             _apk = new Apkifier(apkFilename, !readOnly, readOnly?null:pemCertificateData, readOnly);
@@ -33,10 +41,10 @@ namespace QuestomAssets
         private Dictionary<string, AssetsFile> _openAssetsFiles = new Dictionary<string, AssetsFile>();
 
         private AssetsFile OpenAssets(string assetsFilename)
-        {
+        { 
             if (_openAssetsFiles.ContainsKey(assetsFilename))
                 return _openAssetsFiles[assetsFilename];
-            AssetsFile assetsFile = new AssetsFile(_apk.ReadCombinedAssets(BSConst.KnownFiles.AssetsRootPath+assetsFilename), BSConst.GetAssetTypeMap());
+            AssetsFile assetsFile = new AssetsFile(assetsFilename, _apk.ReadCombinedAssets(BSConst.KnownFiles.AssetsRootPath+assetsFilename), BSConst.GetAssetTypeMap());
             _openAssetsFiles.Add(assetsFilename, assetsFile);
             return assetsFile;
         }

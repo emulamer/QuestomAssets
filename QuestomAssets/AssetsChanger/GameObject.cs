@@ -20,10 +20,10 @@ namespace QuestomAssets.AssetsChanger
             ParseDetails(reader);
         }
 
-        protected void UpdateType(AssetsMetadata metadata, Guid scriptHash, PPtr monoscriptTypePtr)
-        {
-            base.UpdateType(metadata, scriptHash);
-        }
+        //protected void UpdateType(AssetsMetadata metadata, Guid scriptHash, PPtr monoscriptTypePtr)
+        //{
+        //    base.UpdateType(metadata, scriptHash);
+        //}
 
         public GameObject()
         { IsActive = true; }

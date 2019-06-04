@@ -7,6 +7,7 @@ using System.Text;
 
 namespace QuestomAssets.AssetsChanger
 {
+    [SmartPtrAware]
     public class AssetsObject
     {
         [JsonIgnore]
@@ -18,14 +19,6 @@ namespace QuestomAssets.AssetsChanger
         public AssetsObject()
         { }
 
-        protected void UpdateType(AssetsMetadata metadata, Guid scriptHash)
-        {
-            ObjectInfo = new ObjectInfo()
-            {
-                TypeIndex = metadata.GetTypeIndexFromScriptHash(scriptHash)
-            };
-        }
-
         public AssetsObject(AssetsMetadata metadata, int classID)
         {
             ObjectInfo = new ObjectInfo()
@@ -33,11 +26,14 @@ namespace QuestomAssets.AssetsChanger
                 TypeIndex = metadata.Types.IndexOf(metadata.Types.First(x => x.ClassID == classID))
             };
         }
-            
+
 
         public AssetsObject(AssetsMetadata metadata, Guid scriptHash)
         {
-            UpdateType(metadata, scriptHash);
+            ObjectInfo = new ObjectInfo()
+            {
+                TypeIndex = metadata.GetTypeIndexFromScriptHash(scriptHash)
+            };
         }
 
         public AssetsObject(ObjectInfo objectInfo)

@@ -10,6 +10,35 @@ namespace QuestomAssets.AssetsChanger
 {
     public class AssetsFile
     {
+        public string AssetsFileName { get; private set; }
+
+        public int GetOrAddExternalFileIDRef(AssetsFile targetFile)
+        {
+            ExternalFile file = Metadata.ExternalFiles.FirstOrDefault(x => x.FileName == targetFile.AssetsFileName);
+            if (file == null)
+            {
+                file = new ExternalFile()
+                {
+                    AssetName = targetFile.AssetsFileName
+                };
+                Metadata.ExternalFiles.Add(file);
+            }
+
+            return Metadata.ExternalFiles.IndexOf(file) + 1;
+        }
+
+        private List<ISmartPtr<AssetsObject>> _knownPointers = new List<ISmartPtr<AssetsObject>>();
+
+        public void AddPtrRef(ISmartPtr<AssetsObject> ptr)
+        {
+            _knownPointers.Add(ptr);
+        }
+
+        public void RemovePtrRef(ISmartPtr<AssetsObject> ptr)
+        {
+            _knownPointers.Remove(ptr);
+        }
+
         public AssetsFileHeader Header { get; set; }
 
         public AssetsMetadata Metadata { get; set; }
@@ -18,8 +47,9 @@ namespace QuestomAssets.AssetsChanger
 
         private Dictionary<Guid, Type> _scriptHashToTypes = new Dictionary<Guid, Type>();
 
-        public AssetsFile(Stream assetsFileStream, Dictionary<Guid, Type> scriptHashToTypes)
+        public AssetsFile(string assetsFileName, Stream assetsFileStream, Dictionary<Guid, Type> scriptHashToTypes)
         {
+            AssetsFileName = assetsFileName;
             _scriptHashToTypes = scriptHashToTypes;
             Objects = new List<AssetsObject>();
 
@@ -31,7 +61,7 @@ namespace QuestomAssets.AssetsChanger
             }
             using (AssetsReader reader = new AssetsReader(assetsFileStream, false))
             {
-                Metadata = new AssetsMetadata(reader);
+                Metadata = new AssetsMetadata(this, reader);
             }
             assetsFileStream.Seek(Header.ObjectDataOffset, SeekOrigin.Begin);
             using (AssetsReader reader = new AssetsReader(assetsFileStream))
@@ -86,7 +116,7 @@ namespace QuestomAssets.AssetsChanger
             return assetsObject;
         }
 
-        public T CopyAsset<T>(T source) where T: AssetsObject
+        public T CopyAsset<T>(T source) where T : AssetsObject
         {
             T newObj = null;
             using (var ms = new MemoryStream())
@@ -200,7 +230,12 @@ namespace QuestomAssets.AssetsChanger
 
         public string GetFilenameForFileID(int fileID)
         {
-            return Metadata.ExternalFiles[fileID-1].FileName;
+            return Metadata.ExternalFiles[fileID - 1].FileName;
+        }
+
+        public int GetFileIDForFile(AssetsFile file)
+        {
+            return GetFileIDForFilename(file.AssetsFileName);
         }
 
         public int GetFileIDForFilename(string filename)

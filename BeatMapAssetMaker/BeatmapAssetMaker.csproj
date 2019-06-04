@@ -7,6 +7,7 @@
     <Product>BeatmapAssetMaker</Product>
     <Copyright>Copyright ©  2019</Copyright>
     <StartupObject>BeatmapAssetMaker.Program</StartupObject>
+	<SolutionDir>..\</SolutionDir>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
   </PropertyGroup>

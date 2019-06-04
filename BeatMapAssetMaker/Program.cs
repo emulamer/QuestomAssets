@@ -255,9 +255,11 @@ namespace BeatmapAssetMaker
                     {
                         playlist.CoverArt = string.IsNullOrWhiteSpace(args.CoverArt) ? null : new Bitmap(args.CoverArt);
                     }
+#pragma warning disable CS0168 // The variable 'ex' is declared but never used
                     catch (Exception ex)
+#pragma warning restore CS0168 // The variable 'ex' is declared but never used
                     {
-                        Log.LogErr($"Unable to load playlist cover art from {args.CoverArt}");
+                        Log.LogErr($"Unable to load playlist cover art from {args.CoverArt}", ex);
                         playlist.CoverArt = null;
                     }
                     Log.LogMsg($"Attempting to load {customSongsFolders.Count} custom songs...");

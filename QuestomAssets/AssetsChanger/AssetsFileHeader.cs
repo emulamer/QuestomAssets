@@ -13,7 +13,7 @@ namespace QuestomAssets.AssetsChanger
         /// </summary>
         public Int32 HeaderSize {
             get
-            {
+            { 
                 return 4 + 4 + 4 + 4 + 1 + 3 ;
             }
         }

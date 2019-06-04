@@ -13,6 +13,8 @@ namespace QuestomAssets.AssetsChanger
         public Int32 DataSize { get; set; }
         public Int32 TypeIndex { get; set; }
 
+        public AssetsFile ParentFile { get; set; }
+
         public ObjectInfo()
         { }
 

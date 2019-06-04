@@ -21,11 +21,11 @@ namespace QuestomAssets.AssetsChanger
             ParseDetails(reader);
         }
 
-        protected void UpdateType(AssetsMetadata metadata, Guid scriptHash, PPtr monoscriptTypePtr)
-        {
-            base.UpdateType(metadata, scriptHash);
-            MonoscriptTypePtr = monoscriptTypePtr;           
-        }
+        //protected void UpdateType(AssetsMetadata metadata, Guid scriptHash, PPtr monoscriptTypePtr)
+        //{
+        //    base.UpdateType(metadata, scriptHash);
+        //    MonoscriptTypePtr = monoscriptTypePtr;           
+        //}
 
         public MonoBehaviourObject()
         { Enabled = 1; }

@@ -19,10 +19,10 @@ namespace QuestomAssets.BeatSaber
             Parse(reader);
         }
 
-        public void UpdateTypes(AssetsMetadata metadata)
-        {
-            base.UpdateType(metadata, BSConst.ScriptHash.BeatmapLevelCollectionScriptHash, BSConst.ScriptPtr.BeatmapLevelCollectionScriptPtr);
-        }
+        //public void UpdateTypes(AssetsMetadata metadata)
+        //{
+        //    base.UpdateType(metadata, BSConst.ScriptHash.BeatmapLevelCollectionScriptHash, BSConst.ScriptPtr.BeatmapLevelCollectionScriptPtr);
+        //}
 
         public List<PPtr> BeatmapLevels { get; set; } = new List<PPtr>();
 

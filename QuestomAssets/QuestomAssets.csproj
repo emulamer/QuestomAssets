@@ -1,7 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
+	
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp2.2;net462</TargetFrameworks>
+    <TargetFrameworks>netstandard2</TargetFrameworks>
+  <SolutionDir>..\</SolutionDir>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -12,6 +13,7 @@
     <Compile Remove="Resources\**" />
     <EmbeddedResource Remove="Resources\**" />
     <None Remove="Resources\**" />
+
   </ItemGroup>
 
   <ItemGroup>
@@ -25,6 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Cauldron.BasicInterceptors" Version="3.2.3" />
     <PackageReference Include="lz4net.netcore.signed" Version="1.0.15.93" />
     <PackageReference Include="LZMA-SDK" Version="18.1.0" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
