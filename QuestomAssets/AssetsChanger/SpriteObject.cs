@@ -8,7 +8,7 @@ namespace QuestomAssets.AssetsChanger
     /// <summary>
     /// !!!!!!!!!!!!THIS CLASS IS HORRIBLY INCOMPLETE AND JUST HACKED TOGETHER TO GET TO THE TEXTURE POINTER!!!!!!!!!!
     /// </summary>
-    public class SpriteObject : AssetsObject
+    public class SpriteObject : AssetsObject, IHaveName
     {
         public SpriteObject(AssetsMetadata metadata) : base(metadata, AssetsConstants.ClassID.SpriteClassID)
         {

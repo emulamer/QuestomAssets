@@ -26,7 +26,8 @@ namespace QuestomAssets.BeatSaber
             public static PPtr NoArrowsCharacteristic { get; set; } = new PPtr(6, 1);
             public static PPtr StandardCharacteristic { get; set; } = new PPtr(22, 1);
 
-            public static PPtr ExtrasCoverArt { get; set; } = new PPtr(0, 45);
+            public static PPtr ExtrasCoverArtSprite { get; set; } = new PPtr(0, 45);
+            
         }
     }
 }

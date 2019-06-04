@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Text;
+using QuestomAssets.AssetsChanger;
 
 namespace QuestomAssets
 {
@@ -16,6 +17,9 @@ namespace QuestomAssets
 
         [JsonIgnore]
         internal BeatmapLevelCollectionObject LevelCollection { get; set; }
+
+        [JsonIgnore]
+        internal SpriteObject CoverArtSprite { get; set; }
 
         public string PlaylistID { get; set; }
 

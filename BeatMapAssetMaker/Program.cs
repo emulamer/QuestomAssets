@@ -61,6 +61,9 @@ namespace BeatmapAssetMaker
 
         [Option('d', "delete-songs", Required = false, HelpText = "Deletes existing songs that aren't in the custom songs folders.")]
         public bool DeleteSongs { get; set; }
+
+        [Option('c', "cover-art", Required = false, HelpText = "The path to the image file of the cover art you want the playlist to use")]
+        public string CoverArt { get; set; }
         //[Option("nocovers", Required = false, Default = false, HelpText = "Skip importing cover art")]
         //public bool NoCovers { get; set; }
     }
@@ -212,7 +215,11 @@ namespace BeatmapAssetMaker
         static int FolderMode(FolderMode args)
         {
             QuestomAssets.Log.SetLogSink(new ConsoleSink());
-
+            if (!string.IsNullOrWhiteSpace(args.CoverArt) && !File.Exists(args.CoverArt))
+            {
+                Log.LogErr("Playlist cover art file doesn't exist!");
+                return -1;
+            }
             var customSongsFolders = GetCustomSongsFromPath(args.CustomSongsFolder);
             if (customSongsFolders.Count < 1)
             {
@@ -235,7 +242,7 @@ namespace BeatmapAssetMaker
                         playlist = new BeatSaberPlaylist()
                         {
                             PlaylistID = "CustomSongs",
-                            PlaylistName = "Custom Songs"
+                            PlaylistName = "Custom Songs"                            
                         };
                         cfg.Playlists.Add(playlist);
                     }
@@ -244,7 +251,7 @@ namespace BeatmapAssetMaker
                         Log.LogMsg("Deleting current songs from playlist before reloading");
                         playlist.SongList.Clear();
                     }
-
+                    playlist.CoverArtFile = string.IsNullOrWhiteSpace(args.CoverArt) ? null : args.CoverArt;
                     Log.LogMsg($"Attempting to load {customSongsFolders.Count} custom songs...");
                     foreach (var cs in customSongsFolders)
                     {
@@ -286,7 +293,7 @@ namespace BeatmapAssetMaker
             {
                 //do many
                 List<string> foundSongs = Directory.EnumerateDirectories(path).Where(y => File.Exists(Path.Combine(y, "Info.dat"))).ToList();
-                Log.LogErr($"Found {foundSongs.Count()} custom songs to inject");
+                Log.LogMsg($"Found {foundSongs.Count()} custom songs to inject");
                 customSongsFolders.AddRange(foundSongs);
             }
             return customSongsFolders;

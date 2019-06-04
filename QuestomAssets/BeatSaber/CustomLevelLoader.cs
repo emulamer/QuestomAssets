@@ -236,7 +236,7 @@ namespace QuestomAssets.BeatSaber
                     string coverFile = Path.Combine(songPath, levelData.CoverImageFilename);
                     Bitmap coverImage = (Bitmap)Bitmap.FromFile(coverFile);
                     int mips;
-                    var imageBytes = ImageUtils.LoadToRGBAndMipmap(coverImage, 256, 256, 6, out mips);
+                    var imageBytes = ImageUtils.ConvertToRGBAndMipmap(coverImage, 256, 256, 6, out mips);
 
                     var coverAsset = new Texture2DObject(assetsFile.Metadata)
                     {
@@ -282,19 +282,24 @@ namespace QuestomAssets.BeatSaber
             return null;
         }
 
-        public static PPtr LoadPackCover(string assetName, AssetsFile assetsFile, string fromFilename)
+        public static SpriteObject LoadPackCover(string assetName, AssetsFile assetsFile, string fromFilename)
         {
+            byte[] imageBytes = null;
+            int mips = 11;
             if (!string.IsNullOrWhiteSpace(fromFilename))
             {
-                Log.LogErr("Cover art for playlists isn't supported yet!");
-            }
-            //var extrasSprite = assetsFile.Objects.First(x => x.ObjectInfo.ObjectID == 45);
-            //I don't want to write all the code for the Sprint class, so I'm encoding the binary and swapping specific bits around
-            string spriteData = "CwAAAEV4dHJhc0NvdmVyAAAAAAAAAAAAAACARAAAgEQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIBEAAAAPwAAAD8BAAAAAAAAAKrborQQ7eZHhB371sswB+MgA0UBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADgAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAYAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAAAAAAAAQACAAIAAQADAAQAAAAOAAAAAAAAAwAAAAAAAAAAAAAAAAEAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABQAAAAAAAAvwAAAD8AAAAAAAAAPwAAAD8AAAAAAAAAvwAAAL8AAAAAAAAAPwAAAL8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIBEAACARAAAAAAAAAAAAACAvwAAgL8AAAAAAACARAAAAEQAAIBEAAAARAAAgD8AAAAAAAAAAA==";
-            byte[] spriteBytes = Convert.FromBase64String(spriteData);
+                try
+                {
+                    imageBytes = Utils.ImageUtils.ConvertToETC1AndMipmap(new Bitmap(fromFilename), 1024, 1024, 11, out mips);
+                }
+                catch (Exception ex)
+                {
+                    Log.LogErr($"Failed to convert {fromFilename} to ETC2 texture, falling back to default cover image", ex);
 
-            byte[] imageBytes = Resources.Resource1.CustomSongsCover;
-                
+                }
+            }
+            if (imageBytes == null)
+                imageBytes = Resources.Resource1.CustomSongsCover;
 
             var packCover = new Texture2DObject(assetsFile.Metadata)
             {
@@ -304,8 +309,8 @@ namespace QuestomAssets.BeatSaber
                 Width = 1024,
                 Height = 1024,
                 CompleteImageSize = imageBytes.Length,
-                TextureFormat = (AssetsChanger.Texture2DObject.TextureFormatType)34,
-                MipCount = 11,
+                TextureFormat = AssetsChanger.Texture2DObject.TextureFormatType.ETC2_RGB,
+                MipCount = mips,
                 IsReadable = false,
                 StreamingMipmaps = false,
                 StreamingMipmapsPriority = 0,
@@ -331,27 +336,14 @@ namespace QuestomAssets.BeatSaber
                 }
             };
             assetsFile.AddObject(packCover, true);
-            byte[] finalBytes;
-            using (MemoryStream ms = new MemoryStream(spriteBytes))
-            {
-                ms.Seek(116, SeekOrigin.Begin);
-                using (AssetsWriter writer = new AssetsWriter(ms))
-                    packCover.ObjectInfo.LocalPtrTo.Write(writer);
-
-                finalBytes = ms.ToArray();
-            }
-            var nameBytes = System.Text.UTF8Encoding.ASCII.GetBytes("Custom");
-            Array.Copy(nameBytes, 0, finalBytes, 4, nameBytes.Length);
-            AssetsObject coverAsset = new AssetsObject(new ObjectInfo()
-            {
-                TypeIndex = assetsFile.Metadata.GetTypeIndexFromClassID(AssetsConstants.ClassID.SpriteClassID)
-            })
-            {
-                Data = finalBytes
-            };
-
+            
+            //slightly less hacky than before, but only a little
+            var extrasCover = assetsFile.FindAsset<SpriteObject>("ExtrasCover");
+            SpriteObject coverAsset = assetsFile.CopyAsset(extrasCover);
+            coverAsset.Name = assetName;
+            coverAsset.Texture = packCover.ObjectInfo.LocalPtrTo;
             assetsFile.AddObject(coverAsset, true);
-            return coverAsset.ObjectInfo.LocalPtrTo;
+            return coverAsset;
         }
     }
 }

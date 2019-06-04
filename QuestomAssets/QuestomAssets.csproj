@@ -15,6 +15,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="..\Binaries\Win\etcpack.exe" Link="etcpack.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
     <Resource Include="Resources\CustomSongsCover.ETC_RGB4" />
   </ItemGroup>
 

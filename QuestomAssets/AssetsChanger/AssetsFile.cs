@@ -74,6 +74,9 @@ namespace QuestomAssets.AssetsChanger
                 case AssetsConstants.ClassID.GameObjectClassID:
                     assetsObject = new GameObject(objectInfo, reader);
                     break;
+                case AssetsConstants.ClassID.SpriteClassID:
+                    assetsObject = new SpriteObject(objectInfo, reader);
+                    break;
                 default:
                     assetsObject = new AssetsObject(objectInfo, reader);
                     break;
@@ -81,6 +84,27 @@ namespace QuestomAssets.AssetsChanger
             // is this needed?
             //reader.AlignToObjectData(8);
             return assetsObject;
+        }
+
+        public T CopyAsset<T>(T source) where T: AssetsObject
+        {
+            T newObj = null;
+            using (var ms = new MemoryStream())
+            {
+                var newInfo = new ObjectInfo()
+                {
+                    TypeIndex = source.ObjectInfo.TypeIndex,
+                    DataSize = source.ObjectInfo.DataSize
+                };
+                using (var writer = new AssetsWriter(ms))
+                    source.Write(writer);
+                ms.Seek(0, SeekOrigin.Begin);
+                using (var reader = new AssetsReader(ms))
+                    newObj = (T)Activator.CreateInstance(typeof(T), newInfo, reader);
+
+
+            }
+            return newObj;
         }
 
         public void Write(Stream outputStream)

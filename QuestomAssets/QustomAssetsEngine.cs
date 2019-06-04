@@ -142,11 +142,10 @@ namespace QuestomAssets
             {
                 Log.LogMsg($"Level pack for playlist '{playlist.PlaylistID}' was not found and will be created");
                 //don't try to find the cover name, just let it create a dupe, we'll try to clean up linked things we did later
-
-                var packCover = CustomLevelLoader.LoadPackCover(playlist.PlaylistID, songsAssetFile, playlist.CoverArtFile);
+                //var packCover = CustomLevelLoader.LoadPackCover(playlist.PlaylistID, songsAssetFile, playlist.CoverArtFile);
+                //playlist.CoverArtSprite = packCover;
                 levelPack = new BeatmapLevelPackObject(songsAssetFile.Metadata)
                 {
-                    CoverImage = packCover ?? KnownObjects.File17.ExtrasCoverArt,
                     Enabled = 1,
                     GameObjectPtr = new PPtr(),
                     IsPackAlwaysOwned = true,
@@ -179,11 +178,20 @@ namespace QuestomAssets
             levelPack.PackName = playlist.PlaylistName;
             if (!string.IsNullOrEmpty(playlist.CoverArtFile))
             {
-                Log.LogErr($"Playlist '{playlist.PlaylistID}' specified a cover art file, but it isn't supported yet!");
-                //////todo:  delete, old cover art asset, add new one
-                //var packCover = songsAssetFile.GetAssetByID<SpriteObject>
-                //packCover = CustomLevelLoader.LoadPackCover(playlist.PlaylistID+BSConst.NameSuffixes.PackCover, songsAssetFile, playlist.CoverArtFile);
+                Log.LogMsg($"Loading cover art for playlist ID '{playlist.PlaylistID}'");
+
+                playlist.CoverArtSprite = CustomLevelLoader.LoadPackCover(playlist.PlaylistID, songsAssetFile, playlist.CoverArtFile);
+                playlist.LevelPackObject.CoverImage = playlist.CoverArtSprite.ObjectInfo.LocalPtrTo;
             }
+            if (playlist.LevelPackObject.CoverImage != null)
+            {
+                playlist.CoverArtSprite = songsAssetFile.GetAssetByID<SpriteObject>(playlist.LevelPackObject.CoverImage.PathID);
+            }
+            else
+            {
+                playlist.CoverArtSprite = CustomLevelLoader.LoadPackCover(playlist.PlaylistID, songsAssetFile, null);
+            }
+            playlist.LevelPackObject.CoverImage = playlist.CoverArtSprite.ObjectInfo.LocalPtrTo;
 
             //clear out any levels, we'll add them back
             levelCollection.BeatmapLevels.Clear();
@@ -319,16 +327,18 @@ namespace QuestomAssets
 
         private void RemoveLevelPackAssets(BeatmapLevelPackObject levelPack)
         {
+            var songsAssetFile = OpenAssets(BSConst.KnownFiles.SongsAssetsFilename);
+
             Log.LogMsg($"Removing assets for playlist ID '{ levelPack.PackID}'");
             var file17 = OpenAssets(BSConst.KnownFiles.SongsAssetsFilename);
-
-            //TODO: remove cover images once implemented
-
             var collection = file17.GetAssetByID<BeatmapLevelCollectionObject>(levelPack.BeatmapLevelCollection.PathID);
             file17.DeleteObject(collection);
-            file17.DeleteObject(levelPack);                       
+            file17.DeleteObject(levelPack);
+            var sprite = songsAssetFile.GetAssetByID<SpriteObject>(levelPack.CoverImage.PathID);
+            songsAssetFile.DeleteObject(sprite);
+            var texture = songsAssetFile.GetAssetByID<Texture2DObject>(sprite.Texture.PathID);
+            songsAssetFile.DeleteObject(texture);
         }
-
 
 
         public void UpdateConfig(BeatSaberQuestomConfig config)
@@ -359,7 +369,7 @@ namespace QuestomAssets
             var mainLevelPack = mainLevelsFile.FindAsset<MainLevelPackCollectionObject>();
 
 
-
+            //TODO: move this all to RemoveLevelPackAsset
             List<BeatmapLevelPackObject> packsToRemove = new List<BeatmapLevelPackObject>();
             List<PPtr> levelPackPointersToUnlink = new List<PPtr>();
             //List<BeatmapLevelCollectionObject> collectionsToRemove = new List<BeatmapLevelCollectionObject>();
@@ -418,9 +428,14 @@ namespace QuestomAssets
 
             var removedPlaylistCount = originalConfig.Playlists.Where(x => !config.Playlists.Any(y => y.PlaylistID == x.PlaylistID)).Count();
             var newPlaylistCount = config.Playlists.Where(x => !originalConfig.Playlists.Any(y => y.PlaylistID == x.PlaylistID)).Count();
-
+            //
+            //
+            //TODO: clean up cover art, it's leaking!
+            //
+            //
             List<string> audioFilesToDelete = new List<string>();
             removeSongs.ForEach(x => RemoveLevelAssets(x, audioFilesToDelete));
+
             packsToRemove.ForEach(x => RemoveLevelPackAssets(x));
 
             levelPackPointersToUnlink.ForEach(x => mainLevelPack.BeatmapLevelPacks.Remove(x));
