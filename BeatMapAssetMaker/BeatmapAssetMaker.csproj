@@ -2,7 +2,7 @@
   <PropertyGroup>
   <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>netcoreapp2.0;net462</TargetFrameworks>
+    <TargetFrameworks>netcoreapp2.2;net462</TargetFrameworks>
     <AssemblyTitle>BeatmapAssetMaker</AssemblyTitle>
     <Product>BeatmapAssetMaker</Product>
     <Copyright>Copyright ©  2019</Copyright>
@@ -17,6 +17,9 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="CommandLineParser" Version="2.5.0" />
+    <PackageReference Include="lz4net.netcore.signed" Version="1.0.15.93" />
+    <PackageReference Include="LZMA-SDK" Version="18.1.0" />
     <PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
   </ItemGroup>
@@ -26,27 +29,7 @@
     <PackageReference Include="System.IO.Compression.ZipFile" Version="4.3.0" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\New Unity Project\packages\Newtonsoft.Json.12.0.2\lib\net35\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Update="Resource1.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resource1.resx</DependentUpon>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Resources\CustomSongsCover.ETC_RGB4" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Apkifier\Apkifier.csproj" />
-    <ProjectReference Include="..\Assembly-CSharp\Assembly-CSharp.csproj" />
-    <ProjectReference Include="..\StbSharp\StbSharp\StbSharp.NETStandard.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Mox.png" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="BeatmapData.cs" />
@@ -57,7 +40,6 @@
     <Compile Remove="BeatmapObjectData.cs" />
     <Compile Remove="BeatmapObjectType.cs" />
     <Compile Remove="BeatmapSaveData.cs" />
-    <Compile Remove="BeatSaber\AssetsBeatMapLevelDataObject.cs" />
     <Compile Remove="NoteCutDirection.cs" />
     <Compile Remove="NoteData.cs" />
     <Compile Remove="NoteLineLayer.cs" />
@@ -67,10 +49,10 @@
     <Compile Remove="ObstacleType.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\QuestomAssets\QuestomAssets.csproj" />
+  </ItemGroup>
+  <ItemGroup>
     <None Update="BeatmapAssetMaker.runtimeconfig.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="etcpack.exe">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

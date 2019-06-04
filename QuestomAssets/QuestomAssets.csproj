@@ -1,0 +1,62 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netcoreapp2.2;net462</TargetFrameworks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Resources\**" />
+    <EmbeddedResource Remove="Resources\**" />
+    <None Remove="Resources\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\Binaries\Win\etcpack.exe" Link="etcpack.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\CustomSongsCover.ETC_RGB4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="lz4net.netcore.signed" Version="1.0.15.93" />
+    <PackageReference Include="LZMA-SDK" Version="18.1.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
+    <PackageReference Include="System.Drawing.Common" Version="4.5.1" />
+    <PackageReference Include="System.IO.Compression.ZipFile" Version="4.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Apkifier\Apkifier.csproj" />
+    <ProjectReference Include="..\Assembly-CSharp\Assembly-CSharp.csproj" />
+    <ProjectReference Include="..\StbSharp\StbSharp\StbSharp.NETStandard.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Resource1.Designer.cs">
+      <DependentUpon>Resource1.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+  </ItemGroup>
+
+<ItemGroup>
+    <EmbeddedResource Update="Resource1.resx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resource1.Designer.cs</LastGenOutput>
+      <CustomToolNamespace>Resources</CustomToolNamespace>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resources1.resx">
+        <Generator>ResXFileCodeGenerator</Generator>
+        <LastGenOutput>Resources1.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+</ItemGroup>
+
+</Project>
