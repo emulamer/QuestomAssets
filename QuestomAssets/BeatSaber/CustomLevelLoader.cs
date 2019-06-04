@@ -235,43 +235,13 @@ namespace QuestomAssets.BeatSaber
                 {
                     string coverFile = Path.Combine(songPath, levelData.CoverImageFilename);
                     Bitmap coverImage = (Bitmap)Bitmap.FromFile(coverFile);
-                    int mips;
-                    var imageBytes = ImageUtils.ConvertToRGBAndMipmap(coverImage, 256, 256, 6, out mips);
 
                     var coverAsset = new Texture2DObject(assetsFile.Metadata)
                     {
-                        Name = levelData.LevelID + "Cover",
-                        ForcedFallbackFormat = 4,
-                        DownscaleFallback = false,
-                        Width = 256,
-                        Height = 256,
-                        CompleteImageSize = imageBytes.Length,
-                        TextureFormat = Texture2DObject.TextureFormatType.RGB24,
-                        MipCount = mips,
-                        IsReadable = false,
-                        StreamingMipmaps = false,
-                        StreamingMipmapsPriority = 0,
-                        ImageCount = 1,
-                        TextureDimension = 2,
-                        TextureSettings = new GLTextureSettings()
-                        {
-                            FilterMode = 2,
-                            Aniso = 1,
-                            MipBias = -1,
-                            WrapU = 1,
-                            WrapV = 1,
-                            WrapW = 0
-                        },
-                        LightmapFormat = 6,
-                        ColorSpace = 1,
-                        ImageData = imageBytes,
-                        StreamData = new StreamingInfo()
-                        {
-                            offset = 0,
-                            size = 0,
-                            path = ""
-                        }
+                        Name = levelData.LevelID + "Cover"                        
                     };
+
+                    ImageUtils.AssignImageToTexture(coverImage, coverAsset, 256, 256);
                     return coverAsset;
                 }
                 catch (Exception ex)
@@ -282,59 +252,70 @@ namespace QuestomAssets.BeatSaber
             return null;
         }
 
-        public static SpriteObject LoadPackCover(string assetName, AssetsFile assetsFile, string fromFilename)
+        private static void SetFallbackCoverTexture(Texture2DObject texture)
         {
-            byte[] imageBytes = null;
+            byte[] imageBytes = Resources.Resource1.CustomSongsCover;
             int mips = 11;
-            if (!string.IsNullOrWhiteSpace(fromFilename))
+
+            texture.ForcedFallbackFormat = 4;
+            texture.DownscaleFallback = false;
+            texture.Width = 1024;
+            texture.Height = 1024;
+            texture.CompleteImageSize = imageBytes.Length;
+            texture.TextureFormat = AssetsChanger.Texture2DObject.TextureFormatType.ETC2_RGB;
+            texture.MipCount = mips;
+            texture.IsReadable = false;
+            texture.StreamingMipmaps = false;
+            texture.StreamingMipmapsPriority = 0;
+            texture.ImageCount = 1;
+            texture.TextureDimension = 2;
+            texture.TextureSettings = new GLTextureSettings()
+            {
+                FilterMode = 2,
+                Aniso = 1,
+                MipBias = -1,
+                WrapU = 1,
+                WrapV = 1,
+                WrapW = 0
+            };
+            texture.LightmapFormat = 6;
+            texture.ColorSpace = 1;
+            texture.ImageData = imageBytes;
+            texture.StreamData = new StreamingInfo()
+            {
+                offset = 0,
+                size = 0,
+                path = ""
+            };
+        }
+
+        public static SpriteObject LoadPackCover(string assetName, AssetsFile assetsFile, Bitmap coverImage)
+        {
+            Texture2DObject packCover = null;
+            if (coverImage != null)
             {
                 try
                 {
-                    imageBytes = Utils.ImageUtils.ConvertToETC1AndMipmap(new Bitmap(fromFilename), 1024, 1024, 11, out mips);
+                    var loadedCover = new Texture2DObject(assetsFile.Metadata)
+                    {
+                        Name = assetName
+                    };
+                    ImageUtils.AssignImageToTexture(coverImage, loadedCover, 1024, 1024);
+                    packCover = loadedCover;
                 }
                 catch (Exception ex)
                 {
-                    Log.LogErr($"Failed to convert {fromFilename} to ETC2 texture, falling back to default cover image", ex);
-
+                    Log.LogErr($"Failed to convert to texture, falling back to default cover image", ex);
                 }
             }
-            if (imageBytes == null)
-                imageBytes = Resources.Resource1.CustomSongsCover;
-
-            var packCover = new Texture2DObject(assetsFile.Metadata)
+            if (packCover == null)
             {
-                Name = assetName,
-                ForcedFallbackFormat = 4,
-                DownscaleFallback = false,
-                Width = 1024,
-                Height = 1024,
-                CompleteImageSize = imageBytes.Length,
-                TextureFormat = AssetsChanger.Texture2DObject.TextureFormatType.ETC2_RGB,
-                MipCount = mips,
-                IsReadable = false,
-                StreamingMipmaps = false,
-                StreamingMipmapsPriority = 0,
-                ImageCount = 1,
-                TextureDimension = 2,
-                TextureSettings = new GLTextureSettings()
+                var loadedCover = new Texture2DObject(assetsFile.Metadata)
                 {
-                    FilterMode = 2,
-                    Aniso = 1,
-                    MipBias = -1,
-                    WrapU = 1,
-                    WrapV = 1,
-                    WrapW = 0
-                },
-                LightmapFormat = 6,
-                ColorSpace = 1,
-                ImageData = imageBytes,
-                StreamData = new StreamingInfo()
-                {
-                    offset = 0,
-                    size = 0,
-                    path = ""
-                }
-            };
+                    Name = assetName
+                };
+                SetFallbackCoverTexture(packCover);
+            }            
             assetsFile.AddObject(packCover, true);
             
             //slightly less hacky than before, but only a little

@@ -1,0 +1,44 @@
+{
+  "_version": "2.0.0",
+  "_songName": "Testing Song!",
+  "_songSubName": "An ode to test",
+  "_songAuthorName": "Emulamer",
+  "_levelAuthorName": "Not Mapped",
+  "_beatsPerMinute": 160,
+  "_songTimeOffset": 0,
+  "_shuffle": 0,
+  "_shufflePeriod": 0.5,
+  "_previewStartTime": 12.1,
+  "_previewDuration": 16,
+  "_songFilename": "Testing_sound_1.ogg",
+  "_coverImageFilename": "cover.png",
+  "_environmentName": "DefaultEnvironment",
+  "_customData": {
+    "_contributors": [],
+    "_customEnvironment": "",
+    "_customEnvironmentHash": ""
+  },
+  "_difficultyBeatmapSets": [
+    {
+      "_beatmapCharacteristicName": "Standard",
+      "_difficultyBeatmaps": [
+        {
+          "_difficulty": "Expert",
+          "_difficultyRank": 7,
+          "_beatmapFilename": "Expert.dat",
+          "_noteJumpMovementSpeed": 10,
+          "_noteJumpStartBeatOffset": 0,
+          "_customData": {
+            "_difficultyLabel": "",
+            "_editorOffset": 0,
+            "_editorOldOffset": 0,
+            "_warnings": [],
+            "_information": [],
+            "_suggestions": [],
+            "_requirements": []
+          }
+        }
+      ]
+    }
+  ]
+}

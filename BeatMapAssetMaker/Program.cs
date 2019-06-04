@@ -251,7 +251,15 @@ namespace BeatmapAssetMaker
                         Log.LogMsg("Deleting current songs from playlist before reloading");
                         playlist.SongList.Clear();
                     }
-                    playlist.CoverArtFile = string.IsNullOrWhiteSpace(args.CoverArt) ? null : args.CoverArt;
+                    try
+                    {
+                        playlist.CoverArt = string.IsNullOrWhiteSpace(args.CoverArt) ? null : new Bitmap(args.CoverArt);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.LogErr($"Unable to load playlist cover art from {args.CoverArt}");
+                        playlist.CoverArt = null;
+                    }
                     Log.LogMsg($"Attempting to load {customSongsFolders.Count} custom songs...");
                     foreach (var cs in customSongsFolders)
                     {

@@ -1,0 +1,48 @@
+{  
+   "_version":"2.0.0",
+   "_BPMChanges":[  
+
+   ],
+   "_events":[  
+      {  
+         "_time":5,
+         "_type":13,
+         "_value":8
+      }
+   ],
+   "_notes":[  
+      {  
+         "_time":6.312123023,
+         "_lineIndex":0,
+         "_lineLayer":0,
+         "_type":0,
+         "_cutDirection":1
+      },
+      {  
+         "_time":9.351232138999023,
+         "_lineIndex":3,
+         "_lineLayer":0,
+         "_type":1,
+         "_cutDirection":1
+      }
+   ],
+   "_obstacles":[  
+      {  
+         "_time":7.25,
+         "_lineIndex":0,
+         "_type":0,
+         "_duration":3.75,
+         "_width":1
+      },
+      {  
+         "_time":34,
+         "_lineIndex":0,
+         "_type":0,
+         "_duration":6,
+         "_width":1
+      }
+   ],
+   "_bookmarks":[  
+
+   ]
+}

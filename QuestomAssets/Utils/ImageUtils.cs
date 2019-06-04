@@ -5,29 +5,65 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Diagnostics;
+using QuestomAssets.AssetsChanger;
 
 namespace QuestomAssets.Utils
 {
     public class ImageUtils
     {
-        public static byte[] ConvertToRGBAndMipmap(Bitmap image, int targetWidth, int targetHeight, int maxMips, out int actualMips)
+        public enum TextureConversionFormat
         {
-            using (MemoryStream msMips = new MemoryStream())
+            Auto = 0,
+            RGB24 = 1,
+            ETC2_RGB = 2
+        }        
+
+        public static void AssignImageToTexture(Bitmap sourceImage, AssetsChanger.Texture2DObject targetTexture, int targetWidth, int targetHeight, int targetMips = Int32.MaxValue, TextureConversionFormat format = TextureConversionFormat.Auto)
+        {
+            //right now "Auto" is always RGB24.  Probably will automatically decide based on image size, but doing ETC2 sucks at the moment
+
+            int mips;
+            byte[] textureBytes;
+            if (format == TextureConversionFormat.ETC2_RGB)
             {
-                int currentWidth = targetWidth;
-                int currentHeight = targetHeight;
-                int mipCount = 0;
-                while (currentWidth >= 1 && currentHeight >= 1 && mipCount < maxMips)
-                {
-                    byte[] mipData = ConvertToRGBAndSize(image, currentWidth, currentHeight,RotateFlipType.RotateNoneFlipXY);
-                    msMips.Write(mipData, 0, mipData.Length);
-                    currentWidth /= 2;
-                    currentHeight /= 2;
-                    mipCount++;
-                }
-                actualMips = mipCount;
-                return msMips.ToArray();
+                textureBytes = ConvertToETC2AndMipmap(sourceImage, targetWidth, targetHeight, targetMips, out mips);
+                targetTexture.TextureFormat = Texture2DObject.TextureFormatType.ETC2_RGB;
             }
+            else //always fall back to RGB24
+            {
+                textureBytes = ConvertToRGBAndMipmap(sourceImage, targetWidth, targetHeight, targetMips, out mips);
+                targetTexture.TextureFormat = AssetsChanger.Texture2DObject.TextureFormatType.RGB24;
+            }
+
+            targetTexture.ForcedFallbackFormat = 4;
+            targetTexture.DownscaleFallback = false;
+            targetTexture.Width = targetWidth;
+            targetTexture.Height = targetHeight;
+            targetTexture.CompleteImageSize = textureBytes.Length;
+            targetTexture.MipCount = mips;
+            targetTexture.IsReadable = false;
+            targetTexture.StreamingMipmaps = false;
+            targetTexture.StreamingMipmapsPriority = 0;
+            targetTexture.ImageCount = 1;
+            targetTexture.TextureDimension = 2;
+            targetTexture.TextureSettings = new GLTextureSettings()
+            {
+                FilterMode = 2,
+                Aniso = 1,
+                MipBias = -1,
+                WrapU = 1,
+                WrapV = 1,
+                WrapW = 0
+            };
+            targetTexture.LightmapFormat = 6;
+            targetTexture.ColorSpace = 1;
+            targetTexture.ImageData = textureBytes;
+            targetTexture.StreamData = new StreamingInfo()
+            {
+                offset = 0,
+                size = 0,
+                path = ""
+            };
         }
 
         public static Bitmap TextureToBitmap(AssetsChanger.Texture2DObject texture)
@@ -43,23 +79,54 @@ namespace QuestomAssets.Utils
                 case AssetsChanger.Texture2DObject.TextureFormatType.ETC_RGB4:
                 case AssetsChanger.Texture2DObject.TextureFormatType.ETC2_RGBA8:
                 case AssetsChanger.Texture2DObject.TextureFormatType.ETC2_RGBA1:
-                    return ConvertETC1ToBitmap(texture.ImageData, texture.Width, texture.Height);
+                    return ConvertETC2ToBitmap(texture.ImageData, texture.Width, texture.Height);
                 default:
                     throw new NotImplementedException($"Texture type {texture.ToString()} isn't currently supported.");
             }
         }
 
-        
+        private static byte[] ConvertToRGBAndMipmap(Bitmap image, int targetWidth, int targetHeight, int maxMips, out int actualMips)
+        {
+            using (MemoryStream msMips = new MemoryStream())
+            {
+                int currentWidth = targetWidth;
+                int currentHeight = targetHeight;
+                int mipCount = 0;
+                while (currentWidth >= 1 && currentHeight >= 1 && mipCount < maxMips)
+                {
+                    byte[] mipData = ConvertToRGBAndSize(image, currentWidth, currentHeight, RotateFlipType.RotateNoneFlipXY);
+                    msMips.Write(mipData, 0, mipData.Length);
+                    currentWidth /= 2;
+                    currentHeight /= 2;
+                    mipCount++;
+                }
+                actualMips = mipCount;
+                return msMips.ToArray();
+            }
+        }
+
+        private static byte[] FlipRB(byte[] rgb, int limit = Int32.MaxValue)
+        {
+            for (int i = 0; (i+3) < rgb.Length && i < limit; i +=3)
+            {
+                byte temp = rgb[i];
+                rgb[i] = rgb[i + 2];
+                rgb[i + 2] = temp;
+            }
+            return rgb;
+        }
+
         private static Bitmap ConvertFromRGB24ToBitmap(byte[] rgbData, int width, int height, RotateFlipType flipType)
         {
             Bitmap image = new Bitmap(width, height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            int imageBytesSize = width * height * 3;
             Rectangle rect = new Rectangle(0, 0, image.Width, image.Height);
             System.Drawing.Imaging.BitmapData bitmapData =
                 image.LockBits(rect, System.Drawing.Imaging.ImageLockMode.ReadWrite,
                 image.PixelFormat);
             IntPtr bmpPtr = bitmapData.Scan0;
-            FlipRB(rgbData);
-            System.Runtime.InteropServices.Marshal.Copy(rgbData, 0, bmpPtr, rgbData.Length);
+            FlipRB(rgbData, imageBytesSize);
+            System.Runtime.InteropServices.Marshal.Copy(rgbData, 0, bmpPtr, imageBytesSize);
             image.UnlockBits(bitmapData);
             image.RotateFlip(flipType);
             return image;
@@ -72,7 +139,7 @@ namespace QuestomAssets.Utils
             Graphics g = Graphics.FromImage(newImage);
             g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
 
-            g.DrawImage(image,new Rectangle(0, 0, width, height));
+            g.DrawImage(image, new Rectangle(0, 0, width, height));
             newImage.RotateFlip(flipType);
             image = newImage;
 
@@ -87,18 +154,6 @@ namespace QuestomAssets.Utils
 
             return FlipRB(imageBytes);
         }
-
-        public static byte[] FlipRB(byte[] rgb)
-        {
-            for (int i = 0; (i+3) < rgb.Length; i +=3)
-            {
-                byte temp = rgb[i];
-                rgb[i] = rgb[i + 2];
-                rgb[i + 2] = temp;
-            }
-            return rgb;
-        }
-
         #region ETC2
         private static void WriteRGBToPPMFile(string filename, byte[] imageBytes, int width, int height)
         {
@@ -235,7 +290,7 @@ namespace QuestomAssets.Utils
 
         }
 
-        public static byte[] ConvertToETC1AndMipmap(Bitmap image, int targetWidth, int targetHeight, int maxMips, out int actualMips)
+        private static byte[] ConvertToETC2AndMipmap(Bitmap image, int targetWidth, int targetHeight, int maxMips, out int actualMips)
         {
             using (MemoryStream msMips = new MemoryStream())
             {
@@ -245,7 +300,7 @@ namespace QuestomAssets.Utils
                 while (currentWidth >= 1 && currentHeight >= 1 && mipCount < maxMips)
                 {
                     
-                    byte[] mipData = ConvertToETC1AndSize(image, currentWidth, currentHeight);
+                    byte[] mipData = ConvertToETC2AndSize(image, currentWidth, currentHeight);
                     msMips.Write(mipData, 0, mipData.Length);
                     currentWidth /= 2;
                     currentHeight /= 2;
@@ -256,7 +311,7 @@ namespace QuestomAssets.Utils
             }
         }
 
-        private static Bitmap ConvertETC1ToBitmap(byte[] etc1, int width, int height)
+        private static Bitmap ConvertETC2ToBitmap(byte[] etc1, int width, int height)
         {
             var tmp = Path.GetTempFileName();
             var srcFile = Path.Combine(Path.GetDirectoryName(tmp), Path.GetFileNameWithoutExtension(tmp) + ".pkm");
@@ -285,7 +340,7 @@ namespace QuestomAssets.Utils
             return ConvertFromRGB24ToBitmap(rgb, width, height, RotateFlipType.RotateNoneFlipY);
         }
 
-        private static byte[] ConvertToETC1AndSize(Bitmap image, int targetWidth, int targetHeight)
+        private static byte[] ConvertToETC2AndSize(Bitmap image, int targetWidth, int targetHeight)
         {
             byte[] rgb = ConvertToRGBAndSize(image, targetWidth, targetHeight, RotateFlipType.RotateNoneFlipY);
             var tmp = Path.GetTempFileName();
@@ -326,12 +381,13 @@ namespace QuestomAssets.Utils
             public const string ETC2PACKAGE_sRGB_NO_MIPMAPS = "sRGB";
             public const string ETC2PACKAGE_sRGBA_NO_MIPMAPS = "sRGBA";
             public const string ETC2PACKAGE_sRGBA1_NO_MIPMAPS = "sRGBA1";
-        }
-        		
+        }        		
 
         private static void CompressETC(string srcFile, string dstFile, bool fast, bool perceptual, bool etc2, string format)
         {
             ProcessStartInfo psi = new ProcessStartInfo("etcpack", $"\"{srcFile}\" \"{dstFile}\" -s {(fast?"fast":"slow")} -e {(perceptual?"perceptual":"nonperceptual")} -c {(etc2?"etc2":"etc1")} -f {(etc2?format:"RGB")}");
+            psi.UseShellExecute = false;
+            psi.CreateNoWindow = true;
             psi.RedirectStandardOutput = true;
             Process p = Process.Start(psi);
             StringBuilder sb = new StringBuilder();
@@ -345,10 +401,11 @@ namespace QuestomAssets.Utils
                 throw new Exception($"etcpack exited with non zero: {sb.ToString()}");
         }
 
-
         private static void DecompressETC(string srcFile, string dstFile)
         {
             ProcessStartInfo psi = new ProcessStartInfo("etcpack", $"\"{srcFile}\" \"{dstFile}\"");
+            psi.UseShellExecute = false;
+            psi.CreateNoWindow = true;
             psi.RedirectStandardOutput = true;
             Process p = Process.Start(psi);
             StringBuilder sb = new StringBuilder();

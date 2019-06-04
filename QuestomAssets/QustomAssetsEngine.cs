@@ -78,7 +78,6 @@ namespace QuestomAssets
                 if (HideOriginalPlaylists && BSConst.KnownLevelPackIDs.Contains(pack.PackID))
                     continue;
 
-                //TODO: cover art, ETC pack and all that
                 var packModel = new BeatSaberPlaylist() { PlaylistName = pack.PackName, PlaylistID = pack.PackID, LevelPackObject = pack };
                 //TODO: check file ref?  right now they're all in 17
                 var collection = file17.GetAssetByID<BeatmapLevelCollectionObject>(pack.BeatmapLevelCollection.PathID);
@@ -89,6 +88,25 @@ namespace QuestomAssets
                 }
                 packModel.LevelCollection = collection;
 
+                //get cover art for playlist
+                if (!suppressImages)
+                {
+                    try
+                    {
+                        var coverSprite = file17.GetAssetByID<SpriteObject>(pack.CoverImage.PathID);
+                        if (coverSprite == null)
+                            throw new Exception("Unable to find cover art sprite.");
+                        var coverTex = file17.GetAssetByID<Texture2DObject>(coverSprite.Texture.PathID);
+                        if (coverTex == null)
+                            throw new Exception("Unable to find cover art texture.");
+                        packModel.CoverArt = coverTex.ToBitmap();
+                        packModel.CoverArtBase64PNG = packModel.CoverArt.ToBase64PNG();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.LogErr($"Unable to convert texture for playlist ID '{pack.PackID}' cover art", ex);
+                    }
+                }
                 foreach (var songPtr in collection.BeatmapLevels)
                 {
                     var songObj = file17.GetAssetByID<BeatmapLevelDataObject>(songPtr.PathID);
@@ -106,22 +124,32 @@ namespace QuestomAssets
                         SongSubName = songObj.SongSubName,
                         LevelData = songObj
                     };
-                    try
+                    if (!suppressImages)
                     {
-                        var songCover = file17.GetAssetByID<Texture2DObject>(songObj.CoverImageTexture2D.PathID);
-                        if (songCover == null)
+                        try
                         {
-                            Log.LogErr($"The cover image for song id '{songObj.LevelID}' could not be found!");
+                            var songCover = file17.GetAssetByID<Texture2DObject>(songObj.CoverImageTexture2D.PathID);
+                            if (songCover == null)
+                            {
+                                Log.LogErr($"The cover image for song id '{songObj.LevelID}' could not be found!");
+                            }
+                            else
+                            {
+                                try
+                                {
+                                    songModel.CoverArt = songCover.ToBitmap();
+                                    songModel.CoverArtBase64PNG = songModel.CoverArt.ToBase64PNG();
+                                }
+                                catch (Exception ex)
+                                {
+                                    Log.LogErr($"Unable to convert texture for song ID '{songModel.SongID}' cover", ex);
+                                }
+                            }
                         }
-                        else
+                        catch (Exception ex)
                         {
-                            if (!suppressImages)
-                                songModel.CoverArtBase64PNG = songCover.ToBase64PNG();
+                            Log.LogErr($"Exception loading/converting the cover image for song id '{songObj.LevelID}'", ex);
                         }
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.LogErr($"Exception loading/converting the cover image for song id '{songObj.LevelID}'", ex);
                     }
                     packModel.SongList.Add(songModel);
                 }
@@ -176,11 +204,11 @@ namespace QuestomAssets
             playlist.LevelPackObject = levelPack;
 
             levelPack.PackName = playlist.PlaylistName;
-            if (!string.IsNullOrEmpty(playlist.CoverArtFile))
+            if (playlist.CoverArt != null)
             {
                 Log.LogMsg($"Loading cover art for playlist ID '{playlist.PlaylistID}'");
 
-                playlist.CoverArtSprite = CustomLevelLoader.LoadPackCover(playlist.PlaylistID, songsAssetFile, playlist.CoverArtFile);
+                playlist.CoverArtSprite = CustomLevelLoader.LoadPackCover(playlist.PlaylistID, songsAssetFile, playlist.CoverArt);
                 playlist.LevelPackObject.CoverImage = playlist.CoverArtSprite.ObjectInfo.LocalPtrTo;
             }
             if (playlist.LevelPackObject.CoverImage != null)

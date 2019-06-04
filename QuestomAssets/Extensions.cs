@@ -10,14 +10,18 @@ namespace QuestomAssets
 {
     public static class Extensions
     {
-        public static string ToBase64PNG(this Texture2DObject texture)
-        {
-            var image = ImageUtils.TextureToBitmap(texture);
+        public static string ToBase64PNG(this Bitmap image)
+        {            
             using (MemoryStream ms = new MemoryStream())
             {
                 image.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
                 return Convert.ToBase64String(ms.ToArray());
             }
+        }
+
+        public static Bitmap ToBitmap(this Texture2DObject texture)
+        {
+            return ImageUtils.TextureToBitmap(texture);
         }
 
         public static string RemoveSuffix(this string value, string suffix)
