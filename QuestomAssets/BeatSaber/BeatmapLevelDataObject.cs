@@ -101,13 +101,13 @@ namespace QuestomAssets.BeatSaber
 
         //unity asset format properties
         [JsonIgnore]
-        public PPtr CoverImageTexture2D { get; set; }
+        public SmartPtr<CoverImageTexture2D> { get; set; }
 
         [JsonIgnore]
-        public PPtr EnvironmentSceneInfo { get; set; }
+        public SmartPtr<EnvironmentSceneInfo> { get; set; }
 
         [JsonIgnore]
-        public PPtr AudioClip { get; set; }
+        public SmartPtr<AudioClip> { get; set; }
 
 
         public override void Write(AssetsWriter writer)
