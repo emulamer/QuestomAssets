@@ -18,7 +18,7 @@ namespace QuestomAssets.BeatSaber
         public MainLevelPackCollectionObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
         { }
 
-        public MainLevelPackCollectionObject(AssetsFile assetsFile) : base(assetsFile, BSConst.ScriptHash.MainLevelsCollectionHash, assetsFile.GetScriptPointer(KnownObjects.File17.MainLevelsCollectionScriptPtr))
+        public MainLevelPackCollectionObject(AssetsFile assetsFile) : base(assetsFile, assetsFile.Manager.GetScriptObject("BeatmapLevelPackCollectionSO"))
         { }
 
         //public void UpdateTypes(AssetsMetadata metadata)
@@ -34,8 +34,8 @@ namespace QuestomAssets.BeatSaber
             //new PPtr(x)
             //to SmartPtr<BeatmapLevelPackObject>.Read(ObjectInfo.ParentFile,x)
             base.Parse(reader);
-            BeatmapLevelPacks = reader.ReadArrayOf(x => SmartPtr<BeatmapLevelPackObject>.Read(ObjectInfo.ParentFile,x) );
-            PreviewBeatmapLevelPacks = reader.ReadArrayOf(x => SmartPtr<BeatmapLevelPackObject>.Read(ObjectInfo.ParentFile, x));
+            BeatmapLevelPacks = reader.ReadArrayOf(x => SmartPtr<BeatmapLevelPackObject>.Read(ObjectInfo.ParentFile, this, x) );
+            PreviewBeatmapLevelPacks = reader.ReadArrayOf(x => SmartPtr<BeatmapLevelPackObject>.Read(ObjectInfo.ParentFile, this, x));
         }
 
         public override void Write(AssetsWriter writer)

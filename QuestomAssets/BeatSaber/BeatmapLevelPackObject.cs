@@ -10,7 +10,7 @@ namespace QuestomAssets.BeatSaber
 {
     public sealed class BeatmapLevelPackObject : MonoBehaviourObject, INeedAssetsMetadata
     {
-        public BeatmapLevelPackObject(AssetsFile assetsFile) : base(assetsFile, BSConst.ScriptHash.BeatmapLevelPackScriptHash, assetsFile.GetScriptPointer(KnownObjects.File17.BeatmapLevelPackScriptPtr))
+        public BeatmapLevelPackObject(AssetsFile assetsFile) : base(assetsFile, assetsFile.Manager.GetScriptObject("BeatmapLevelPackSO"))
         { }
 
         public BeatmapLevelPackObject(IObjectInfo<AssetsObject> objectInfo, AssetsReader reader) : base(objectInfo)
@@ -45,9 +45,9 @@ namespace QuestomAssets.BeatSaber
             base.Parse(reader);
             PackID = reader.ReadString();
             PackName = reader.ReadString();
-            CoverImage = SmartPtr<SpriteObject>.Read(ObjectInfo.ParentFile, reader);
+            CoverImage = SmartPtr<SpriteObject>.Read(ObjectInfo.ParentFile, this, reader);
             IsPackAlwaysOwned = reader.ReadBoolean();
-            BeatmapLevelCollection = SmartPtr<BeatmapLevelCollectionObject>.Read(ObjectInfo.ParentFile, reader);
+            BeatmapLevelCollection = SmartPtr<BeatmapLevelCollectionObject>.Read(ObjectInfo.ParentFile, this, reader);
         }
 
         public override byte[] ScriptParametersData

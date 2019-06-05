@@ -78,57 +78,15 @@ namespace QuestomAssets.AssetsChanger
                 Metadata.Parse(reader);
             }
             assetsFileStream.Seek(Header.ObjectDataOffset, SeekOrigin.Begin);
-            //using (AssetsReader reader = new AssetsReader(assetsFileStream))
-            //{
-            //    foreach (var objectInfo in Metadata.ObjectInfos)
-            //    {
-            //        AssetsObject assetsObject = ReadObject(reader, objectInfo);
-            //    }
-            //}
-        }
 
-        private AssetsObject ReadObject(AssetsReader reader, IObjectInfo<AssetsObject> objectInfo)
-        {
-            AssetsObject assetsObject;
-            var objectType = Metadata.Types[objectInfo.TypeIndex];
-            switch (objectType.ClassID)
+            if (!manager.LazyLoad)
             {
-                case AssetsConstants.ClassID.MonoBehaviourScriptType:
-                    if (_scriptHashToTypes.ContainsKey(objectType.ScriptHash))
-                    {
-                        Type assetObjectType = _scriptHashToTypes[objectType.ScriptHash];
-                        if (!assetObjectType.IsSubclassOf(typeof(MonoBehaviourObject)))
-                        {
-                            throw new ArgumentException("Types provided in scriptHashToTypes must be a subclass of AssetsMonoBehaviourObject.");
-                        }
-                        assetsObject = (AssetsObject)Activator.CreateInstance(assetObjectType, objectInfo, reader);
-                    }
-                    else
-                    {
-                        assetsObject = new MonoBehaviourObject(objectInfo, reader);
-                    }
-                    break;
-                case AssetsConstants.ClassID.AudioClipClassID:
-                    assetsObject = new AudioClipObject(objectInfo, reader);
-                    break;
-                case AssetsConstants.ClassID.Texture2DClassID:
-                    assetsObject = new Texture2DObject(objectInfo, reader);
-                    break;
-                case AssetsConstants.ClassID.GameObjectClassID:
-                    assetsObject = new GameObject(objectInfo, reader);
-                    break;
-                case AssetsConstants.ClassID.SpriteClassID:
-                    assetsObject = new SpriteObject(objectInfo, reader);
-                    break;
-                default:
-                    assetsObject = new AssetsObject(objectInfo, reader);
-                    break;
+                foreach (var oi in Metadata.ObjectInfos)
+                {
+                    var o = oi.Object;
+                }
             }
-            // is this needed?
-            //reader.AlignToObjectData(8);
-            return assetsObject;
         }
-
         public T CopyAsset<T>(T source) where T : AssetsObject
         {
             T newObj = null;
@@ -256,15 +214,14 @@ namespace QuestomAssets.AssetsChanger
             return Metadata.ExternalFiles.IndexOf(file)+1;
         }
 
-        public T FindAsset<T>(string name = null) where T: AssetsObject
+        public IObjectInfo<T> FindAsset<T>(Func<IObjectInfo<T>, bool> filter) where T: AssetsObject
         {
-            return Metadata.ObjectInfos.Where(x => x.Object is ObjectInfo<T>).Select(x => x as ObjectInfo<T>).FirstOrDefault()?.Object;
-            //as T != null && (name == null || ((x as IHaveName)?.Name == name))) as T;
+            return FindAssets(filter).FirstOrDefault();
         }
 
-        public List<T> FindAssets<T>(Func<T, bool> filter) where T: AssetsObject
+        public IEnumerable<IObjectInfo<T>> FindAssets<T>(Func<IObjectInfo<T>, bool> filter) where T: AssetsObject
         {
-            return Metadata.ObjectInfos.Where(x => typeof(IObjectInfo<T>).IsAssignableFrom(x.GetType()) && filter(((IObjectInfo<T>)x).Object)).Select(x => (x as IObjectInfo<T>).Object).ToList();
+            return Metadata.ObjectInfos.Where(x => typeof(IObjectInfo<T>).IsAssignableFrom(x.GetType()) && filter((IObjectInfo<T>)x)).Select(x => (x as IObjectInfo<T>));
         }
 
         public T GetAssetByID<T>(long objectID) where T : AssetsObject
@@ -300,22 +257,28 @@ namespace QuestomAssets.AssetsChanger
             {
                 if (ptr.Owner == objectInfo.Object)
                 {
-                    //TODO: this isn't right
-                    Log.LogErr($"Pointer is still set on an object being removed, forcibly removing pointer from property");
-
-                    ptr.UnsetOwnerProperty();
+                    //is this a problem?
+                    Log.LogMsg($"Pointer is being removed that is owned by this file, cleaning up the target ref.  Owner type: {ptr.Owner.GetType().Name}");
+                    if (ptr.Target != null)
+                    {
+                        //is this ok?
+                        ptr.Target.ParentFile.RemovePtrRef(ptr);
+                    }
+                    ptr.Dispose();
                 }
                 else if (ptr.Target == objectInfo.Object)
                 {
                     if (ptr.Owner != null)
                     {
-                        Log.LogErr($"Pointer is still set to target an object being removed that is still assigned!  Owner type: {ptr.Owner.GetType().Name}.  Forcibly unsetting it!");
-                        ptr.UnsetOwnerProperty();
+                        Log.LogErr($"Pointer is still set to target an object of type {ptr.Target.GetType().Name} being removed that is still alive!  Owner type: {ptr.Owner.GetType().Name}.");
+                        throw new Exception("Pointer owner is still using this object!");
                     }
                 }
-                ptr.Dispose();
+                
             }
         }
+
+
 
         public void DeleteObject(AssetsObject assetsObject)
         {

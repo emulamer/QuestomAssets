@@ -7,7 +7,6 @@ using System.Text;
 
 namespace QuestomAssets.AssetsChanger
 {
-    [SmartPtrAware]
     public class AssetsObject
     {
         [JsonIgnore]

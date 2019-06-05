@@ -20,7 +20,7 @@ namespace QuestomAssets.BeatSaber
         public BeatmapDataObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
         { }
 
-        public BeatmapDataObject(AssetsFile assetsFile) : base(assetsFile, BSConst.ScriptHash.BeatmapDataHash, assetsFile.GetScriptPointer(KnownObjects.File17.BeatmapDataScriptPtr))
+        public BeatmapDataObject(AssetsFile assetsFile) : base(assetsFile, assetsFile.Manager.GetScriptObject("BeatmapDataSO"))
         { }
 
         

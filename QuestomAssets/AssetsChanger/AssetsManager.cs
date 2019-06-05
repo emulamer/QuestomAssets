@@ -53,5 +53,64 @@ namespace QuestomAssets.AssetsChanger
                 _openAssetsFiles.Remove(assetsFileName);
             }
         }
+
+        private Dictionary<string, MonoScriptObject> _classCache = new Dictionary<string, MonoScriptObject>();
+        public MonoScriptObject GetScriptObject(string className)
+        {
+            if (_classCache.ContainsKey(className))
+                return _classCache[className];
+            var classObj = MassFindAsset<MonoScriptObject>(x => x.Object.Name == className);
+            if (classObj == null)
+                throw new Exception($"Unable to find a script with type name {className}!");
+            _classCache.Add(className, classObj.Object);
+            return classObj.Object;
+        }
+
+        public IObjectInfo<T> MassFindAsset<T>(Func<IObjectInfo<T>, bool> filter, bool deepSearch = true) where T : AssetsObject
+        {
+            return MassFindAssets(filter, deepSearch).FirstOrDefault();
+        }
+
+        private IEnumerable<IObjectInfo<T>> MassFindAssets<T>(AssetsFile file, Func<IObjectInfo<T>, bool> filter, bool deepSearch, List<AssetsFile> searched, List<AssetsFile> deepSearched) where T : AssetsObject
+        {
+            if (!searched.Contains(file))
+            {
+                searched.Add(file);
+                foreach (var res in file.FindAssets(filter))
+                    yield return res;
+            }
+            if (deepSearch)
+            {
+                foreach (var extFile in file.Metadata.ExternalFiles)
+                {
+                    var ext = GetAssetsFile(extFile.FileName);
+                    if (!deepSearched.Contains(ext))
+                    {
+                        deepSearched.Add(ext);
+                        foreach (var res in MassFindAssets(ext, filter, deepSearch, searched, deepSearched))
+                            yield return res;
+                    }
+
+                }
+            }
+            yield return null;
+        }
+        public IEnumerable<IObjectInfo<T>> MassFindAssets<T>(Func<IObjectInfo<T>, bool> filter, bool deepSearch = false) where T : AssetsObject
+        {
+            List<AssetsFile> searched = new List<AssetsFile>();
+            List<AssetsFile> deepSearched = new List<AssetsFile>();
+            //do a quick pass on the open assts files so that if we find one and stop at that, we don't iterate them all
+            foreach (var file in _openAssetsFiles.Values)
+                foreach (var res in file.FindAssets(filter))
+                    yield return res;
+
+            if (deepSearch)
+            {
+                //now do a deep search
+                foreach (var file in _openAssetsFiles.Values)
+                    foreach (var res in MassFindAssets(file, filter, true, searched, deepSearched))
+                        yield return res;
+            }
+        }
     }
 }

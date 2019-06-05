@@ -6,14 +6,9 @@ using System.Text;
 
 namespace QuestomAssets.AssetsChanger
 {
-    public interface ISmartAction<out T> where T : AssetsObject
-    {
-
-    }
     public interface ISmartPtr<out T> where T : AssetsObject
     {
-        IObjectInfo<AssetsObject> Owner { get; set; }
-        Action UnsetOwnerProperty { get; set; }
+        AssetsObject Owner { get; }
         IObjectInfo<T> Target { get; }
         void Dispose();
         void WritePtr(AssetsWriter writer);
@@ -22,53 +17,54 @@ namespace QuestomAssets.AssetsChanger
 
     public class SmartPtr<T> : ISmartPtr<T>, IDisposable where T : AssetsObject
     {
-        public SmartPtr(IObjectInfo<T> target)
+        public SmartPtr(AssetsObject owner, IObjectInfo<T> target)
         {
             Target = target ?? throw new NullReferenceException("Target cannot be null");
+            Owner = owner ?? throw new NullReferenceException("Owner cannot be null");
             //TODO: not sure this is only ever called by new objects
             Changes = true;
             Target.ParentFile.AddPtrRef(this);
+            Owner.ObjectInfo.ParentFile.AddPtrRef(this);
         }
 
-        public static SmartPtr<T> Read(AssetsFile assetsFile, AssetsReader reader)
+        public static SmartPtr<T> Read(AssetsFile assetsFile, AssetsObject owner, AssetsReader reader)
         {
             int fileID = reader.ReadInt32();
             Int64 pathID = reader.ReadInt64();
             if (fileID == 0 && pathID == 0)
                 return null;
             
-            SmartPtr<T> ptr = new SmartPtr<T>(assetsFile.GetObjectInfo<T>(fileID, pathID));
+            SmartPtr<T> ptr = new SmartPtr<T>(owner, assetsFile.GetObjectInfo<T>(fileID, pathID));
             //TODO: not sure this is only ever called by existing objects
             ptr.Changes = false;
+
             return ptr;
         }
 
         public bool Changes { get; set; }
-        public Action UnsetOwnerProperty { get; set; }
-        private IObjectInfo<AssetsObject> _owner;
-        public IObjectInfo<AssetsObject> Owner
-        {
-            get
-            {
-                return _owner;
-            }
-            set
-            {
-                if (_owner != value)
-                {
-                    if (_owner != null)
-                    {
-                        _owner.ParentFile.RemovePtrRef(this);
-                    }
-                    if (value != null)
-                    {
-                        value.ParentFile.AddPtrRef(this);
-                        value.ParentFile.GetOrAddExternalFileIDRef(Target.ParentFile);
-                    }
-                }
-                _owner = value;
-            }
-        }
+        public AssetsObject Owner { get; private set; }
+        //{
+        //    get
+        //    {
+        //        return _owner;
+        //    }
+        //    set
+        //    {
+        //        if (_owner != value)
+        //        {
+        //            if (_owner != null)
+        //            {
+        //                _owner.ParentFile.RemovePtrRef(this);
+        //            }
+        //            if (value != null)
+        //            {
+        //                value.ParentFile.AddPtrRef(this);
+        //                value.ParentFile.GetOrAddExternalFileIDRef(Target.ParentFile);
+        //            }
+        //        }
+        //        _owner = value;
+        //    }
+        //}
 
         public IObjectInfo<T> Target { get; private set; }
 
@@ -81,10 +77,10 @@ namespace QuestomAssets.AssetsChanger
             {
                 if (Owner == null)
                     throw new NotSupportedException("SmartPtr doesn't have an owner, getting FileID isn't supported!");
-                if (Owner.ParentFile == Target.ParentFile)
+                if (Owner.ObjectInfo.ParentFile == Target.ParentFile)
                     return 0;
 
-                return Owner.ParentFile.GetFileIDForFile(Target.ParentFile);
+                return Owner.ObjectInfo.ParentFile.GetFileIDForFile(Target.ParentFile);
             }
         }
 
@@ -104,13 +100,12 @@ namespace QuestomAssets.AssetsChanger
                 {
                     if (Owner != null)
                     {
-                        Owner.ParentFile.RemovePtrRef(this);
+                        Owner.ObjectInfo.ParentFile.RemovePtrRef(this);
                     }
                     if (Target != null)
                     {
                         Target.ParentFile.RemovePtrRef(this);
                     }
-                    OwnerPropInfo = null;
                     Owner = null;
                     Target = null;
                     // TODO: dispose managed state (managed objects).
@@ -136,7 +131,7 @@ namespace QuestomAssets.AssetsChanger
         public void WritePtr(AssetsWriter writer)
         {
             writer.Write(FileID);
-            writer.Write(Owner.ObjectID);
+            writer.Write(Owner.ObjectInfo.ObjectID);
         }
 
 

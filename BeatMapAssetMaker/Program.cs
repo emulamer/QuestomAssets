@@ -216,13 +216,10 @@ namespace BeatmapAssetMaker
         {
             using (var apk = new Apkifier(args.ApkFile, false, null, true))
             {
-                AssetsManager manager = new AssetsManager(apk);
-                var file17 = manager.GetAssetsFile(BSConst.KnownFiles.SongsAssetsFilename);
-                var found = file17.FindAssets<BeatmapLevelDataObject>(x => x.Name == "BeatSaberLevel");
-                var g = found.First().MonoscriptTypePtr.Target.Type;
+                AssetsManager m = new AssetsManager(apk, false);
 
-                var scriptTypes = manager.OpenFiles.SelectMany(x => x.Metadata.Types).Where(x => x.IsScriptType).ToList();
-                var level = scriptTypes.Where(x => x.ScriptHash == new Guid("4690eca3-1201-f506-cd10-9314850602e3")).ToList();
+                m.GetAssetsFile(BSConst.KnownFiles.SongsAssetsFilename);
+                var all = m.MassFindAssets<BeatmapLevelDataObject>(x => true).ToList();
             }
             return -1;
             QuestomAssets.Log.SetLogSink(new ConsoleSink());
@@ -320,19 +317,5 @@ namespace BeatmapAssetMaker
             return customSongsFolders;
         }
 
-        static void Usage()
-        {
-            Console.WriteLine("Usage: BeatmapAssetMaker <mode> [-nocovers] [-nopatch] <apkFile> <customSongsFolder>");
-            Console.WriteLine("\tModes:");
-            Console.WriteLine("\t\toutputconfig");
-            Console.WriteLine("\t\tupdateconfig");
-            Console.WriteLine("\t\toldmode");
-
-            Console.WriteLine("\tapkFile: the path to the APK.");
-            Console.WriteLine("\tcustomSongsFolder: the folder that contains folders of custom songs in the new native beatsaber format, or a folder with a single song that contains an Info.dat file");
-            Console.WriteLine("\tIf you want to skip importing covers then add \"nocovers\" at the end.");
-            Console.WriteLine("\tIf you want to skip patching the binary to allow custom songs, add \"nopatch\" at the end.");
-            return;
-        }
     }
 }

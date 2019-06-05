@@ -35,18 +35,18 @@ namespace QuestomAssets.BeatSaber
         public DifficultyBeatmap()
         { }
 
-        public DifficultyBeatmap(AssetsFile assetsFile, AssetsReader reader)
+        public DifficultyBeatmap(AssetsFile assetsFile, AssetsObject owner, AssetsReader reader)
         {
-            Parse(assetsFile, reader);
+            Parse(assetsFile, owner, reader);
         }
 
-        private void Parse(AssetsFile assetsFile, AssetsReader reader)
+        private void Parse(AssetsFile assetsFile, AssetsObject owner, AssetsReader reader)
         {
             Difficulty = (Difficulty)reader.ReadInt32();
             DifficultyRank = reader.ReadInt32();
             NoteJumpMovementSpeed = reader.ReadSingle();
             NoteJumpStartBeatOffset = reader.ReadInt32();
-            BeatmapDataPtr = SmartPtr<BeatmapDataObject>.Read(assetsFile, reader);
+            BeatmapDataPtr = SmartPtr<BeatmapDataObject>.Read(assetsFile, owner, reader);
         }
 
         public void Write(AssetsWriter writer)

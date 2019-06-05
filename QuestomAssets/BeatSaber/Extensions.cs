@@ -10,11 +10,6 @@ namespace QuestomAssets.BeatSaber
 {
     public static class Extensions
     {
-        //TODO: hopefully not needed after types are all figured out and working
-        public static ISmartPtr<MonoScriptObject> GetScriptPointer(this AssetsFile assetsFile, RawPtr ptr)
-        {
-            return new SmartPtr<MonoScriptObject>(assetsFile.GetObjectInfo<MonoScriptObject>(ptr.FileID, ptr.PathID));
-        }
         private static string FindFirstOfSplit(Apkifier apk, string assetsFile)
         {
             int lastDot = assetsFile.LastIndexOf('.');

@@ -9,10 +9,10 @@ namespace QuestomAssets.AssetsChanger
 {
     public class MonoBehaviourObject : AssetsObject, IHaveName
     {
-        public MonoBehaviourObject(AssetsFile assetsFile, Guid scriptHash, ISmartPtr<MonoScriptObject> monoscriptTypePtr) : base(assetsFile, scriptHash)
+        public MonoBehaviourObject(AssetsFile assetsFile, MonoScriptObject scriptObject) : base(assetsFile, scriptObject.PropertiesHash)
         {
             Enabled = 1;
-            MonoscriptTypePtr = monoscriptTypePtr;
+            MonoscriptTypePtr = new SmartPtr<MonoScriptObject>(this, (IObjectInfo<MonoScriptObject>)scriptObject.ObjectInfo);
         }
 
         public MonoBehaviourObject(IObjectInfo<AssetsObject> objectInfo, AssetsReader reader) : base(objectInfo)
@@ -79,9 +79,9 @@ namespace QuestomAssets.AssetsChanger
         protected override void Parse(AssetsReader reader)
         {
             base.Parse(reader);
-            GameObjectPtr = SmartPtr<GameObject>.Read(ObjectInfo.ParentFile, reader);
+            GameObjectPtr = SmartPtr<GameObject>.Read(ObjectInfo.ParentFile, this, reader);
             Enabled = reader.ReadInt32();
-            MonoscriptTypePtr = SmartPtr<MonoScriptObject>.Read(ObjectInfo.ParentFile, reader);
+            MonoscriptTypePtr = SmartPtr<MonoScriptObject>.Read(ObjectInfo.ParentFile, this, reader);
             Name = reader.ReadString();
         }
 
