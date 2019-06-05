@@ -40,7 +40,7 @@ namespace QuestomAssets.AssetsChanger
             for (int i = 0; i < numObj; i++)
             {
                 reader.AlignTo(4);
-                var obj = new ObjectInfo(reader);
+                var obj = ObjectInfo.Parse(reader);
                 obj.ParentFile = Owner;
                 ObjectInfos.Add(obj);
             }

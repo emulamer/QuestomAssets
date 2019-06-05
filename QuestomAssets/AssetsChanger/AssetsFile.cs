@@ -43,15 +43,22 @@ namespace QuestomAssets.AssetsChanger
 
         public AssetsMetadata Metadata { get; set; }
 
-        public List<AssetsObject> Objects { get; set; }
+       // public List<AssetsObject> Objects { get; set; }
+
+            
 
         private Dictionary<Guid, Type> _scriptHashToTypes = new Dictionary<Guid, Type>();
 
+        public Stream BaseStream { get; private set; }
+
         public AssetsFile(string assetsFileName, Stream assetsFileStream, Dictionary<Guid, Type> scriptHashToTypes)
         {
+            if (!assetsFileStream.CanSeek)
+                throw new NotSupportedException("Stream must support seeking!");
+            BaseStream = assetsFileStream;
             AssetsFileName = assetsFileName;
             _scriptHashToTypes = scriptHashToTypes;
-            Objects = new List<AssetsObject>();
+            //Objects = new List<AssetsObject>();
 
             assetsFileStream.Seek(0, SeekOrigin.Begin);
 
