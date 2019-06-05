@@ -61,6 +61,11 @@ namespace QuestomAssets.AssetsChanger
 
                 return Owner.ObjectInfo.ParentFile.GetFileIDForFile(Target.ObjectInfo.ParentFile);                
             }
+            set
+            {
+                /////////////////////////////////////////NO, fix this.  should never be a set.  Need to coordinate with assets manager!
+                _fileID = value;
+            }
         }
 
         public ulong PathID

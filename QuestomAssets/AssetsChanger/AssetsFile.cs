@@ -10,6 +10,7 @@ namespace QuestomAssets.AssetsChanger
 {
     public class AssetsFile
     {
+        public AssetsManager Manager { get; private set; }
         public string AssetsFileName { get; private set; }
 
         public int GetOrAddExternalFileIDRef(AssetsFile targetFile)
@@ -51,8 +52,9 @@ namespace QuestomAssets.AssetsChanger
 
         public Stream BaseStream { get; private set; }
 
-        public AssetsFile(string assetsFileName, Stream assetsFileStream, Dictionary<Guid, Type> scriptHashToTypes)
+        public AssetsFile(AssetsManager manager, string assetsFileName, Stream assetsFileStream, Dictionary<Guid, Type> scriptHashToTypes)
         {
+            Manager = manager;
             if (!assetsFileStream.CanSeek)
                 throw new NotSupportedException("Stream must support seeking!");
             BaseStream = assetsFileStream;

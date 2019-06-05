@@ -20,11 +20,6 @@ namespace QuestomAssets.BeatSaber
         public BeatmapLevelPackObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
         { }
 
-        //public void UpdateTypes(AssetsMetadata metadata)
-        //{
-        //    base.UpdateType(metadata, BSConst.ScriptHash.BeatmapLevelPackScriptHash, BSConst.ScriptPtr.BeatmapLevelPackScriptPtr);
-        //}
-
         public string PackID { get; set; }
 
         public string PackName { get; set; }
