@@ -16,8 +16,9 @@ namespace QuestomAssets.AssetsChanger
         Int32 DataSize { get; set; }
         Int32 TypeIndex { get; }
         void Write(AssetsWriter writer);
+        AssetsType Type { get; }
     }
-    public class ObjectInfo<T> where T: AssetsObject
+    public class ObjectInfo<T> : IObjectInfo<T> where T: AssetsObject
     {
         //TODO: pass this in somehow
         private static Dictionary<Guid, Type> _scriptHashToTypes = BeatSaber.BSConst.GetAssetTypeMap();
@@ -26,10 +27,22 @@ namespace QuestomAssets.AssetsChanger
         public Int64 ObjectID { get; set; }
         public Int32 DataOffset { get; set; }
         public Int32 DataSize { get; set; }
-        public Int32 TypeIndex { get; set; }
+        public Int32 TypeIndex { get; private set; }
 
         public AssetsFile ParentFile { get; set; }
 
+        public AssetsType Type
+        {
+            get
+            {
+                return ParentFile.Metadata.Types[TypeIndex];
+            }
+            //set
+            //{
+            //    TypeIndex = ParentFile.Metadata.Types.IndexOf(value);
+            //}
+        }
+ 
         
 
         private ObjectInfo()
@@ -50,7 +63,11 @@ namespace QuestomAssets.AssetsChanger
             var dataOffset = reader.ReadInt32();
             var dataSize = reader.ReadInt32();
             var typeIndex = reader.ReadInt32();
-            return FromTypeIndex(file, typeIndex);
+            var obji = FromTypeIndex(file, typeIndex);
+            obji.ObjectID = objectID;
+            obji.DataOffset = dataOffset;
+            obji.DataSize = dataSize;
+            return obji;
         }
 
         public static IObjectInfo<AssetsObject> FromTypeIndex(AssetsFile file, int typeIndex)
@@ -94,6 +111,9 @@ namespace QuestomAssets.AssetsChanger
                 case AssetsConstants.ClassID.SpriteClassID:
                     type = typeof(SpriteObject);
                     break;
+                case AssetsConstants.ClassID.MonoScriptType:
+                    type = typeof(MonoScriptObject);
+                    break;
                 default:
                     type = typeof(AssetsObject);
                     break;
@@ -119,7 +139,7 @@ namespace QuestomAssets.AssetsChanger
 
         private void LoadObject()
         {
-            using (AssetsReader reader = new AssetsReader(ParentFile.BaseStream))
+            using (var reader = ParentFile.GetReaderAtDataOffset())
             {
                 _object = (T) Activator.CreateInstance(typeof(T), this, reader);
             }

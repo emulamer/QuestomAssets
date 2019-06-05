@@ -6,13 +6,18 @@ using System.Text;
 
 namespace QuestomAssets.AssetsChanger
 {
+    public interface ISmartAction<out T> where T : AssetsObject
+    {
 
+    }
     public interface ISmartPtr<out T> where T : AssetsObject
     {
         IObjectInfo<AssetsObject> Owner { get; set; }
-        PropertyInfo OwnerPropInfo { get; set; }
+        Action UnsetOwnerProperty { get; set; }
         IObjectInfo<T> Target { get; }
         void Dispose();
+        void WritePtr(AssetsWriter writer);
+        bool Changes { get; set; }
     }
 
     public class SmartPtr<T> : ISmartPtr<T>, IDisposable where T : AssetsObject
@@ -20,16 +25,26 @@ namespace QuestomAssets.AssetsChanger
         public SmartPtr(IObjectInfo<T> target)
         {
             Target = target ?? throw new NullReferenceException("Target cannot be null");
+            //TODO: not sure this is only ever called by new objects
+            Changes = true;
             Target.ParentFile.AddPtrRef(this);
         }
 
-        public SmartPtr(AssetsFile assetsFile, AssetsReader reader)
+        public static SmartPtr<T> Read(AssetsFile assetsFile, AssetsReader reader)
         {
-            _fileID = reader.ReadInt32();
+            int fileID = reader.ReadInt32();
             Int64 pathID = reader.ReadInt64();
-            Target = assetsFile.GetObjectInfo<T>(_fileID, pathID);
+            if (fileID == 0 && pathID == 0)
+                return null;
+            
+            SmartPtr<T> ptr = new SmartPtr<T>(assetsFile.GetObjectInfo<T>(fileID, pathID));
+            //TODO: not sure this is only ever called by existing objects
+            ptr.Changes = false;
+            return ptr;
         }
-        public PropertyInfo OwnerPropInfo { get; set; }
+
+        public bool Changes { get; set; }
+        public Action UnsetOwnerProperty { get; set; }
         private IObjectInfo<AssetsObject> _owner;
         public IObjectInfo<AssetsObject> Owner
         {
@@ -41,7 +56,6 @@ namespace QuestomAssets.AssetsChanger
             {
                 if (_owner != value)
                 {
-                    _fileID = 0;
                     if (_owner != null)
                     {
                         _owner.ParentFile.RemovePtrRef(this);
@@ -49,7 +63,7 @@ namespace QuestomAssets.AssetsChanger
                     if (value != null)
                     {
                         value.ParentFile.AddPtrRef(this);
-                        _fileID = value.ParentFile.GetOrAddExternalFileIDRef(Target.ParentFile);
+                        value.ParentFile.GetOrAddExternalFileIDRef(Target.ParentFile);
                     }
                 }
                 _owner = value;
@@ -57,11 +71,11 @@ namespace QuestomAssets.AssetsChanger
         }
 
         public IObjectInfo<T> Target { get; private set; }
-            
 
-        private int _fileID = 0;
 
-        public int FileID
+        //private int _fileID = 0;
+
+        private int FileID
         {
             get
             {
@@ -70,12 +84,7 @@ namespace QuestomAssets.AssetsChanger
                 if (Owner.ParentFile == Target.ParentFile)
                     return 0;
 
-                return Owner.ParentFile.GetFileIDForFile(Target.ParentFile);                
-            }
-            set
-            {
-                /////////////////////////////////////////NO, fix this.  should never be a set.  Need to coordinate with assets manager!
-                _fileID = value;
+                return Owner.ParentFile.GetFileIDForFile(Target.ParentFile);
             }
         }
 
@@ -114,23 +123,21 @@ namespace QuestomAssets.AssetsChanger
             }
         }
 
-        // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
-        // ~SmartPtr()
-        // {
-        //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-        //   Dispose(false);
-        // }
 
         // This code added to correctly implement the disposable pattern.
         public void Dispose()
         {
             // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
             Dispose(true);
-            // TODO: uncomment the following line if the finalizer is overridden above.
-            // GC.SuppressFinalize(this);
+
         }
         #endregion
 
+        public void WritePtr(AssetsWriter writer)
+        {
+            writer.Write(FileID);
+            writer.Write(Owner.ObjectID);
+        }
 
 
 

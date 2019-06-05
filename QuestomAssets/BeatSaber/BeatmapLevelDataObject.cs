@@ -21,7 +21,7 @@ namespace QuestomAssets.BeatSaber
             Parse(reader);
         }
 
-        public BeatmapLevelDataObject(AssetsFile assetsFile) : base(assetsFile, BSConst.ScriptHash.BeatmapLevelDataHash, KnownObjects.File17.BeatmapLevelDataScriptPtr)
+        public BeatmapLevelDataObject(AssetsFile assetsFile) : base(assetsFile, BSConst.ScriptHash.BeatmapLevelDataHash, assetsFile.GetScriptPointer(KnownObjects.File17.BeatmapLevelDataScriptPtr))
         { }
 
         public override byte[] ScriptParametersData
@@ -142,16 +142,16 @@ namespace QuestomAssets.BeatSaber
             SongSubName = reader.ReadString();
             SongAuthorName = reader.ReadString();
             LevelAuthorName = reader.ReadString();
-            AudioClip = new PPtr(reader);
+            AudioClip = SmartPtr<AudioClipObject>.Read(ObjectInfo.ParentFile, reader);
             BeatsPerMinute = reader.ReadSingle();
             SongTimeOffset = reader.ReadSingle();
             Shuffle = reader.ReadSingle();
             ShufflePeriod = reader.ReadSingle();
             PreviewStartTime = reader.ReadSingle();
             PreviewDuration = reader.ReadSingle();
-            CoverImageTexture2D = new PPtr(reader);
-            EnvironmentSceneInfo = new PPtr(reader);
-            DifficultyBeatmapSets = reader.ReadArrayOf(x => new DifficultyBeatmapSet(x));
+            CoverImageTexture2D = SmartPtr<Texture2DObject>.Read(ObjectInfo.ParentFile, reader);
+            EnvironmentSceneInfo = SmartPtr<AssetsObject>.Read(ObjectInfo.ParentFile, reader);
+            DifficultyBeatmapSets = reader.ReadArrayOf(x => new DifficultyBeatmapSet(ObjectInfo.ParentFile, x));
         }
 
         

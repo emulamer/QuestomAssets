@@ -19,16 +19,20 @@ namespace QuestomAssets.AssetsChanger
             if (typeof(ISmartPtr<AssetsObject>).IsAssignableFrom(propertyInterceptionInfo.PropertyType))
             {
                 ISmartPtr<AssetsObject> aOld = (ISmartPtr<AssetsObject>)oldValue;
+                if (aOld != null)
+                {
+                    aOld.Owner = null;
+                    aOld.UnsetOwnerProperty();
+                }
                 ISmartPtr<AssetsObject> aNew = (ISmartPtr<AssetsObject>)newValue;
                 if (aNew != null)
                 {
                     aNew.Owner = ((IObjectInfo<AssetsObject>)propertyInterceptionInfo.Instance);
-                    aNew.OwnerPropInfo = propertyInterceptionInfo.ToPropertyInfo();
-                }
-                if (aOld != null)
-                {
-                    aOld.OwnerPropInfo = null;
-                    aOld.Owner = null;
+                    aNew.UnsetOwnerProperty = () =>
+                    {
+                        var pi = propertyInterceptionInfo.ToPropertyInfo();
+                        pi.GetSetMethod().Invoke(aNew, null);
+                    };
                 }
             }
             return false;

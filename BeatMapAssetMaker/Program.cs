@@ -214,6 +214,17 @@ namespace BeatmapAssetMaker
 
         static int FolderMode(FolderMode args)
         {
+            using (var apk = new Apkifier(args.ApkFile, false, null, true))
+            {
+                AssetsManager manager = new AssetsManager(apk);
+                var file17 = manager.GetAssetsFile(BSConst.KnownFiles.SongsAssetsFilename);
+                var found = file17.FindAssets<BeatmapLevelDataObject>(x => x.Name == "BeatSaberLevel");
+                var g = found.First().MonoscriptTypePtr.Target.Type;
+
+                var scriptTypes = manager.OpenFiles.SelectMany(x => x.Metadata.Types).Where(x => x.IsScriptType).ToList();
+                var level = scriptTypes.Where(x => x.ScriptHash == new Guid("4690eca3-1201-f506-cd10-9314850602e3")).ToList();
+            }
+            return -1;
             QuestomAssets.Log.SetLogSink(new ConsoleSink());
             if (!string.IsNullOrWhiteSpace(args.CoverArt) && !File.Exists(args.CoverArt))
             {

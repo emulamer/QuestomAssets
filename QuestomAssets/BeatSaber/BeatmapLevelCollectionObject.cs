@@ -11,11 +11,14 @@ namespace QuestomAssets.BeatSaber
 {
     public sealed class BeatmapLevelCollectionObject : MonoBehaviourObject, INeedAssetsMetadata
     {
-        public BeatmapLevelCollectionObject(AssetsFile assetsFile) : base(assetsFile, BSConst.ScriptHash.BeatmapLevelCollectionScriptHash, KnownObjects.File17.BeatmapLevelCollectionScriptPtr)
-        { }
+        public BeatmapLevelCollectionObject(AssetsFile assetsFile) : base(assetsFile, BSConst.ScriptHash.BeatmapLevelCollectionScriptHash, assetsFile.GetScriptPointer(KnownObjects.File17.BeatmapLevelCollectionScriptPtr))
+        {
+            BeatmapLevels = new SmartPtrList<BeatmapLevelDataObject>(this.ObjectInfo);
+        }
 
         public BeatmapLevelCollectionObject(IObjectInfo<AssetsObject> objectInfo, AssetsReader reader) : base(objectInfo)
         {
+            BeatmapLevels = new SmartPtrList<BeatmapLevelDataObject>(this.ObjectInfo);
             Parse(reader);
         }
 
@@ -24,7 +27,7 @@ namespace QuestomAssets.BeatSaber
         //    base.UpdateType(metadata, BSConst.ScriptHash.BeatmapLevelCollectionScriptHash, BSConst.ScriptPtr.BeatmapLevelCollectionScriptPtr);
         //}
 
-        public List<PPtr> BeatmapLevels { get; set; } = new List<PPtr>();
+        public SmartPtrList<BeatmapLevelDataObject> BeatmapLevels { get; } 
 
         protected override void Parse(AssetsReader reader)
         {
@@ -32,7 +35,7 @@ namespace QuestomAssets.BeatSaber
             int count = reader.ReadInt32();
             for (int i = 0; i < count; i++)
             {
-                BeatmapLevels.Add(new PPtr(reader));
+                BeatmapLevels.Add(SmartPtr<BeatmapLevelDataObject>.Read(ObjectInfo.ParentFile, reader));
             }
         }
 

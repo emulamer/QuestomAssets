@@ -44,9 +44,13 @@ namespace QuestomAssets.AssetsChanger
 
         public AssetsMetadata Metadata { get; set; }
 
-       // public List<AssetsObject> Objects { get; set; }
+        // public List<AssetsObject> Objects { get; set; }
 
-            
+        public AssetsReader GetReaderAtDataOffset()
+        {
+            BaseStream.Seek(Header.ObjectDataOffset, SeekOrigin.Begin);
+            return new AssetsReader(BaseStream);
+        }
 
         private Dictionary<Guid, Type> _scriptHashToTypes = new Dictionary<Guid, Type>();
 
@@ -70,16 +74,17 @@ namespace QuestomAssets.AssetsChanger
             }
             using (AssetsReader reader = new AssetsReader(assetsFileStream, false))
             {
-                Metadata = new AssetsMetadata(this, reader);
+                Metadata = new AssetsMetadata(this);
+                Metadata.Parse(reader);
             }
             assetsFileStream.Seek(Header.ObjectDataOffset, SeekOrigin.Begin);
-            using (AssetsReader reader = new AssetsReader(assetsFileStream))
-            {
-                foreach (var objectInfo in Metadata.ObjectInfos)
-                {
-                    AssetsObject assetsObject = ReadObject(reader, objectInfo);
-                }
-            }
+            //using (AssetsReader reader = new AssetsReader(assetsFileStream))
+            //{
+            //    foreach (var objectInfo in Metadata.ObjectInfos)
+            //    {
+            //        AssetsObject assetsObject = ReadObject(reader, objectInfo);
+            //    }
+            //}
         }
 
         private AssetsObject ReadObject(AssetsReader reader, IObjectInfo<AssetsObject> objectInfo)
@@ -259,7 +264,7 @@ namespace QuestomAssets.AssetsChanger
 
         public List<T> FindAssets<T>(Func<T, bool> filter) where T: AssetsObject
         {
-            return Metadata.ObjectInfos.Where(x => x.Object is ObjectInfo<T>).Select(x => (x as ObjectInfo<T>).Object).ToList();
+            return Metadata.ObjectInfos.Where(x => typeof(IObjectInfo<T>).IsAssignableFrom(x.GetType()) && filter(((IObjectInfo<T>)x).Object)).Select(x => (x as IObjectInfo<T>).Object).ToList();
         }
 
         public T GetAssetByID<T>(long objectID) where T : AssetsObject
@@ -281,7 +286,7 @@ namespace QuestomAssets.AssetsChanger
             }
             else
             {
-                var file = Metadata.ExternalFiles[fileID];
+                var file = Metadata.ExternalFiles[fileID-1];
                 var externFile = Manager.GetAssetsFile(file.FileName);
                 return externFile.GetObjectInfo<T>(0, pathID);
             }
@@ -289,20 +294,23 @@ namespace QuestomAssets.AssetsChanger
 
         private void CleanupPtrs(IObjectInfo<AssetsObject> objectInfo)
         {
+
+            //TODO implement for colections, go over this logic and make it right
             foreach (var ptr in _knownPointers.Where(x=> x.Owner == objectInfo.Object || x.Target == objectInfo.Object).ToList())
             {
                 if (ptr.Owner == objectInfo.Object)
                 {
-                    //TODO: is this ok?
-                    Log.LogErr($"Pointer is still set on an object being removed, forcibly removing pointer from property {ptr.OwnerPropInfo.Name}");
-                    ptr.OwnerPropInfo.GetSetMethod().Invoke(ptr.Owner, null);
+                    //TODO: this isn't right
+                    Log.LogErr($"Pointer is still set on an object being removed, forcibly removing pointer from property");
+
+                    ptr.UnsetOwnerProperty();
                 }
                 else if (ptr.Target == objectInfo.Object)
                 {
                     if (ptr.Owner != null)
                     {
-                        Log.LogErr($"Pointer is still set to target an object being removed that is still assigned!  Owner type: {ptr.Owner.GetType().Name}, property: {ptr.OwnerPropInfo.Name}.  Forcibly unsetting it!");
-                        ptr.OwnerPropInfo.GetSetMethod().Invoke(ptr.Owner, null);
+                        Log.LogErr($"Pointer is still set to target an object being removed that is still assigned!  Owner type: {ptr.Owner.GetType().Name}.  Forcibly unsetting it!");
+                        ptr.UnsetOwnerProperty();
                     }
                 }
                 ptr.Dispose();
@@ -321,6 +329,8 @@ namespace QuestomAssets.AssetsChanger
             
             Metadata.ObjectInfos.Remove(assetsObject.ObjectInfo);
             //TODO: IDs need to be shored up at all?  reflection loop through all objects looking for refs?
+
+            CleanupPtrs(assetsObject.ObjectInfo);
         }
 
         

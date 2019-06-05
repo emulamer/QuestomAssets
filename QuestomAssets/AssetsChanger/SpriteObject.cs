@@ -28,7 +28,7 @@ namespace QuestomAssets.AssetsChanger
             int startPosition = reader.Position;
             Name = reader.ReadString();
             UnparsedData1 = reader.ReadBytes(100);
-            Texture = new PPtr(reader);
+            Texture = SmartPtr<Texture2DObject>.Read(ObjectInfo.ParentFile, reader);
             int readLen = ObjectInfo.DataSize - (reader.Position - startPosition);
             UnparsedData2 = reader.ReadBytes(readLen);
         }
@@ -51,7 +51,7 @@ namespace QuestomAssets.AssetsChanger
 
         public byte[] UnparsedData1 { get; set; }
 
-        public PPtr Texture { get; set; }
+        public ISmartPtr<Texture2DObject> Texture { get; set; }
 
         public byte[] UnparsedData2 { get; set; }
 

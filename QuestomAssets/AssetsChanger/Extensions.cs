@@ -10,20 +10,7 @@ namespace QuestomAssets.AssetsChanger
 {
     public static class Extensions
     {
-        public static UPtr ToUPtr(this AssetsChanger.PPtr ptr)
-        {
-            return new UPtr()
-            {
-                FileID = ptr.FileID,
-                PathID = ptr.PathID
-            };
-        }
-
-        public static AssetsChanger.PPtr ToAssetsPtr(this UPtr ptr)
-        {
-            return new AssetsChanger.PPtr(ptr.FileID, ptr.PathID);
-        }
-
+  
         public static Stream ToStream(this byte[] bytes)
         {
             return new MemoryStream(bytes);
@@ -36,6 +23,18 @@ namespace QuestomAssets.AssetsChanger
             return bytes;
         }
 
+        public static void Write<T>(this ISmartPtr<T> ptr, AssetsWriter writer) where T: AssetsObject
+        {
+            if (ptr == null)
+            {
+                writer.Write((Int32)0);
+                writer.Write((Int64)0);
+            }
+            else
+            {
+                ptr.WritePtr(writer);
+            }
+        }
         
     }
 }

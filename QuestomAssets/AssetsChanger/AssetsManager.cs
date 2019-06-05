@@ -9,13 +9,23 @@ namespace QuestomAssets.AssetsChanger
 {
     public class AssetsManager
     {
+        
         private Apkifier _apk;
         //TODO: to make it useful for anything else, shouldn't be an APK path, should be something that implements an interface
-        public AssetsManager(Apkifier apk)
+        public AssetsManager(Apkifier apk, bool lazyLoad = false)
         {
             _apk = apk;
+            LazyLoad = lazyLoad;
         }
         private Dictionary<string, AssetsFile> _openAssetsFiles = new Dictionary<string, AssetsFile>();
+        public bool LazyLoad { get; private set; }
+        public List<AssetsFile> OpenFiles
+        {
+            get
+            {
+                return _openAssetsFiles.Values.ToList();
+            }
+        }
 
         public AssetsFile GetAssetsFile(string assetsFilename)
         {

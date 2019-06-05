@@ -10,32 +10,60 @@ namespace QuestomAssets.BeatSaber
 {
     public static class Extensions
     {
-        public static string FindFirstOfSplit(this Apkifier apk, string assetsFile)
+        //TODO: hopefully not needed after types are all figured out and working
+        public static ISmartPtr<MonoScriptObject> GetScriptPointer(this AssetsFile assetsFile, RawPtr ptr)
+        {
+            return new SmartPtr<MonoScriptObject>(assetsFile.GetObjectInfo<MonoScriptObject>(ptr.FileID, ptr.PathID));
+        }
+        private static string FindFirstOfSplit(Apkifier apk, string assetsFile)
         {
             int lastDot = assetsFile.LastIndexOf('.');
-            string afterDot = assetsFile.Substring(lastDot, assetsFile.Length - lastDot);
-            string noSplit;
-            if (afterDot.ToLower().StartsWith(".split"))
+            if (lastDot > 0)
             {
-                noSplit = assetsFile.Substring(0, lastDot);
-                if (apk.FileExists(noSplit))
-                    return noSplit;
-                
+
+                string afterDot = assetsFile.Substring(lastDot, assetsFile.Length - lastDot);
+                string noSplit;
+                if (afterDot.ToLower().StartsWith(".split"))
+                {
+                    noSplit = assetsFile.Substring(0, lastDot);
+                    if (apk.FileExists(noSplit))
+                        return noSplit;
+
+                }
+                else
+                {
+                    noSplit = assetsFile;
+                }
+                var split0 = noSplit + ".split0";
+                if (apk.FileExists(split0))
+                    return split0;
             }
-            else
-            {
-                noSplit = assetsFile;
-            }
-            var split0 = noSplit + ".split0";
-            if (apk.FileExists(split0))
-                return split0;
             if (apk.FileExists(assetsFile))
             {
                 return assetsFile;
             }
-            throw new ArgumentException("The file doesn't exist in the APK with any name!");
+            return null;
+
+            
         }
 
+        public static string CorrectAssetFilename(this Apkifier apk, string assetsFile)
+        {
+            var correctName = FindFirstOfSplit(apk, assetsFile);
+            if (correctName != null)
+                return correctName;
+            //some of the files in ExternalFiles have library/ on them, but they're actually in the root path
+            var splitPath = assetsFile.Split('/').ToList();
+            if (splitPath.Count() > 1)
+            {
+                splitPath.RemoveAt(splitPath.Count - 2);
+                correctName = String.Join("/", splitPath);
+                correctName = FindFirstOfSplit(apk, correctName);
+                if (correctName != null)
+                    return correctName;
+            }
+            throw new ArgumentException("The file doesn't exist in the APK with any name!");
+        }
         public static void WriteCombinedAssets(this Apkifier apk, AssetsFile assetsFile, string assetsFilePath)
         {
             if (assetsFilePath.EndsWith("split0"))
@@ -47,7 +75,7 @@ namespace QuestomAssets.BeatSaber
 
         public static Stream ReadCombinedAssets(this Apkifier apk, string assetsFilePath)
         {
-            string actualName = apk.FindFirstOfSplit(assetsFilePath);
+            string actualName = apk.CorrectAssetFilename(assetsFilePath);
 
             List<string> assetFiles = new List<string>();
             if (actualName.ToLower().EndsWith("split0"))

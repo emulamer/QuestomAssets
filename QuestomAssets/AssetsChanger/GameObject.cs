@@ -41,7 +41,7 @@ namespace QuestomAssets.AssetsChanger
         {
             int count = reader.ReadInt32();
             for (int i = 0; i < count; i++)
-                Component.Add(new PPtr(reader));
+                Component.Add(SmartPtr<AssetsObject>.Read(ObjectInfo.ParentFile, reader));
             Layer = reader.ReadUInt32();
             Name = reader.ReadString();
             Tag = reader.ReadUInt16();
@@ -65,7 +65,7 @@ namespace QuestomAssets.AssetsChanger
             WriteBase(writer);
         } 
 
-        public List<PPtr> Component { get; set; }
+        public List<ISmartPtr<AssetsObject>> Component { get; set; }
 
         public UInt32 Layer { get; set; }
 

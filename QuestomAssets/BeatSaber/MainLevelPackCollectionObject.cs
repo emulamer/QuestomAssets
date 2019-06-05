@@ -18,7 +18,7 @@ namespace QuestomAssets.BeatSaber
         public MainLevelPackCollectionObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
         { }
 
-        public MainLevelPackCollectionObject(AssetsFile assetsFile) : base(assetsFile, BSConst.ScriptHash.MainLevelsCollectionHash, KnownObjects.File17.MainLevelsCollectionScriptPtr)
+        public MainLevelPackCollectionObject(AssetsFile assetsFile) : base(assetsFile, BSConst.ScriptHash.MainLevelsCollectionHash, assetsFile.GetScriptPointer(KnownObjects.File17.MainLevelsCollectionScriptPtr))
         { }
 
         //public void UpdateTypes(AssetsMetadata metadata)
@@ -26,14 +26,16 @@ namespace QuestomAssets.BeatSaber
         //    base.UpdateType(metadata, BSConst.ScriptHash.MainLevelsCollectionHash, BSConst.ScriptPtr.MainLevelsCollectionScriptPtr);
         //}
 
-        public List<PPtr> BeatmapLevelPacks { get; set; } = new List<PPtr>();
-        public List<PPtr> PreviewBeatmapLevelPacks { get; set; } = new List<PPtr>();
+        public List<SmartPtr<BeatmapLevelPackObject>> BeatmapLevelPacks { get; set; } = new List<SmartPtr<BeatmapLevelPackObject>>();
+        public List<SmartPtr<BeatmapLevelPackObject>> PreviewBeatmapLevelPacks { get; set; } = new List<SmartPtr<BeatmapLevelPackObject>>();
 
         protected override void Parse(AssetsReader reader)
         {
+            //new PPtr(x)
+            //to SmartPtr<BeatmapLevelPackObject>.Read(ObjectInfo.ParentFile,x)
             base.Parse(reader);
-            BeatmapLevelPacks = reader.ReadArrayOf(x => new PPtr(x));
-            PreviewBeatmapLevelPacks = reader.ReadArrayOf(x => new PPtr(x));
+            BeatmapLevelPacks = reader.ReadArrayOf(x => SmartPtr<BeatmapLevelPackObject>.Read(ObjectInfo.ParentFile,x) );
+            PreviewBeatmapLevelPacks = reader.ReadArrayOf(x => SmartPtr<BeatmapLevelPackObject>.Read(ObjectInfo.ParentFile, x));
         }
 
         public override void Write(AssetsWriter writer)

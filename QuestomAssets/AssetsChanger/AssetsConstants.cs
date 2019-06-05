@@ -9,6 +9,7 @@ namespace QuestomAssets.AssetsChanger
     {
         public static class ClassID
         {
+            public const int MonoScriptType = 115;
             public const int MonoBehaviourScriptType = 114;
             public const int AudioClipClassID = 83;
             public const int Texture2DClassID = 28;
