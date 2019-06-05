@@ -22,7 +22,7 @@ namespace QuestomAssets.AssetsChanger
                 ISmartPtr<AssetsObject> aNew = (ISmartPtr<AssetsObject>)newValue;
                 if (aNew != null)
                 {
-                    aNew.Owner = ((AssetsObject)propertyInterceptionInfo.Instance);
+                    aNew.Owner = ((IObjectInfo<AssetsObject>)propertyInterceptionInfo.Instance);
                     aNew.OwnerPropInfo = propertyInterceptionInfo.ToPropertyInfo();
                 }
                 if (aOld != null)

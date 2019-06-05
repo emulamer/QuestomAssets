@@ -38,35 +38,6 @@ namespace QuestomAssets
             _apk = new Apkifier(apkFilename, !readOnly, readOnly?null:pemCertificateData, readOnly);
         }
 
-        private Dictionary<string, AssetsFile> _openAssetsFiles = new Dictionary<string, AssetsFile>();
-
-        private AssetsFile OpenAssets(string assetsFilename)
-        { 
-            if (_openAssetsFiles.ContainsKey(assetsFilename))
-                return _openAssetsFiles[assetsFilename];
-            AssetsFile assetsFile = new AssetsFile(assetsFilename, _apk.ReadCombinedAssets(BSConst.KnownFiles.AssetsRootPath+assetsFilename), BSConst.GetAssetTypeMap());
-            _openAssetsFiles.Add(assetsFilename, assetsFile);
-            return assetsFile;
-        }
-
-        private void WriteAllOpenAssets()
-        {
-            foreach (var assetsFileName in _openAssetsFiles.Keys.ToList())
-            {
-                var assetsFile = _openAssetsFiles[assetsFileName];
-                try
-                {
-                    _apk.WriteCombinedAssets(assetsFile, BSConst.KnownFiles.AssetsRootPath+assetsFileName);
-                }
-                catch (Exception ex)
-                {
-                    Log.LogErr($"Exception writing assets file {assetsFileName}", ex);
-                    throw;
-                }
-                _openAssetsFiles.Remove(assetsFileName);
-            }
-        }
-
         public BeatSaberQuestomConfig GetCurrentConfig(bool suppressImages = false)
         {
             BeatSaberQuestomConfig config = new BeatSaberQuestomConfig();
@@ -574,32 +545,34 @@ namespace QuestomAssets
         //this is crap, I need to load all files and resolve file pointers properly
         private void UpdateKnownObjects()
         {
-            var songsFile = OpenAssets(BeatSaber.BSConst.KnownFiles.SongsAssetsFilename);
-            if (!songsFile.Metadata.ExternalFiles.Any(x => x.FileName == BSConst.KnownFiles.File19))
-            {
-                songsFile.Metadata.ExternalFiles.Add(new ExternalFile()
-                {
-                    FileName = BSConst.KnownFiles.File19,
-                    AssetName = "",
-                    ID = Guid.Empty,
-                    Type = 0
-                });
-            }
-            songsFile = OpenAssets(BeatSaber.BSConst.KnownFiles.SongsAssetsFilename);
-            if (!songsFile.Metadata.ExternalFiles.Any(x => x.FileName == BSConst.KnownFiles.File14))
-            {
-                songsFile.Metadata.ExternalFiles.Add(new ExternalFile()
-                {
-                    FileName = BSConst.KnownFiles.File19,
-                    AssetName = "",
-                    ID = Guid.Empty,
-                    Type = 0
-                });
-            }
-            int file19 = songsFile.GetFileIDForFilename(BSConst.KnownFiles.File19);
-            int file14 = songsFile.GetFileIDForFilename(BSConst.KnownFiles.File14);
-            KnownObjects.File17.MonstercatEnvironment = new PPtr(file19, KnownObjects.File17.MonstercatEnvironment.PathID);
-            KnownObjects.File17.NiceEnvironment = new PPtr(file14, KnownObjects.File17.NiceEnvironment.PathID);
+            throw new NotImplementedException();
+            //var songsFile = OpenAssets(BeatSaber.BSConst.KnownFiles.SongsAssetsFilename);
+            //if (!songsFile.Metadata.ExternalFiles.Any(x => x.FileName == BSConst.KnownFiles.File19))
+            //{
+            //    songsFile.Metadata.ExternalFiles.Add(new ExternalFile()
+            //    {
+            //        FileName = BSConst.KnownFiles.File19,
+            //        AssetName = "",
+            //        ID = Guid.Empty,
+            //        Type = 0
+            //    });
+            //}
+            //songsFile = OpenAssets(BeatSaber.BSConst.KnownFiles.SongsAssetsFilename);
+            //if (!songsFile.Metadata.ExternalFiles.Any(x => x.FileName == BSConst.KnownFiles.File14))
+            //{
+            //    songsFile.Metadata.ExternalFiles.Add(new ExternalFile()
+            //    {
+            //        FileName = BSConst.KnownFiles.File19,
+            //        AssetName = "",
+            //        ID = Guid.Empty,
+            //        Type = 0
+            //    });
+            //}
+            //int file19 = songsFile.GetFileIDForFilename(BSConst.KnownFiles.File19);
+            //int file14 = songsFile.GetFileIDForFilename(BSConst.KnownFiles.File14);
+
+            //KnownObjects.File17.MonstercatEnvironment = new PPtr(file19, KnownObjects.File17.MonstercatEnvironment.PathID);
+            //KnownObjects.File17.NiceEnvironment = new PPtr(file14, KnownObjects.File17.NiceEnvironment.PathID);
         }
 
         #region Helper Functions

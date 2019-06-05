@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 
@@ -8,22 +9,29 @@ namespace QuestomAssets.AssetsChanger
 
     public interface ISmartPtr<out T> where T : AssetsObject
     {
-        AssetsObject Owner { get; set; }
+        IObjectInfo<AssetsObject> Owner { get; set; }
         PropertyInfo OwnerPropInfo { get; set; }
-        T Target { get; }
+        IObjectInfo<T> Target { get; }
         void Dispose();
     }
 
     public class SmartPtr<T> : ISmartPtr<T>, IDisposable where T : AssetsObject
     {
-        public SmartPtr(T target)
+        public SmartPtr(IObjectInfo<T> target)
         {
             Target = target ?? throw new NullReferenceException("Target cannot be null");
-            Target.ObjectInfo.ParentFile.AddPtrRef(this);
+            Target.ParentFile.AddPtrRef(this);
+        }
+
+        public SmartPtr(AssetsFile assetsFile, AssetsReader reader)
+        {
+            _fileID = reader.ReadInt32();
+            Int64 pathID = reader.ReadInt64();
+            Target = assetsFile.GetObjectInfo<T>(_fileID, pathID);
         }
         public PropertyInfo OwnerPropInfo { get; set; }
-        private AssetsObject _owner;
-        public AssetsObject Owner
+        private IObjectInfo<AssetsObject> _owner;
+        public IObjectInfo<AssetsObject> Owner
         {
             get
             {
@@ -33,33 +41,36 @@ namespace QuestomAssets.AssetsChanger
             {
                 if (_owner != value)
                 {
+                    _fileID = 0;
                     if (_owner != null)
                     {
-                        _owner.ObjectInfo.ParentFile.RemovePtrRef(this);
+                        _owner.ParentFile.RemovePtrRef(this);
                     }
                     if (value != null)
                     {
-                        value.ObjectInfo.ParentFile.AddPtrRef(this);
-                        value.ObjectInfo.ParentFile.GetOrAddExternalFileIDRef(Target.ObjectInfo.ParentFile);
+                        value.ParentFile.AddPtrRef(this);
+                        _fileID = value.ParentFile.GetOrAddExternalFileIDRef(Target.ParentFile);
                     }
                 }
                 _owner = value;
             }
         }
 
-        public T Target { get; private set; }
+        public IObjectInfo<T> Target { get; private set; }
+            
 
         private int _fileID = 0;
+
         public int FileID
         {
             get
             {
                 if (Owner == null)
                     throw new NotSupportedException("SmartPtr doesn't have an owner, getting FileID isn't supported!");
-                if (Owner.ObjectInfo.ParentFile == Target.ObjectInfo.ParentFile)
+                if (Owner.ParentFile == Target.ParentFile)
                     return 0;
 
-                return Owner.ObjectInfo.ParentFile.GetFileIDForFile(Target.ObjectInfo.ParentFile);                
+                return Owner.ParentFile.GetFileIDForFile(Target.ParentFile);                
             }
             set
             {
@@ -68,10 +79,10 @@ namespace QuestomAssets.AssetsChanger
             }
         }
 
-        public ulong PathID
-        {
-            get; set;
-        }
+        //public ulong PathID
+        //{
+        //    get; set;
+        //}
 
         #region IDisposable Support
         private bool disposedValue = false; // To detect redundant calls
@@ -84,11 +95,11 @@ namespace QuestomAssets.AssetsChanger
                 {
                     if (Owner != null)
                     {
-                        Owner.ObjectInfo.ParentFile.RemovePtrRef(this);
+                        Owner.ParentFile.RemovePtrRef(this);
                     }
                     if (Target != null)
                     {
-                        Target.ObjectInfo.ParentFile.RemovePtrRef(this);
+                        Target.ParentFile.RemovePtrRef(this);
                     }
                     OwnerPropInfo = null;
                     Owner = null;

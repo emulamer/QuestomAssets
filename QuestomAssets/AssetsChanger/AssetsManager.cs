@@ -17,11 +17,11 @@ namespace QuestomAssets.AssetsChanger
         }
         private Dictionary<string, AssetsFile> _openAssetsFiles = new Dictionary<string, AssetsFile>();
 
-        private AssetsFile OpenAssets(string assetsFilename)
+        public AssetsFile GetAssetsFile(string assetsFilename)
         {
             if (_openAssetsFiles.ContainsKey(assetsFilename))
                 return _openAssetsFiles[assetsFilename];
-            AssetsFile assetsFile = new AssetsFile(assetsFilename, _apk.ReadCombinedAssets(BSConst.KnownFiles.AssetsRootPath + assetsFilename), BSConst.GetAssetTypeMap());
+            AssetsFile assetsFile = new AssetsFile(this, assetsFilename, _apk.ReadCombinedAssets(BSConst.KnownFiles.AssetsRootPath + assetsFilename), BSConst.GetAssetTypeMap());
             _openAssetsFiles.Add(assetsFilename, assetsFile);
             return assetsFile;
         }

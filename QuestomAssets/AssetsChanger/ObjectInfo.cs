@@ -109,13 +109,13 @@ namespace QuestomAssets.AssetsChanger
             writer.Write(TypeIndex);
         }
 
-        public PPtr LocalPtrTo
-        {
-            get
-            {
-                return new PPtr(0, ObjectID);
-            }
-        }
+        //public PPtr LocalPtrTo
+        //{
+        //    get
+        //    {
+        //        return new PPtr(0, ObjectID);
+        //    }
+        //}
 
         private void LoadObject()
         {

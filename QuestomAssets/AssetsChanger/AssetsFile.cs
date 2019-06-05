@@ -267,6 +267,26 @@ namespace QuestomAssets.AssetsChanger
             return Metadata.ObjectInfos.Where(x => x is ObjectInfo<T> && x.ObjectID == objectID).Cast<ObjectInfo<T>>().FirstOrDefault()?.Object;
         }
 
+        public IObjectInfo<T> GetObjectInfo<T>(int fileID, Int64 pathID)
+        {
+            if (fileID == 0)
+            {
+                var objInfo = Metadata.ObjectInfos.FirstOrDefault(x => x.ObjectID == pathID);
+                if (objInfo == null)
+                    throw new Exception($"Object info could not be found for path id {pathID} in file {AssetsFileName}");
+                var objTypedInfo = objInfo as IObjectInfo<T>;
+                if (objTypedInfo == null)
+                    throw new Exception($"Object was the wrong type!  Pointer expected {typeof(T).Name}, target was actually {(objInfo.GetType().Name)}");
+                return objTypedInfo;
+            }
+            else
+            {
+                var file = Metadata.ExternalFiles[fileID];
+                var externFile = Manager.GetAssetsFile(file.FileName);
+                return externFile.GetObjectInfo<T>(0, pathID);
+            }
+        }
+
         private void CleanupPtrs(IObjectInfo<AssetsObject> objectInfo)
         {
             foreach (var ptr in _knownPointers.Where(x=> x.Owner == objectInfo.Object || x.Target == objectInfo.Object).ToList())
