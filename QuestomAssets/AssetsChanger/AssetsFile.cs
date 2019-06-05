@@ -27,18 +27,6 @@ namespace QuestomAssets.AssetsChanger
             return Metadata.ExternalFiles.IndexOf(file) + 1;
         }
 
-        private List<ISmartPtr<AssetsObject>> _knownPointers = new List<ISmartPtr<AssetsObject>>();
-
-        public void AddPtrRef(ISmartPtr<AssetsObject> ptr)
-        {
-            _knownPointers.Add(ptr);
-        }
-
-        public void RemovePtrRef(ISmartPtr<AssetsObject> ptr)
-        {
-            _knownPointers.Remove(ptr);
-        }
-
         public AssetsFileHeader Header { get; set; }
 
         public AssetsMetadata Metadata { get; set; }

@@ -72,7 +72,7 @@ namespace QuestomAssets.Utils
             switch (texture.TextureFormat)
             {
                 case AssetsChanger.Texture2DObject.TextureFormatType.RGB24:
-                    return ConvertFromRGB24ToBitmap(texture.ImageData, texture.Width, texture.Height, RotateFlipType.RotateNoneFlipNone);
+                    return ConvertFromRGB24ToBitmap(texture.ImageData, texture.Width, texture.Height, RotateFlipType.RotateNoneFlipXY);
 
                 //not really sure if it can do all these or not
                 case AssetsChanger.Texture2DObject.TextureFormatType.ETC2_RGB:
@@ -94,7 +94,7 @@ namespace QuestomAssets.Utils
                 int mipCount = 0;
                 while (currentWidth >= 1 && currentHeight >= 1 && mipCount < maxMips)
                 {
-                    byte[] mipData = ConvertToRGBAndSize(image, currentWidth, currentHeight, RotateFlipType.RotateNoneFlipXY);
+                    byte[] mipData = ConvertToRGBAndSize(image, currentWidth, currentHeight, RotateFlipType.Rotate180FlipX);
                     msMips.Write(mipData, 0, mipData.Length);
                     currentWidth /= 2;
                     currentHeight /= 2;

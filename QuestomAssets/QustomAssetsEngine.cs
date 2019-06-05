@@ -9,11 +9,6 @@ using System.Linq;
 
 namespace QuestomAssets
 {
-    [SmartPtrAware]
-    public class Test : AssetsObject
-    {
-        public SmartPtr<MonoBehaviourObject> mo { get; set; }
-    }
     public class QuestomAssetsEngine : IDisposable
     {
         private string _apkFilename;
@@ -31,8 +26,6 @@ namespace QuestomAssets
         /// <param name="pemCertificateData">The contents of the PEM certificate that will be used to sign the APK.  If omitted, a new self signed cert will be generated.</param>
         public QuestomAssetsEngine(string apkFilename, bool readOnly = false, string pemCertificateData = BSConst.DebugCertificatePEM)
         {
-            Test t = new Test();
-            //t.mo = new SmartPtr<MonoBehaviourObject>();
             _readOnly = readOnly;
             _apkFilename = apkFilename;
             _apk = new Apkifier(apkFilename, !readOnly, readOnly?null:pemCertificateData, readOnly);
@@ -586,20 +579,20 @@ namespace QuestomAssets
                 });
             }
             songsFile = OpenAssets(BeatSaber.BSConst.KnownFiles.SongsAssetsFilename);
-            if (!songsFile.Metadata.ExternalFiles.Any(x => x.FileName == BSConst.KnownFiles.File14))
-            {
-                songsFile.Metadata.ExternalFiles.Add(new ExternalFile()
-                {
-                    FileName = BSConst.KnownFiles.File19,
-                    AssetName = "",
-                    ID = Guid.Empty,
-                    Type = 0
-                });
-            }
+            //if (!songsFile.Metadata.ExternalFiles.Any(x => x.FileName == BSConst.KnownFiles.File14))
+            //{
+            //    songsFile.Metadata.ExternalFiles.Add(new ExternalFile()
+            //    {
+            //        FileName = BSConst.KnownFiles.File14,
+            //        AssetName = "",
+            //        ID = Guid.Empty,
+            //        Type = 0
+            //    });
+            //}
             int file19 = songsFile.GetFileIDForFilename(BSConst.KnownFiles.File19);
-            int file14 = songsFile.GetFileIDForFilename(BSConst.KnownFiles.File14);
+            //int file14 = songsFile.GetFileIDForFilename(BSConst.KnownFiles.File14);
             KnownObjects.File17.MonstercatEnvironment = new PPtr(file19, KnownObjects.File17.MonstercatEnvironment.PathID);
-            KnownObjects.File17.NiceEnvironment = new PPtr(file14, KnownObjects.File17.NiceEnvironment.PathID);
+            //KnownObjects.File17.NiceEnvironment = new PPtr(file14, KnownObjects.File17.NiceEnvironment.PathID);
         }
 
         #region Helper Functions

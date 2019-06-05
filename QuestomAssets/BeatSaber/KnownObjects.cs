@@ -19,8 +19,8 @@ namespace QuestomAssets.BeatSaber
             public static PPtr MonstercatEnvironment { get; set; } = new PPtr(-1, 52);
 
             //in sharedassets14
-            public static PPtr NiceEnvironment { get; set; } = new PPtr(-1, 3);
-            public static PPtr TriangleEnvironment { get; set; } = new PPtr(0, 252);
+            public static PPtr NiceEnvironment { get; set; } = new PPtr(0, 252);
+            public static PPtr TriangleEnvironment { get; set; } = new PPtr(0, 253);
             public static PPtr BeatSaberCoverArt { get; set; } = new PPtr(0, 19);
             public static PPtr OneSaberCharacteristic { get; set; } = new PPtr(19, 1);
             public static PPtr NoArrowsCharacteristic { get; set; } = new PPtr(6, 1);

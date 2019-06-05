@@ -48,11 +48,11 @@ namespace QuestomAssets.BeatSaber
 
         public static class ScriptPtr
         {
-            public static PPtr BeatmapLevelDataScriptPtr { get { return new PPtr(1, 644); } }
-            public static PPtr BeatmapDataScriptPtr { get { return new PPtr(1, 1552); } }
-            public static PPtr BeatmapLevelCollectionScriptPtr { get { return new PPtr(1, 762); } }
-            public static PPtr BeatmapLevelPackScriptPtr { get { return new PPtr(1, 1480); } }
-            public static PPtr MainLevelsCollectionScriptPtr { get { return new PPtr(1, 1530); } }
+            public static PPtr BeatmapLevelDataScriptPtr { get { return new PPtr(1, 642); } }
+            public static PPtr BeatmapDataScriptPtr { get { return new PPtr(1, 1548); } }
+            public static PPtr BeatmapLevelCollectionScriptPtr { get { return new PPtr(1, 760); } }
+            public static PPtr BeatmapLevelPackScriptPtr { get { return new PPtr(1, 1476); } }
+            public static PPtr MainLevelsCollectionScriptPtr { get { return new PPtr(1, 1526); } }
         }
 
         public static Dictionary<Guid, Type> GetAssetTypeMap()
