@@ -17,7 +17,7 @@ namespace QuestomAssets.Utils
                 return false;
             }
             byte[] binaryBytes = apk.Read(binaryFile);
-            if (binaryBytes.Length != 27041992)
+            if (binaryBytes.Length != 244756415)
             {
                 Console.WriteLine("Binary file to patch is the wrong length!");
                 return false;
@@ -25,10 +25,10 @@ namespace QuestomAssets.Utils
             Console.WriteLine("Patching binary...");
             using (MemoryStream msBinary = new MemoryStream(binaryBytes))
             {
-                msBinary.Seek(0x0109D074, SeekOrigin.Begin);
+                msBinary.Seek(0x491578, SeekOrigin.Begin);
                 byte[] readVals = new byte[4];
                 msBinary.Read(readVals, 0, 4);
-                if (readVals[0] != 0x8B || readVals[1] != 0xD8 || readVals[2] != 0xFE || readVals[3] != 0xEB)
+                if (readVals[0] != 0x00 || readVals[1] != 0x00 || readVals[2] != 0xA0 || readVals[3] != 0xE3)
                 {
                     if (readVals[0] == 0x01 && readVals[1] == 0x00 && readVals[2] == 0xA0 && readVals[3] == 0xE3)
                     {
@@ -41,7 +41,7 @@ namespace QuestomAssets.Utils
                         return false;
                     }
                 }
-                msBinary.Seek(0x0109D074, SeekOrigin.Begin);
+                msBinary.Seek(0x491578, SeekOrigin.Begin);
                 msBinary.Write(new byte[] { 0x01, 0x00, 0xA0, 0xE3 }, 0, 4);
                 msBinary.Seek(0, SeekOrigin.Begin);
                 byte[] binaryOutData = msBinary.ToArray();

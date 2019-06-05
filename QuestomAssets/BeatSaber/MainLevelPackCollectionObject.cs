@@ -10,15 +10,15 @@ namespace QuestomAssets.BeatSaber
 {
     public sealed class MainLevelPackCollectionObject : MonoBehaviourObject
     {
-        public MainLevelPackCollectionObject(ObjectInfo objectInfo, AssetsReader reader) : base(objectInfo)
+        public MainLevelPackCollectionObject(IObjectInfo<AssetsObject> objectInfo, AssetsReader reader) : base(objectInfo)
         {
             Parse(reader);
         }
 
-        public MainLevelPackCollectionObject(ObjectInfo objectInfo) : base(objectInfo)
+        public MainLevelPackCollectionObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
         { }
 
-        public MainLevelPackCollectionObject(AssetsMetadata metadata) : base(metadata, BSConst.ScriptHash.MainLevelsCollectionHash, BSConst.ScriptPtr.MainLevelsCollectionScriptPtr)
+        public MainLevelPackCollectionObject(AssetsFile assetsFile) : base(assetsFile, BSConst.ScriptHash.MainLevelsCollectionHash, KnownObjects.File17.MainLevelsCollectionScriptPtr)
         { }
 
         //public void UpdateTypes(AssetsMetadata metadata)

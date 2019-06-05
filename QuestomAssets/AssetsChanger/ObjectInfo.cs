@@ -9,7 +9,13 @@ namespace QuestomAssets.AssetsChanger
 
     public interface IObjectInfo<out T>
     {
-        int ObjectID { get; }
+        Int64 ObjectID { get; set; }
+        AssetsFile ParentFile { get; }
+        T Object { get; }
+        Int32 DataOffset { get; set; }
+        Int32 DataSize { get; set; }
+        Int32 TypeIndex { get; }
+        void Write(AssetsWriter writer);
     }
     public class ObjectInfo<T> where T: AssetsObject
     {
@@ -29,24 +35,30 @@ namespace QuestomAssets.AssetsChanger
         private ObjectInfo()
         { }
 
-        public ObjectInfo(Int64 objectID, Int32 dataOffset, Int32 dataSize, Int32 typeIndex)
+        public ObjectInfo(Int64 objectID, Int32 dataOffset, Int32 dataSize, Int32 typeIndex, AssetsFile parentFile)
         {
             ObjectID = ObjectID;
             DataOffset = dataOffset;
             DataSize = dataSize;
             TypeIndex = typeIndex;
+            ParentFile = parentFile;
         }
 
-        public static IObjectInfo<AssetsObject> Parse(AssetsMetadata meta, AssetsReader reader)
+        public static IObjectInfo<AssetsObject> Parse(AssetsFile file, AssetsReader reader)
         {
             var objectID = reader.ReadInt64();
             var dataOffset = reader.ReadInt32();
             var dataSize = reader.ReadInt32();
             var typeIndex = reader.ReadInt32();
-            var type = GetObjectType(meta, typeIndex);
+            return FromTypeIndex(file, typeIndex);
+        }
+
+        public static IObjectInfo<AssetsObject> FromTypeIndex(AssetsFile file, int typeIndex)
+        {
+            var type = GetObjectType(file.Metadata, typeIndex);
             var genericInfoType = typeof(ObjectInfo<>).MakeGenericType(type);
-            var genericOI = (Activator.CreateInstance(genericInfoType, objectID, dataOffset, dataSize, typeIndex);
-            return (IObjectInfo<AssetsObject>)genericOI;
+            var genericOI = (IObjectInfo<AssetsObject>)Activator.CreateInstance(genericInfoType, 0, 0, 0, typeIndex, file);
+            return genericOI;
         }
 
         private static Type GetObjectType(AssetsMetadata meta, int typeIndex)
@@ -89,14 +101,6 @@ namespace QuestomAssets.AssetsChanger
             return type;
         }
 
-        //private static void ParseData(AssetsReader reader)
-        //{
-        //    ObjectID = reader.ReadInt64();
-        //    DataOffset = reader.ReadInt32();
-        //    DataSize = reader.ReadInt32();
-        //    TypeIndex = reader.ReadInt32();
-        //}
-
         public void Write(AssetsWriter writer)
         {
             writer.Write(ObjectID);
@@ -128,11 +132,13 @@ namespace QuestomAssets.AssetsChanger
             {
                 if (_object == null)
                     LoadObject();
-
+                return _object;
             }
             set
             {
-
+                //don't think this should be settable
+                throw new Exception("see if this ever gets hit");
+                _object = value;
             }
         }
 

@@ -36,15 +36,15 @@ namespace QuestomAssets.AssetsChanger
 
         public int CompressionFormat { get; set; }
         
-        public AudioClipObject(ObjectInfo objectInfo) : base(objectInfo)
+        public AudioClipObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
         { }
 
-        public AudioClipObject(ObjectInfo objectInfo, AssetsReader reader) : base(objectInfo)
+        public AudioClipObject(IObjectInfo<AssetsObject> objectInfo, AssetsReader reader) : base(objectInfo)
         {
             Parse(reader);
         }
 
-        public AudioClipObject(AssetsMetadata metadata) : base(metadata, AssetsConstants.ClassID.AudioClipClassID)
+        public AudioClipObject(AssetsFile assetsFile) : base(assetsFile, AssetsConstants.ClassID.AudioClipClassID)
         { }
 
         protected override void Parse(AssetsReader reader)

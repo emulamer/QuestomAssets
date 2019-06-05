@@ -10,19 +10,16 @@ namespace QuestomAssets.AssetsChanger
     /// </summary>
     public class SpriteObject : AssetsObject, IHaveName
     {
-        public SpriteObject(AssetsMetadata metadata) : base(metadata, AssetsConstants.ClassID.SpriteClassID)
+        public SpriteObject(AssetsFile assetsFile) : base(assetsFile, AssetsConstants.ClassID.SpriteClassID)
         {
         }
 
-        public SpriteObject(ObjectInfo objectInfo, AssetsReader reader) : base(objectInfo)
+        public SpriteObject(IObjectInfo<AssetsObject> objectInfo, AssetsReader reader) : base(objectInfo)
         {
             Parse(reader);
         }
 
-        public SpriteObject()
-        { }
-
-        public SpriteObject(ObjectInfo objectInfo) : base(objectInfo)
+        public SpriteObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
         { }
         
         protected override void Parse(AssetsReader reader)

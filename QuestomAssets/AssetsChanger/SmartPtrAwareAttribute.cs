@@ -21,9 +21,15 @@ namespace QuestomAssets.AssetsChanger
                 ISmartPtr<AssetsObject> aOld = (ISmartPtr<AssetsObject>)oldValue;
                 ISmartPtr<AssetsObject> aNew = (ISmartPtr<AssetsObject>)newValue;
                 if (aNew != null)
+                {
                     aNew.Owner = ((AssetsObject)propertyInterceptionInfo.Instance);
+                    aNew.OwnerPropInfo = propertyInterceptionInfo.ToPropertyInfo();
+                }
                 if (aOld != null)
+                {
+                    aOld.OwnerPropInfo = null;
                     aOld.Owner = null;
+                }
             }
             return false;
         }

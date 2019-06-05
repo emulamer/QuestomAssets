@@ -9,13 +9,13 @@ namespace QuestomAssets.AssetsChanger
 {
     public class MonoBehaviourObject : AssetsObject, IHaveName
     {
-        public MonoBehaviourObject(AssetsMetadata metadata, Guid scriptHash, PPtr monoscriptTypePtr) : base(metadata, scriptHash)
+        public MonoBehaviourObject(AssetsFile assetsFile, Guid scriptHash, PPtr monoscriptTypePtr) : base(assetsFile, scriptHash)
         {
             Enabled = 1;
             MonoscriptTypePtr = monoscriptTypePtr;
         }
 
-        public MonoBehaviourObject(ObjectInfo objectInfo, AssetsReader reader) : base(objectInfo)
+        public MonoBehaviourObject(IObjectInfo<AssetsObject> objectInfo, AssetsReader reader) : base(objectInfo)
         {
             Parse(reader);
             ParseDetails(reader);
@@ -27,10 +27,10 @@ namespace QuestomAssets.AssetsChanger
         //    MonoscriptTypePtr = monoscriptTypePtr;           
         //}
 
-        public MonoBehaviourObject()
-        { Enabled = 1; }
+        //public MonoBehaviourObject()
+        //{ Enabled = 1; }
 
-        public MonoBehaviourObject(ObjectInfo objectInfo) : base(objectInfo)
+        protected MonoBehaviourObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
         { Enabled = 1; }
 
         //public AssetsMonoBehaviourObject(AssetsObjectInfo objectInfo, AssetsReader reader) : base(objectInfo, reader)

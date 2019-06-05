@@ -46,14 +46,7 @@ namespace QuestomAssets.BeatSaber
             public static Guid BeatmapDataHash { get { return new Guid("8d3caf95-6f40-5cf3-9da1-51e0ee1e0013"); } }
         }
 
-        public static class ScriptPtr
-        {
-            public static PPtr BeatmapLevelDataScriptPtr { get { return new PPtr(1, 644); } }
-            public static PPtr BeatmapDataScriptPtr { get { return new PPtr(1, 1552); } }
-            public static PPtr BeatmapLevelCollectionScriptPtr { get { return new PPtr(1, 762); } }
-            public static PPtr BeatmapLevelPackScriptPtr { get { return new PPtr(1, 1480); } }
-            public static PPtr MainLevelsCollectionScriptPtr { get { return new PPtr(1, 1530); } }
-        }
+
 
         public static Dictionary<Guid, Type> GetAssetTypeMap()
         {

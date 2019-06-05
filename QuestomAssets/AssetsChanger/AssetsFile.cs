@@ -76,12 +76,11 @@ namespace QuestomAssets.AssetsChanger
                 foreach (var objectInfo in Metadata.ObjectInfos)
                 {
                     AssetsObject assetsObject = ReadObject(reader, objectInfo);
-                    Objects.Add(assetsObject);
                 }
             }
         }
 
-        private AssetsObject ReadObject(AssetsReader reader, ObjectInfo objectInfo)
+        private AssetsObject ReadObject(AssetsReader reader, IObjectInfo<AssetsObject> objectInfo)
         {
             AssetsObject assetsObject;
             var objectType = Metadata.Types[objectInfo.TypeIndex];
@@ -128,11 +127,8 @@ namespace QuestomAssets.AssetsChanger
             T newObj = null;
             using (var ms = new MemoryStream())
             {
-                var newInfo = new ObjectInfo()
-                {
-                    TypeIndex = source.ObjectInfo.TypeIndex,
-                    DataSize = source.ObjectInfo.DataSize
-                };
+                IObjectInfo<AssetsObject> newInfo = ObjectInfo<AssetsObject>.FromTypeIndex(this, source.ObjectInfo.TypeIndex);
+                newInfo.DataSize = source.ObjectInfo.DataSize;
                 using (var writer = new AssetsWriter(ms))
                     source.Write(writer);
                 ms.Seek(0, SeekOrigin.Begin);
@@ -151,7 +147,7 @@ namespace QuestomAssets.AssetsChanger
             using (AssetsWriter writer = new AssetsWriter(objectsMS))
             {
                 int ctr = 0;
-                foreach (var obj in Objects)
+                foreach (var obj in Metadata.ObjectInfos.Select(x=> x.Object))
                 {
                     ctr++;
                     obj.ObjectInfo.DataOffset = (int)objectsMS.Position;
@@ -232,7 +228,7 @@ namespace QuestomAssets.AssetsChanger
                 throw new ArgumentException("ObjectInfo.ObjectID already exists in this file.");
 
             Metadata.ObjectInfos.Add(assetsObject.ObjectInfo);
-            Objects.Add(assetsObject);
+            //Objects.Add(assetsObject);
         }
 
         public string GetFilenameForFileID(int fileID)
@@ -255,55 +251,54 @@ namespace QuestomAssets.AssetsChanger
 
         public T FindAsset<T>(string name = null) where T: AssetsObject
         {
-            return Objects.FirstOrDefault(x => x as T != null && (name == null || ((x as IHaveName)?.Name == name))) as T;
+            return Metadata.ObjectInfos.Where(x => x.Object is ObjectInfo<T>).Select(x => x as ObjectInfo<T>).FirstOrDefault()?.Object;
+            //as T != null && (name == null || ((x as IHaveName)?.Name == name))) as T;
         }
 
         public List<T> FindAssets<T>(Func<T, bool> filter) where T: AssetsObject
         {
-            return Objects.Where(x => x as T != null && filter(x as T)).Cast<T>().ToList();
+            return Metadata.ObjectInfos.Where(x => x.Object is ObjectInfo<T>).Select(x => (x as ObjectInfo<T>).Object).ToList();
         }
 
         public T GetAssetByID<T>(long objectID) where T : AssetsObject
         {
-            return (T)Objects.FirstOrDefault(x => x.ObjectInfo.ObjectID == objectID);               
+            return Metadata.ObjectInfos.Where(x => x is ObjectInfo<T> && x.ObjectID == objectID).Cast<ObjectInfo<T>>().FirstOrDefault()?.Object;
+        }
+
+        private void CleanupPtrs(IObjectInfo<AssetsObject> objectInfo)
+        {
+            foreach (var ptr in _knownPointers.Where(x=> x.Owner == objectInfo.Object || x.Target == objectInfo.Object).ToList())
+            {
+                if (ptr.Owner == objectInfo.Object)
+                {
+                    //TODO: is this ok?
+                    Log.LogErr($"Pointer is still set on an object being removed, forcibly removing pointer from property {ptr.OwnerPropInfo.Name}");
+                    ptr.OwnerPropInfo.GetSetMethod().Invoke(ptr.Owner, null);
+                }
+                else if (ptr.Target == objectInfo.Object)
+                {
+                    if (ptr.Owner != null)
+                    {
+                        Log.LogErr($"Pointer is still set to target an object being removed that is still assigned!  Owner type: {ptr.Owner.GetType().Name}, property: {ptr.OwnerPropInfo.Name}.  Forcibly unsetting it!");
+                        ptr.OwnerPropInfo.GetSetMethod().Invoke(ptr.Owner, null);
+                    }
+                }
+                ptr.Dispose();
+            }
         }
 
         public void DeleteObject(AssetsObject assetsObject)
         {
-            Objects.Remove(assetsObject);
+            //TODO: implement dispose on these or something?
+            var obj = Metadata.ObjectInfos.FirstOrDefault(x => x.Object == assetsObject);
+            if (obj == null)
+            {
+                Log.LogErr("Tried to delete an object that wasn't part of this file");
+                return;
+            }
+            
             Metadata.ObjectInfos.Remove(assetsObject.ObjectInfo);
             //TODO: IDs need to be shored up at all?  reflection loop through all objects looking for refs?
-        }
-
-        /// <summary>
-        /// This is REALLY unsafe, as it can break lots of things if it guesses they aren't in use but they are referenced from another file
-        /// </summary>
-        public void DeleteObjectRecursive(AssetsObject assetsObject)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// This is unsafe and will only validate against objects in this file that have known/parsed types
-        /// </summary>
-        public bool ObjectInUseInFile(PPtr objectPtr)
-        {
-            //this is probably going to be slow
-            foreach (AssetsObject obj in Objects)
-            {
-                foreach (var prop in obj.GetType().GetProperties().Where(x=>x.PropertyType == typeof(PPtr)))
-                {
-                    var ptr = prop.GetValue(obj, null) as PPtr;
-                    if (ptr == null)
-                        continue;
-                    //if the pointer doesn't point to this file, skip it
-                    if (ptr.FileID != 0)
-                        continue;
-                    if (ptr.PathID == objectPtr.PathID)
-                        return true;
-                }
-            }
-            return false;
         }
 
         

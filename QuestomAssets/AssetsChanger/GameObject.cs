@@ -9,12 +9,12 @@ namespace QuestomAssets.AssetsChanger
 {
     public class GameObject : AssetsObject, IHaveName
     {
-        public GameObject(AssetsMetadata metadata) : base(metadata, AssetsConstants.ClassID.GameObjectClassID)
+        public GameObject(AssetsFile assetsFile) : base(assetsFile, AssetsConstants.ClassID.GameObjectClassID)
         {
             IsActive = true;
         }
 
-        public GameObject(ObjectInfo objectInfo, AssetsReader reader) : base(objectInfo)
+        public GameObject(IObjectInfo<AssetsObject> objectInfo, AssetsReader reader) : base(objectInfo)
         {
             Parse(reader);
             ParseDetails(reader);
@@ -25,10 +25,10 @@ namespace QuestomAssets.AssetsChanger
         //    base.UpdateType(metadata, scriptHash);
         //}
 
-        public GameObject()
-        { IsActive = true; }
+        //public GameObject()
+        //{ IsActive = true; }
 
-        public GameObject(ObjectInfo objectInfo) : base(objectInfo)
+        protected GameObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
         { IsActive = true; }
 
 

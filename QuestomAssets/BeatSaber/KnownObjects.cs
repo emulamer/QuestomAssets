@@ -27,7 +27,18 @@ namespace QuestomAssets.BeatSaber
             public static PPtr StandardCharacteristic { get; set; } = new PPtr(22, 1);
 
             public static PPtr ExtrasCoverArtSprite { get; set; } = new PPtr(0, 45);
-            
+
+
+
+            public static PPtr BeatmapLevelDataScriptPtr { get; set; } = new PPtr(1, 644); 
+            public static PPtr BeatmapDataScriptPtr { get; set; } = new PPtr(1, 1552); 
+            public static PPtr BeatmapLevelCollectionScriptPtr { get; set; } = new PPtr(1, 762);
+            public static PPtr BeatmapLevelPackScriptPtr { get; set; } = new PPtr(1, 1480);
+            public static PPtr MainLevelsCollectionScriptPtr { get; set; } = new PPtr(1, 1530); 
+
+
         }
+
+
     }
 }

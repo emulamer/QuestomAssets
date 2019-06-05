@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 
 namespace QuestomAssets.AssetsChanger
@@ -8,7 +9,9 @@ namespace QuestomAssets.AssetsChanger
     public interface ISmartPtr<out T> where T : AssetsObject
     {
         AssetsObject Owner { get; set; }
+        PropertyInfo OwnerPropInfo { get; set; }
         T Target { get; }
+        void Dispose();
     }
 
     public class SmartPtr<T> : ISmartPtr<T>, IDisposable where T : AssetsObject
@@ -18,7 +21,7 @@ namespace QuestomAssets.AssetsChanger
             Target = target ?? throw new NullReferenceException("Target cannot be null");
             Target.ObjectInfo.ParentFile.AddPtrRef(this);
         }
-
+        public PropertyInfo OwnerPropInfo { get; set; }
         private AssetsObject _owner;
         public AssetsObject Owner
         {
@@ -80,8 +83,11 @@ namespace QuestomAssets.AssetsChanger
                     }
                     if (Target != null)
                     {
-                        Owner.ObjectInfo.ParentFile.RemovePtrRef(this);
+                        Target.ObjectInfo.ParentFile.RemovePtrRef(this);
                     }
+                    OwnerPropInfo = null;
+                    Owner = null;
+                    Target = null;
                     // TODO: dispose managed state (managed objects).
                 }
 

@@ -10,14 +10,14 @@ namespace QuestomAssets.BeatSaber
 {
     public sealed class BeatmapLevelPackObject : MonoBehaviourObject, INeedAssetsMetadata
     {
-        public BeatmapLevelPackObject(AssetsMetadata metadata) : base(metadata, BSConst.ScriptHash.BeatmapLevelPackScriptHash, BSConst.ScriptPtr.BeatmapLevelPackScriptPtr)
+        public BeatmapLevelPackObject(AssetsFile assetsFile) : base(assetsFile, BSConst.ScriptHash.BeatmapLevelPackScriptHash, KnownObjects.File17.BeatmapLevelPackScriptPtr)
         { }
 
-        public BeatmapLevelPackObject(ObjectInfo objectInfo, AssetsReader reader) : base(objectInfo)
+        public BeatmapLevelPackObject(IObjectInfo<AssetsObject> objectInfo, AssetsReader reader) : base(objectInfo)
         {
             Parse(reader);
         }
-        public BeatmapLevelPackObject(ObjectInfo objectInfo) : base(objectInfo)
+        public BeatmapLevelPackObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
         { }
 
         //public void UpdateTypes(AssetsMetadata metadata)

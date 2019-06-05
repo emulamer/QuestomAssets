@@ -180,7 +180,7 @@ namespace QuestomAssets
                 //don't try to find the cover name, just let it create a dupe, we'll try to clean up linked things we did later
                 //var packCover = CustomLevelLoader.LoadPackCover(playlist.PlaylistID, songsAssetFile, playlist.CoverArtFile);
                 //playlist.CoverArtSprite = packCover;
-                levelPack = new BeatmapLevelPackObject(songsAssetFile.Metadata)
+                levelPack = new BeatmapLevelPackObject(songsAssetFile)
                 {
                     Enabled = 1,
                     GameObjectPtr = new PPtr(),
@@ -202,7 +202,7 @@ namespace QuestomAssets
             }
             if (levelCollection == null)
             {
-                levelCollection = new BeatmapLevelCollectionObject(songsAssetFile.Metadata)
+                levelCollection = new BeatmapLevelCollectionObject(songsAssetFile)
                 { Name = playlist.PlaylistID + BSConst.NameSuffixes.LevelCollection };
                 songsAssetFile.AddObject(levelCollection, true);
                 levelPack.BeatmapLevelCollection = levelCollection.ObjectInfo.LocalPtrTo;

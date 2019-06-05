@@ -11,20 +11,20 @@ namespace QuestomAssets.AssetsChanger
         public AssetsMetadata(AssetsFile owner, AssetsReader reader)
         {
             Types = new List<AssetsType>();
-            ObjectInfos = new List<ObjectInfo>();
+            ObjectInfos = new List<IObjectInfo<AssetsObject>>();
             Adds = new List<PPtr>();
             ExternalFiles = new List<ExternalFile>();
             Parse(reader);
-            Owner = owner;
+            ParentFile = owner;
         }
         public string Version { get; set; }
         public Int32 Platform { get; set; }
         public bool HasTypeTrees { get; set; }
         public List<AssetsType> Types { get; set; }
-        public List<ObjectInfo> ObjectInfos { get; set; }
+        public List<IObjectInfo<AssetsObject>> ObjectInfos { get; set; }
         public List<PPtr> Adds { get; set; }
         public List<ExternalFile> ExternalFiles { get; set; }
-        public AssetsFile Owner { get; set; }
+        public AssetsFile ParentFile { get; set; }
 
         public void Parse(AssetsReader reader)
         {
@@ -40,8 +40,7 @@ namespace QuestomAssets.AssetsChanger
             for (int i = 0; i < numObj; i++)
             {
                 reader.AlignTo(4);
-                var obj = ObjectInfo.Parse(reader);
-                obj.ParentFile = Owner;
+                var obj = ObjectInfo<AssetsObject>.Parse(ParentFile, reader);
                 ObjectInfos.Add(obj);
             }
             int numAdds = reader.ReadInt32();
