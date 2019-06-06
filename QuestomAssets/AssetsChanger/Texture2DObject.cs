@@ -13,8 +13,8 @@ namespace QuestomAssets.AssetsChanger
             Parse(reader);
         }
 
-        public Texture2DObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
-        { }
+        //public Texture2DObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
+        //{ }
 
         public Texture2DObject(AssetsFile assetsFile) : base(assetsFile, AssetsConstants.ClassID.Texture2DClassID)
         { }

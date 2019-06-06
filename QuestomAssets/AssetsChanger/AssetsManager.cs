@@ -44,14 +44,18 @@ namespace QuestomAssets.AssetsChanger
             foreach (var assetsFileName in _openAssetsFiles.Keys.ToList())
             {
                 var assetsFile = _openAssetsFiles[assetsFileName];
-                try
+                if (assetsFile.HasChanges)
                 {
-                    _apk.WriteCombinedAssets(assetsFile, BSConst.KnownFiles.AssetsRootPath + assetsFileName);
-                }
-                catch (Exception ex)
-                {
-                    Log.LogErr($"Exception writing assets file {assetsFileName}", ex);
-                    throw;
+                    Log.LogMsg($"File {assetsFileName} has changed, writing new contents.");
+                    try
+                    {
+                        _apk.WriteCombinedAssets(assetsFile, BSConst.KnownFiles.AssetsRootPath + assetsFileName);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.LogErr($"Exception writing assets file {assetsFileName}", ex);
+                        throw;
+                    }
                 }
                 _openAssetsFiles.Remove(assetsFileName);
             }
@@ -62,7 +66,8 @@ namespace QuestomAssets.AssetsChanger
         {
             if (_classCache.ContainsKey(className))
                 return _classCache[className];
-            var classObj = MassFirstOrDefaultAsset<MonoScriptObject>(x => x.Object.Name == className);
+            var ggm = GetAssetsFile("globalgamemanagers.assets");
+            var classObj = ggm.FindAsset<MonoScriptObject>(x => x.Object.Name == className);
             if (classObj == null)
                 throw new Exception($"Unable to find a script with type name {className}!");
             _classCache.Add(className, classObj.Object);
@@ -101,21 +106,21 @@ namespace QuestomAssets.AssetsChanger
 
                 }
             }
-            yield return null;
+            yield break;
         }
         public IEnumerable<IObjectInfo<T>> MassFindAssets<T>(Func<IObjectInfo<T>, bool> filter, bool deepSearch = true) where T : AssetsObject
         {
             List<AssetsFile> searched = new List<AssetsFile>();
             List<AssetsFile> deepSearched = new List<AssetsFile>();
             //do a quick pass on the open assts files so that if we find one and stop at that, we don't iterate them all
-            foreach (var file in _openAssetsFiles.Values)
+            foreach (var file in _openAssetsFiles.Values.ToList())
                 foreach (var res in file.FindAssets(filter))
                     yield return res;
 
             if (deepSearch)
             {
                 //now do a deep search
-                foreach (var file in _openAssetsFiles.Values)
+                foreach (var file in _openAssetsFiles.Values.ToList())
                     foreach (var res in MassFindAssets(file, filter, true, searched, deepSearched))
                         yield return res;
             }

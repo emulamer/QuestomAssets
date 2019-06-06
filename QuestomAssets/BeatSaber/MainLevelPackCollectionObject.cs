@@ -15,8 +15,8 @@ namespace QuestomAssets.BeatSaber
             Parse(reader);
         }
 
-        public MainLevelPackCollectionObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
-        { }
+        //public MainLevelPackCollectionObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
+        //{ }
 
         public MainLevelPackCollectionObject(AssetsFile assetsFile) : base(assetsFile, assetsFile.Manager.GetScriptObject("BeatmapLevelPackCollectionSO"))
         { }

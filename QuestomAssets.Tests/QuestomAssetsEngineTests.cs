@@ -3,7 +3,7 @@ using System.IO;
 using QuestomAssets;
 using System.Collections.Generic;
 using System.Linq;
-using System.Collections.Immutable;
+
 
 namespace Tests
 {
@@ -173,6 +173,8 @@ namespace Tests
                 Assert.AreEqual(string.Format(SongIDFormat, 1, 0), testConfig.Playlists[1].SongList[0].SongID);
                 Assert.AreEqual(string.Format(SongIDFormat, 1, 1), testConfig.Playlists[1].SongList[1].SongID);
                 Assert.AreEqual(string.Format(SongIDFormat, 0, 0), testConfig.Playlists[1].SongList[2].SongID);
+                Assert.AreEqual(oldConfig.Playlists[0].PlaylistName, testConfig.Playlists[0].PlaylistName);
+                Assert.AreEqual(oldConfig.Playlists[1].PlaylistName, testConfig.Playlists[1].PlaylistName);
             }
             Assert.Pass();
         }

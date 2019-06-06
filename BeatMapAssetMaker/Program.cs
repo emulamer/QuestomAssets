@@ -10,6 +10,7 @@ using QuestomAssets.BeatSaber;
 using System.Drawing;
 using CommandLine;
 using Newtonsoft.Json;
+using static QuestomAssets.Utils.Patcher;
 
 namespace BeatmapAssetMaker
 {
@@ -132,13 +133,14 @@ namespace BeatmapAssetMaker
                     }
                     
                     Log.LogMsg($"Config parsed");
+                    
+
 
                     Log.LogMsg("Applying new configuration...");
                     q.UpdateConfig(config);
                     Log.LogMsg("Configuration updated");
 
-                    if (!args.NoPatch)
-                        q.ApplyBeatmapSignaturePatch();
+                    
 
                     Log.LogMsg("Signing and saving APK...");
                 }
@@ -215,6 +217,7 @@ namespace BeatmapAssetMaker
         static int FolderMode(FolderMode args)
         {
             QuestomAssets.Log.SetLogSink(new ConsoleSink());
+
             if (!string.IsNullOrWhiteSpace(args.CoverArt) && !File.Exists(args.CoverArt))
             {
                 Log.LogErr("Playlist cover art file doesn't exist!");
@@ -232,9 +235,19 @@ namespace BeatmapAssetMaker
                 using (QuestomAssetsEngine q = new QuestomAssetsEngine(args.ApkFile))
                 {
                     Log.LogMsg($"Loading configuration...");
-                    var cfg = q.GetCurrentConfig();
+                    var cfg = q.GetCurrentConfig(true);
                     Log.LogMsg($"Configuration loaded");
-                    
+
+                    if (!args.NoPatch)
+                    {
+                        Log.LogMsg($"Applying patches...");
+                        if (!q.ApplyPatchSettingsFile())
+                        {
+                            Log.LogErr("Failed to apply patches.  Cannot continue.");
+                            return -1;
+                        }
+                    }
+
                     BeatSaberPlaylist playlist = cfg.Playlists.FirstOrDefault(x => x.PlaylistID == "CustomSongs");
                     if (playlist == null)
                     {
@@ -268,8 +281,7 @@ namespace BeatmapAssetMaker
                             CustomSongFolder = cs
                         });
                     }
-                    if (!args.NoPatch)
-                        q.ApplyBeatmapSignaturePatch();
+
 
                     Log.LogMsg("Applying new configuration...");
                     q.UpdateConfig(cfg);
@@ -284,7 +296,8 @@ namespace BeatmapAssetMaker
             {
                 Log.LogErr("Something went horribly wrong", ex);
                 return -1;
-            }            
+            }
+
         }
 
         static List<string> GetCustomSongsFromPath(string path)

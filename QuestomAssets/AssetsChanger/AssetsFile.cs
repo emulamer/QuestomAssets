@@ -32,7 +32,8 @@ namespace QuestomAssets.AssetsChanger
 
         public void AddPtrRef(ISmartPtr<AssetsObject> ptr)
         {
-            _knownPointers.Add(ptr);
+            if (!_knownPointers.Contains(ptr))
+                _knownPointers.Add(ptr);
         }
 
         public void RemovePtrRef(ISmartPtr<AssetsObject> ptr)
@@ -52,7 +53,23 @@ namespace QuestomAssets.AssetsChanger
             return new AssetsReader(BaseStream);
         }
 
-        
+        public bool HasChanges
+        {
+            get
+            {
+                var newPtrs = _knownPointers.Where(x => x.Owner.ObjectInfo.ParentFile == this && x.IsNew).ToList();
+                if (newPtrs.Any())
+                {
+                    return true;
+                }
+                var newObjInfos = Metadata.ObjectInfos.Where(x => x.IsNew).ToList();
+                if (newObjInfos.Any())
+                {
+                    return true;
+                }
+                return false;
+            }
+        }
 
         public Stream BaseStream { get; private set; }
 
@@ -77,40 +94,22 @@ namespace QuestomAssets.AssetsChanger
             }
             assetsFileStream.Seek(Header.ObjectDataOffset, SeekOrigin.Begin);
 
-            foreach (var ext in Metadata.ExternalFiles)
-            {
-                manager.GetAssetsFile(ext.FileName);
-            }
+
 
             if (!manager.LazyLoad)
             {
+                //foreach (var ext in Metadata.ExternalFiles)
+                //{
+                //    manager.GetAssetsFile(ext.FileName);
+                //}
                 foreach (var oi in Metadata.ObjectInfos)
                 {
                     var o = oi.Object;
                 }
+                BaseStream.Close();
+                BaseStream.Dispose();
+                BaseStream = null;
             }
-        }
-        public T CopyAsset<T>(T source) where T : AssetsObject
-        {
-            if (source.ObjectInfo.ParentFile != this)
-                throw new NotImplementedException("Haven't implemented cloning objects to another file yet.");
-
-            T newObj = null;
-            using (var ms = new MemoryStream())
-            {
-                IObjectInfo<T> newInfo = (IObjectInfo<T>)ObjectInfo<T>.FromTypeIndex(this, source.ObjectInfo.TypeIndex);
-                
-                newInfo.DataSize = source.ObjectInfo.DataSize;
-                //newInfo.ObjectID
-                using (var writer = new AssetsWriter(ms))
-                    source.Write(writer);
-                ms.Seek(0, SeekOrigin.Begin);
-                using (var reader = new AssetsReader(ms))
-                {
-                    newObj = (T)Activator.CreateInstance(typeof(T), newInfo, reader);
-                }
-            }
-            return newObj;
         }
 
         public void Write(Stream outputStream)
@@ -120,7 +119,7 @@ namespace QuestomAssets.AssetsChanger
             using (AssetsWriter writer = new AssetsWriter(objectsMS))
             {
                 int ctr = 0;
-                foreach (var obj in Metadata.ObjectInfos.Select(x=> x.Object))
+                foreach (var obj in Metadata.ObjectInfos.Select(x => x.Object))
                 {
                     ctr++;
                     obj.ObjectInfo.DataOffset = (int)objectsMS.Position;
@@ -246,7 +245,7 @@ namespace QuestomAssets.AssetsChanger
                     throw new Exception($"Object info could not be found for path id {pathID} in file {AssetsFileName}");
                 var objTypedInfo = objInfo as IObjectInfo<T>;
                 if (objTypedInfo == null)
-                    throw new Exception($"Object was the wrong type!  Pointer expected {typeof(T).Name}, target was actually {(objInfo.GetType().Name)}");
+                    throw new Exception($"Object was the wrong type!  Pointer expected {typeof(T).Name}, target was actually {(objInfo.GetType().GenericTypeArguments[0]?.Name)}");
                 return objTypedInfo;
             }
             else

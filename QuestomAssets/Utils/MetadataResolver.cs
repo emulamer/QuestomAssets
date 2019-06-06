@@ -17,7 +17,7 @@ namespace QuestomAssets.Utils
             if (typeof(AssetsChanger.INeedAssetsMetadata).IsAssignableFrom(objectType))
             {
                 var contract = base.CreateObjectContract(objectType);
-                contract.DefaultCreator = () => Activator.CreateInstance(objectType, _assetsFile.Metadata);
+                contract.DefaultCreator = () => Activator.CreateInstance(objectType, _assetsFile);
                 return contract;
             }
 

@@ -11,6 +11,11 @@ namespace QuestomAssets.BeatSaber
 {
     public sealed class BeatmapLevelCollectionObject : MonoBehaviourObject, INeedAssetsMetadata
     {
+        //public BeatmapLevelCollectionObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
+        //{
+
+        //}
+
         public BeatmapLevelCollectionObject(AssetsFile assetsFile) : base(assetsFile, assetsFile.Manager.GetScriptObject("BeatmapLevelCollectionSO"))
         {
             BeatmapLevels = new List<ISmartPtr<BeatmapLevelDataObject>>();
