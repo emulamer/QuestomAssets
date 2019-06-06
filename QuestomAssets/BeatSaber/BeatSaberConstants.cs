@@ -13,6 +13,7 @@ namespace QuestomAssets.BeatSaber
             public const string File17 = "sharedassets17.assets";
             public const string File11 = "sharedassets11.assets";
             public const string File14 = "sharedassets14.assets";
+            public const string File1 = "sharedassets1.assets";
 
             //public const string FullFile19Path = AssetsRootPath + File19;
             //public const string FullFile17Path = AssetsRootPath + File17;
@@ -23,10 +24,31 @@ namespace QuestomAssets.BeatSaber
             public const string SaberAssetsFilename = File11;
             public const string SongsAssetsFilename = File17;
             public const string MainCollectionAssetsFilename = File19;
+            public const string ColorAssetsFilename = File1;
+            public const string TextAssetFilename = "231368cb9c1d5dd43988f2a85226e7d7";
 
             //public const string FullSaberAssetsPath = AssetsRootPath + SaberAssetsFilename;
             //public const string FullSongsAssetsPath = AssetsRootPath + SongsAssetsFilename;
             //public const string FullMainCollectionAssetsPath = AssetsRootPath + MainCollectionAssetsFilename;
+        }
+
+        public static class Colors
+        {
+            // Could use a hex string to calculate this exactly, but I was too lazy
+            public static readonly Color DefaultColorA = new Color()
+            {
+                R = 0.188235f,
+                G = 0.619608f,
+                B = 1.0f,
+                A = 1.0f
+            };
+            public static readonly Color DefaultColorB = new Color()
+            {
+                R = 0.941176f,
+                G = 0.188235f,
+                B = 0.188235f,
+                A = 1.0f
+            };
         }
 
         public static class NameSuffixes
@@ -58,6 +80,8 @@ namespace QuestomAssets.BeatSaber
             scriptHashToTypes.Add("BeatmapLevelPackCollectionSO", typeof(MainLevelPackCollectionObject));
             scriptHashToTypes.Add("BeatmapDataSO", typeof(BeatmapDataObject));
             scriptHashToTypes.Add("BeatmapLevelSO", typeof(BeatmapLevelDataObject));
+            scriptHashToTypes.Add("SimpleColorSO", typeof(SimpleColorSO));
+            scriptHashToTypes.Add("ColorManager", typeof(ColorManager));
             return scriptHashToTypes;
         }
 

@@ -38,8 +38,6 @@ namespace QuestomAssets
         public BeatSaberQuestomConfig GetCurrentConfig(bool suppressImages = false)
         {
             BeatSaberQuestomConfig config = new BeatSaberQuestomConfig();
-            var file19 = _manager.GetAssetsFile(BSConst.KnownFiles.MainCollectionAssetsFilename);
-            var file17 = _manager.GetAssetsFile(BSConst.KnownFiles.SongsAssetsFilename);
             var mainPack = GetMainLevelPack();
             foreach (var packPtr in mainPack.BeatmapLevelPacks)
             {
@@ -102,7 +100,7 @@ namespace QuestomAssets
                 }
                 config.Playlists.Add(packModel);
             }
-            return config;            
+            return config;
         }
 
         private void UpdatePlaylistConfig(BeatSaberPlaylist playlist)
@@ -332,6 +330,11 @@ namespace QuestomAssets
             //compare with new ones
             //generate a diff
             //etc.
+
+            UpdateColorConfig(config.Colors);
+
+            UpdateTextConfig(config.TextChanges);
+
             var songsAssetFile = _manager.GetAssetsFile(BSConst.KnownFiles.SongsAssetsFilename);
 
             foreach (var playlist in config.Playlists)
@@ -456,7 +459,57 @@ namespace QuestomAssets
             _manager.WriteAllOpenAssets();
         }
 
+        public void UpdateColorConfig(SimpleColorSO[] colors)
+        {
+            var manager = GetColorManager();
 
+            var colorA = colors[0];
+            var colorB = colors[1];
+
+            if (colorA != null)
+            {
+                (manager.ColorA.Object as SimpleColorSO).color = colorA.color;
+            }
+            if (colorB != null)
+                (manager.ColorB.Object as SimpleColorSO).color = colorB.color;
+            // Reset
+            if (colorA == null && colorB == null)
+            {
+                (manager.ColorA.Object as SimpleColorSO).color = BSConst.Colors.DefaultColorA;
+                (manager.ColorB.Object as SimpleColorSO).color = BSConst.Colors.DefaultColorB;
+            }
+        }
+
+        public void UpdateTextConfig(List<(string, string)> texts)
+        {
+            var textAsset = GetBeatSaberTextAsset();
+            var textKeyPairs = Utils.TextUtils.ReadLocaleText(textAsset.Script, new List<char>() { ',', ',', '\n' });
+            Utils.TextUtils.ApplyWatermark(textKeyPairs);
+            foreach (var kp in texts)
+            {
+                textKeyPairs[kp.Item1][textKeyPairs[kp.Item1].Count - 1] = kp.Item2;
+            }
+            textAsset.Script = Utils.TextUtils.WriteLocaleText(textKeyPairs, new List<char>() { ',', ',', '\n' });
+        }
+
+        private TextAsset GetBeatSaberTextAsset()
+        {
+            _manager.GetAssetsFile(BSConst.KnownFiles.TextAssetFilename);
+            var textAssets = _manager.MassFindAssets<TextAsset>(x => true).ToList();
+            if (textAssets.Count == 0)
+                throw new Exception("Unable to find any TextAssets! Perhaps the ClassID/ScriptHash are invalid?");
+            // Literally the only object in the TextAssetFile is "BeatSaber" at PathID=1
+            return textAssets.Find(a => a.Object.Name == "BeatSaber").Object;
+        }
+
+        private ColorManager GetColorManager()
+        {
+            _manager.GetAssetsFile(BSConst.KnownFiles.ColorAssetsFilename);
+            var colorManager = _manager.MassFirstOrDefaultAsset<ColorManager>(x => true)?.Object;
+            if (colorManager == null)
+                throw new Exception("Unable to find the color manager asset!");
+            return colorManager;
+        }
 
         private MainLevelPackCollectionObject GetMainLevelPack()
         {

@@ -355,3 +355,4 @@ MigrationBackup/
 |.vscode/tasks.json
 |.vscode/launch.json
 |.vscode/extensions.json
+Binaries/Win/etcpack\.exe
