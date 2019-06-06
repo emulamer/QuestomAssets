@@ -19,8 +19,8 @@ namespace QuestomAssets.AssetsChanger
             Parse(reader);
         }
 
-        public SpriteObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
-        { }
+        //public SpriteObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
+        //{ }
         
         protected override void Parse(AssetsReader reader)
         {

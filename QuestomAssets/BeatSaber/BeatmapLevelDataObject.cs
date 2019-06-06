@@ -13,8 +13,8 @@ namespace QuestomAssets.BeatSaber
     {
 
 
-        public BeatmapLevelDataObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
-        { }
+        //public BeatmapLevelDataObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
+        //{ }
 
         public BeatmapLevelDataObject(IObjectInfo<AssetsObject> objectInfo, AssetsReader reader) : base(objectInfo)
         {

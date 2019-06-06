@@ -21,13 +21,13 @@ namespace QuestomAssets.AssetsChanger
         public AssetsObject(AssetsFile assetsFile, int classID)
         {
 
-            ObjectInfo = ObjectInfo<AssetsObject>.FromClassID(assetsFile, classID);
+            ObjectInfo = ObjectInfo<AssetsObject>.FromClassID(assetsFile, classID, this);
             
         }
 
         public AssetsObject(AssetsFile assetsFile, Guid typeHash)
         {
-            ObjectInfo = ObjectInfo<AssetsObject>.FromTypeHash(assetsFile, typeHash);
+            ObjectInfo = ObjectInfo<AssetsObject>.FromTypeHash(assetsFile, typeHash, this);
         }
 
         protected AssetsObject(IObjectInfo<AssetsObject> objectInfo)

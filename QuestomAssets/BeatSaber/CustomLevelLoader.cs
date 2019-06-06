@@ -13,14 +13,22 @@ namespace QuestomAssets.BeatSaber
 {
     public class CustomLevelLoader
     {
+        public CustomLevelLoader(AssetsFile assetsFile)
+        {
+            _assetsFile = assetsFile;
+        }
 
-        public static BeatmapLevelDataObject DeserializeFromJson(AssetsFile assetsFile, string songPath, string overrideLevelID)
+        private AssetsFile _assetsFile;
+
+        private Dictionary<string, MonoBehaviourObject> _characteristicCache = new Dictionary<string, MonoBehaviourObject>();
+
+        public BeatmapLevelDataObject DeserializeFromJson(string songPath, string overrideLevelID)
         {
             try
             {
                 var jsonSettings = new JsonSerializerSettings()
                 {
-                    ContractResolver = new MetadataResolver(assetsFile)
+                    ContractResolver = new MetadataResolver(_assetsFile)
                 };
 
                 string infoFile = Path.Combine(songPath, "Info.dat");
@@ -44,8 +52,7 @@ namespace QuestomAssets.BeatSaber
             }
         }
 
-
-        public static BeatmapLevelDataObject LoadSongToAsset(BeatmapLevelDataObject beatmapLevel, string songPath, AssetsFile assetsFile, out string oggFileName, bool includeCovers = true)
+        public BeatmapLevelDataObject LoadSongToAsset(BeatmapLevelDataObject beatmapLevel, string songPath, out string oggFileName, bool includeCovers = true)
         {
             oggFileName = null;
             try
@@ -56,40 +63,29 @@ namespace QuestomAssets.BeatSaber
                 Texture2DObject coverImage = null;
                 if (includeCovers)
                 {
-                    coverImage = LoadSongCover(songPath, beatmapLevel, assetsFile);
+                    coverImage = LoadSongCover(songPath, beatmapLevel);
                 }
 
                 //audio
-                var audioAsset = LoadSongAudioAsset(songPath, beatmapLevel, assetsFile);
+                var audioAsset = LoadSongAudioAsset(songPath, beatmapLevel);
                 if (audioAsset == null)
                 {
                     Log.LogErr($"failed to get audio for song at path {songPath}");
                     return null;
                 }
                 oggFileName = Path.Combine(songPath, beatmapLevel.SongFilename); ;
-
-                foreach (var d in beatmapLevel.DifficultyBeatmapSets)
+                
+                foreach (var difficultySet in beatmapLevel.DifficultyBeatmapSets)
                 {
-                    switch (d.BeatmapCharacteristicName)
-                    {
-                        case Characteristic.OneSaber:
-                            d.BeatmapCharacteristic = assetsFile.FindAsset<MonoBehaviourObject>(x => x.Object.Name == "OneColorBeatmapCharacteristic").PtrFrom(beatmapLevel);
-                            break;
-                        case Characteristic.NoArrows:
-                            d.BeatmapCharacteristic = assetsFile.FindAsset<MonoBehaviourObject>(x => x.Object.Name == "NoArrowsBeatmapCharacteristic").PtrFrom(beatmapLevel);
-                            break;
-                        case Characteristic.Standard:
-                            d.BeatmapCharacteristic = assetsFile.FindAsset<MonoBehaviourObject>(x => x.Object.Name == "StandardBeatmapCharacteristic").PtrFrom(beatmapLevel);
-                            break;
-                    }
+                    difficultySet.BeatmapCharacteristic = GetCharacteristicAsset(difficultySet.BeatmapCharacteristicName).PtrFrom(beatmapLevel);
                     List<DifficultyBeatmap> toRemove = new List<DifficultyBeatmap>();
-                    foreach (var dm in d.DifficultyBeatmaps)
+                    foreach (var difficultyBeatmap in difficultySet.DifficultyBeatmaps)
                     {
-                        var dataFile = Path.Combine(songPath, $"{dm.Difficulty.ToString()}.dat");
+                        var dataFile = Path.Combine(songPath, $"{difficultyBeatmap.Difficulty.ToString()}.dat");
                         if (!File.Exists(dataFile))
                         {
                             Log.LogErr(dataFile + " is missing, skipping this difficulty");
-                            toRemove.Add(dm);
+                            toRemove.Add(difficultyBeatmap);
                             continue;
                         }
                         string jsonData;
@@ -97,54 +93,54 @@ namespace QuestomAssets.BeatSaber
                         {
                             jsonData = sr.ReadToEnd();
                         }
-                        if (assetsFile != null)
+                        if (_assetsFile != null)
                         {
-                            dm.BeatmapData = new BeatmapDataObject(assetsFile);
+                            difficultyBeatmap.BeatmapData = new BeatmapDataObject(_assetsFile);
                         }
 
-                        dm.BeatmapData.Name = beatmapLevel.LevelID + ((d.BeatmapCharacteristicName == Characteristic.Standard) ? "" : d.BeatmapCharacteristicName.ToString()) + dm.Difficulty.ToString() + "BeatmapData";
-                        dm.BeatmapData.BeatsPerMinute = beatmapLevel.BeatsPerMinute;
-                        dm.BeatmapData.Shuffle = beatmapLevel.Shuffle;
-                        dm.BeatmapData.ShufflePeriod = beatmapLevel.ShufflePeriod;
-                        dm.BeatmapData.JsonData = jsonData;
-                        dm.BeatmapData.TransformToProjectedData();
-                        dm.BeatmapData.JsonData = null;
+                        difficultyBeatmap.BeatmapData.Name = beatmapLevel.LevelID + ((difficultySet.BeatmapCharacteristicName == Characteristic.Standard) ? "" : difficultySet.BeatmapCharacteristicName.ToString()) + difficultyBeatmap.Difficulty.ToString() + "BeatmapData";
+                        difficultyBeatmap.BeatmapData.BeatsPerMinute = beatmapLevel.BeatsPerMinute;
+                        difficultyBeatmap.BeatmapData.Shuffle = beatmapLevel.Shuffle;
+                        difficultyBeatmap.BeatmapData.ShufflePeriod = beatmapLevel.ShufflePeriod;
+                        difficultyBeatmap.BeatmapData.JsonData = jsonData;
+                        difficultyBeatmap.BeatmapData.TransformToProjectedData();
+                        difficultyBeatmap.BeatmapData.JsonData = null;
 
-                        assetsFile.AddObject(dm.BeatmapData, true);
-                        dm.BeatmapDataPtr = dm.BeatmapData.PtrFrom(beatmapLevel);
+                        _assetsFile.AddObject(difficultyBeatmap.BeatmapData, true);
+                        difficultyBeatmap.BeatmapDataPtr = difficultyBeatmap.BeatmapData.PtrFrom(beatmapLevel);
                     }
-                    toRemove.ForEach(x => d.DifficultyBeatmaps.Remove(x));
-                    if (d.DifficultyBeatmaps.Count < 1)
+                    toRemove.ForEach(x => difficultySet.DifficultyBeatmaps.Remove(x));
+                    if (difficultySet.DifficultyBeatmaps.Count < 1)
                     {
                         Log.LogErr($"Song at path {songPath} has no valid beatmaps for any difficulty, skipping song");
                         return null;
                     }
                 }
 
-                assetsFile.AddObject(audioAsset, true);
+                _assetsFile.AddObject(audioAsset, true);
                 if (coverImage != null)
                 {
-                    assetsFile.AddObject(coverImage);
+                    _assetsFile.AddObject(coverImage);
                 }
 
                 beatmapLevel.AudioClip = audioAsset.PtrFrom(beatmapLevel);
                 if (coverImage == null)
                 {
-                    beatmapLevel.CoverImageTexture2D = assetsFile.FindAsset<Texture2DObject>(x => x.Object.Name == "BeatSaberCover").PtrFrom(beatmapLevel);
+                    beatmapLevel.CoverImageTexture2D = _assetsFile.FindAsset<Texture2DObject>(x => x.Object.Name == "BeatSaberCover").PtrFrom(beatmapLevel);
                 }
                 else
                 {
                     beatmapLevel.CoverImageTexture2D = coverImage.PtrFrom(beatmapLevel);
                 }
-                var environment = assetsFile.Manager.MassFirstOrDefaultAsset<MonoBehaviourObject>(x => x.Object.Name == $"{beatmapLevel.EnvironmentName}SceneInfo");
+                var environment = _assetsFile.Manager.MassFirstOrDefaultAsset<MonoBehaviourObject>(x => x.Object.Name == $"{beatmapLevel.EnvironmentName}SceneInfo");
                 if (environment == null)
                 {
                     Log.LogMsg($"Unknown environment name '{beatmapLevel.EnvironmentName}' on '{beatmapLevel.SongName}', falling back to default.");
-                    environment = assetsFile.Manager.MassFirstAsset<MonoBehaviourObject>(x => x.Object.Name == "DefaultEnvironmentSceneInfo");
+                    environment = _assetsFile.Manager.MassFirstAsset<MonoBehaviourObject>(x => x.Object.Name == "DefaultEnvironmentSceneInfo");
                 }
 
                 beatmapLevel.EnvironmentSceneInfo = environment.PtrFrom(beatmapLevel);
-                assetsFile.AddObject(beatmapLevel, true);
+                _assetsFile.AddObject(beatmapLevel, true);
                 return beatmapLevel;
             }
             catch (Exception ex)
@@ -154,7 +150,7 @@ namespace QuestomAssets.BeatSaber
             }
         }
 
-        public static AudioClipObject LoadSongAudioAsset(string songPath, BeatmapLevelDataObject levelData, AssetsFile assetsFile)
+        public AudioClipObject LoadSongAudioAsset(string songPath, BeatmapLevelDataObject levelData)
         {
             string audioClipFile = Path.Combine(songPath, levelData.SongFilename);
             string outputFileName = levelData.LevelID + ".ogg";
@@ -187,7 +183,7 @@ namespace QuestomAssets.BeatSaber
                     pinnedArray.Free();
                 }
             }
-            var audioClip = new AudioClipObject(assetsFile)
+            var audioClip = new AudioClipObject(_assetsFile)
             {
                 Name = levelData.LevelID,
                 LoadType = 1,
@@ -207,7 +203,7 @@ namespace QuestomAssets.BeatSaber
             return audioClip;
         }
 
-        public static Texture2DObject LoadSongCover(string songPath, BeatmapLevelDataObject levelData, AssetsFile assetsFile)
+        public Texture2DObject LoadSongCover(string songPath, BeatmapLevelDataObject levelData)
         {
             if (!string.IsNullOrWhiteSpace(levelData.CoverImageFilename) && File.Exists(Path.Combine(songPath, levelData.CoverImageFilename)))
             {
@@ -216,7 +212,7 @@ namespace QuestomAssets.BeatSaber
                     string coverFile = Path.Combine(songPath, levelData.CoverImageFilename);
                     Bitmap coverImage = (Bitmap)Bitmap.FromFile(coverFile);
 
-                    var coverAsset = new Texture2DObject(assetsFile)
+                    var coverAsset = new Texture2DObject(_assetsFile)
                     {
                         Name = levelData.LevelID + "Cover"
                     };
@@ -232,9 +228,47 @@ namespace QuestomAssets.BeatSaber
             return null;
         }
 
+        public SpriteObject LoadPackCover(string assetName, Bitmap coverImage)
+        {
+            Texture2DObject packCover = null;
+            if (coverImage != null)
+            {
+                try
+                {
+                    var loadedCover = new Texture2DObject(_assetsFile)
+                    {
+                        Name = assetName
+                    };
+                    ImageUtils.AssignImageToTexture(coverImage, loadedCover, 1024, 1024);
+                    packCover = loadedCover;
+                }
+                catch (Exception ex)
+                {
+                    Log.LogErr($"Failed to convert to texture, falling back to default cover image", ex);
+                }
+            }
+            if (packCover == null)
+            {
+                packCover = new Texture2DObject(_assetsFile)
+                {
+                    Name = assetName
+                };
+                SetFallbackCoverTexture(packCover);
+            }
+            _assetsFile.AddObject(packCover, true);
+
+            //slightly less hacky than before, but only a little
+            var extrasCover = _assetsFile.Manager.MassFirstAsset<SpriteObject>(x => x.Object.Name == "ExtrasCover");
+            SpriteObject coverAsset = extrasCover.Clone().Object;
+            coverAsset.Name = assetName;
+            coverAsset.Texture = packCover.PtrFrom(coverAsset);
+            _assetsFile.AddObject(coverAsset, true);
+            return coverAsset;
+        }
+
         private static void SetFallbackCoverTexture(Texture2DObject texture)
         {
-            byte[] imageBytes = Resources.Resource1.CustomSongsCover;
+            byte[] imageBytes = File.ReadAllBytes(Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location), "CustomSongsCover.ETC_RGB4"));
             int mips = 11;
 
             texture.ForcedFallbackFormat = 4;
@@ -268,43 +302,33 @@ namespace QuestomAssets.BeatSaber
                 path = ""
             };
         }
-
-        public static SpriteObject LoadPackCover(string assetName, AssetsFile assetsFile, Bitmap coverImage)
+        
+        private MonoBehaviourObject GetCharacteristicAsset(Characteristic characteristic)
         {
-            Texture2DObject packCover = null;
-            if (coverImage != null)
+            string name = "StandardBeatmapCharacteristic";
+            switch (characteristic)
             {
-                try
-                {
-                    var loadedCover = new Texture2DObject(assetsFile)
-                    {
-                        Name = assetName
-                    };
-                    ImageUtils.AssignImageToTexture(coverImage, loadedCover, 1024, 1024);
-                    packCover = loadedCover;
-                }
-                catch (Exception ex)
-                {
-                    Log.LogErr($"Failed to convert to texture, falling back to default cover image", ex);
-                }
+                case Characteristic.OneSaber:
+                    name = "OneColorBeatmapCharacteristic";
+                    break;
+                case Characteristic.NoArrows:
+                    name = "NoArrowsBeatmapCharacteristic";
+                    break;
+                case Characteristic.Standard:
+                    name = "StandardBeatmapCharacteristic";
+                    break;
             }
-            if (packCover == null)
+            MonoBehaviourObject charObj = null;
+            if (!_characteristicCache.ContainsKey(name))
             {
-                var loadedCover = new Texture2DObject(assetsFile)
-                {
-                    Name = assetName
-                };
-                SetFallbackCoverTexture(packCover);
+                charObj = _assetsFile.Manager.MassFirstAsset<MonoBehaviourObject>(x => x.Object.Name == name).Object;
+                _characteristicCache.Add(name, charObj);
             }
-            assetsFile.AddObject(packCover, true);
-
-            //slightly less hacky than before, but only a little
-            var extrasCover = assetsFile.Manager.MassFirstAsset<SpriteObject>(x=>x.Object.Name == "ExtrasCover").Object;
-            SpriteObject coverAsset = assetsFile.CopyAsset(extrasCover);
-            coverAsset.Name = assetName;
-            coverAsset.Texture = packCover.PtrFrom(coverAsset);
-            assetsFile.AddObject(coverAsset, true);
-            return coverAsset;
-        }
+            else
+            {
+                charObj = _characteristicCache[name];
+            }
+            return charObj;
+        }        
     }
 }

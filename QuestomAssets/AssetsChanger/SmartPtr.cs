@@ -12,7 +12,7 @@ namespace QuestomAssets.AssetsChanger
         IObjectInfo<T> Target { get; }
         void Dispose();
         void WritePtr(AssetsWriter writer);
-        bool Changes { get; set; }
+        bool IsNew { get; set; }
         T Object { get; }
     }
 
@@ -33,7 +33,7 @@ namespace QuestomAssets.AssetsChanger
             Target = target ?? throw new NullReferenceException("Target cannot be null");
             Owner = owner ?? throw new NullReferenceException("Owner cannot be null");
             //TODO: not sure this is only ever called by new objects
-            Changes = true;
+            IsNew = true;
             Target.ParentFile.AddPtrRef(this);
             Owner.ObjectInfo.ParentFile.AddPtrRef(this);
         }
@@ -47,18 +47,19 @@ namespace QuestomAssets.AssetsChanger
         public static SmartPtr<T> Read(AssetsFile assetsFile, AssetsObject owner, AssetsReader reader)
         {
             int fileID = reader.ReadInt32();
+            reader.AlignTo(4);
             Int64 pathID = reader.ReadInt64();
             if (fileID == 0 && pathID == 0)
                 return null;
             
             SmartPtr<T> ptr = new SmartPtr<T>(owner, assetsFile.GetObjectInfo<T>(fileID, pathID));
             //TODO: not sure this is only ever called by existing objects
-            ptr.Changes = false;
+            ptr.IsNew = false;
 
             return ptr;
         }
 
-        public bool Changes { get; set; }
+        public bool IsNew { get; set; }
         public AssetsObject Owner { get; private set; }
         //{
         //    get
@@ -148,7 +149,8 @@ namespace QuestomAssets.AssetsChanger
         public void WritePtr(AssetsWriter writer)
         {
             writer.Write(FileID);
-            writer.Write(Owner.ObjectInfo.ObjectID);
+            writer.AlignTo(4);
+            writer.Write(Target.ObjectID);
         }
 
 

@@ -17,8 +17,8 @@ namespace QuestomAssets.BeatSaber
             Parse(reader);
         }
 
-        public BeatmapDataObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
-        { }
+        //public BeatmapDataObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
+        //{ }
 
         public BeatmapDataObject(AssetsFile assetsFile) : base(assetsFile, assetsFile.Manager.GetScriptObject("BeatmapDataSO"))
         { }

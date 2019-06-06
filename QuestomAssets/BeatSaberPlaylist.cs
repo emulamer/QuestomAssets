@@ -14,9 +14,6 @@ namespace QuestomAssets
         internal BeatmapLevelPackObject LevelPackObject { get; set; }
 
         [JsonIgnore]
-        internal BeatmapLevelCollectionObject LevelCollection { get; set; }
-
-        [JsonIgnore]
         internal SpriteObject CoverArtSprite { get; set; }
 
         [JsonIgnore]

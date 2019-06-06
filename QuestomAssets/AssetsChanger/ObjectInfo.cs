@@ -18,14 +18,22 @@ namespace QuestomAssets.AssetsChanger
         Int32 TypeIndex { get; }
         void Write(AssetsWriter writer);
         AssetsType Type { get; }
+        bool IsNew { get; }
+        IObjectInfo<T> Clone();
     }
     public class ObjectInfo<T> : IObjectInfo<T> where T: AssetsObject
     {
-        public Int64 ObjectID { get; set; }
-        public Int32 DataOffset { get; set; }
-        public Int32 DataSize { get; set; }
-        public Int32 TypeIndex { get; private set; }
-
+        public Int64 ObjectID { get; set; } = -1;
+        public Int32 DataOffset { get; set; } = -1;
+        public Int32 DataSize { get; set; } = -1;
+        public Int32 TypeIndex { get; private set; } = -1;
+        public bool IsNew
+        {
+            get
+            {
+                return (DataOffset < 0 || DataSize < 0);
+            }
+        }
         public AssetsFile ParentFile { get; set; }
 
         public AssetsType Type
@@ -35,19 +43,43 @@ namespace QuestomAssets.AssetsChanger
                 return ParentFile.Metadata.Types[TypeIndex];
             }
         }
- 
-        
+
+        public IObjectInfo<T> Clone()
+        {
+            T newObj = null;
+            using (var ms = new MemoryStream())
+            {
+                ObjectInfo<T> newInfo = (ObjectInfo<T>)ObjectInfo<T>.FromTypeIndex(ParentFile, TypeIndex, null);
+                newInfo.DataOffset = 0;
+                newInfo.ObjectID = 0;
+                using (var writer = new AssetsWriter(ms))
+                {
+                    Object.Write(writer);
+                }
+                newInfo.DataSize = (int)ms.Length;
+                ms.Seek(0, SeekOrigin.Begin);
+                using (var reader = new AssetsReader(ms))
+                {
+                    newObj = (T)Activator.CreateInstance(typeof(T), newInfo, reader);
+                }
+                newInfo.DataOffset = -1;
+                newInfo.DataSize = -1;
+                newInfo._object = newObj;
+            }
+            return (IObjectInfo<T>)newObj.ObjectInfo;
+        }
 
         private ObjectInfo()
         { }
 
-        public ObjectInfo(Int64 objectID, Int32 dataOffset, Int32 dataSize, Int32 typeIndex, AssetsFile parentFile)
+        private ObjectInfo(Int64 objectID, Int32 dataOffset, Int32 dataSize, Int32 typeIndex, AssetsFile parentFile, T assetsObject)
         {
             ObjectID = ObjectID;
             DataOffset = dataOffset;
             DataSize = dataSize;
             TypeIndex = typeIndex;
             ParentFile = parentFile;
+            _object = assetsObject;
         }
 
         internal static IObjectInfo<AssetsObject> Parse(AssetsFile file, AssetsReader reader)
@@ -56,29 +88,32 @@ namespace QuestomAssets.AssetsChanger
             var dataOffset = reader.ReadInt32();
             var dataSize = reader.ReadInt32();
             var typeIndex = reader.ReadInt32();
-            var obji = FromTypeIndex(file, typeIndex);
+            var obji = FromTypeIndex(file, typeIndex, null);
             obji.ObjectID = objectID;
             obji.DataOffset = dataOffset;
             obji.DataSize = dataSize;
             return obji;
         }
 
-        public static IObjectInfo<AssetsObject> FromClassID(AssetsFile assetsFile, int classID)
+        public static IObjectInfo<AssetsObject> FromClassID(AssetsFile assetsFile, int classID, AssetsObject assetsObject)
         {
             var typeIndex = assetsFile.Metadata.Types.IndexOf(assetsFile.Metadata.Types.First(x => x.ClassID == classID));
-            return FromTypeIndex(assetsFile, typeIndex);
+            return FromTypeIndex(assetsFile, typeIndex, assetsObject);
         }
-        public static IObjectInfo<AssetsObject> FromTypeHash(AssetsFile assetsFile, Guid typeHash)
+        public static IObjectInfo<AssetsObject> FromTypeHash(AssetsFile assetsFile, Guid typeHash, AssetsObject assetsObject)
         {
             var typeIndex = assetsFile.Metadata.Types.IndexOf(assetsFile.Metadata.Types.First(x => x.TypeHash == typeHash));
-            return FromTypeIndex(assetsFile, typeIndex);
+            return FromTypeIndex(assetsFile, typeIndex, assetsObject);
         }
 
-        public static IObjectInfo<AssetsObject> FromTypeIndex(AssetsFile assetsFile, int typeIndex)
+        public static IObjectInfo<AssetsObject> FromTypeIndex(AssetsFile assetsFile, int typeIndex, AssetsObject assetsObject)
         {
             var type = GetObjectType(assetsFile, typeIndex);
             var genericInfoType = typeof(ObjectInfo<>).MakeGenericType(type);
-            var genericOI = (IObjectInfo<AssetsObject>)Activator.CreateInstance(genericInfoType, (Int64)0, (int)0, (int)0, typeIndex, assetsFile);
+            var constructor = genericInfoType.GetConstructor(BindingFlags.NonPublic | BindingFlags.Instance, null, new Type[] { typeof(Int64), typeof(int), typeof(int), typeof(int), typeof(AssetsFile), type }, null);
+
+            var genericOI = (IObjectInfo<AssetsObject>)constructor.Invoke(new object[] { (Int64)(-1), (int)-1, (int)-1, typeIndex, assetsFile, assetsObject});
+            
             return genericOI;
         }
 
@@ -157,11 +192,22 @@ namespace QuestomAssets.AssetsChanger
             get
             {
                 if (_object == null)
-                    LoadObject();
+                {
+                    if (DataOffset < 0 || DataSize < 0)
+                    {
+                        throw new Exception("Object is not set and DataOffset or DataSize is not set!");
+                    }
+                    else
+                    {
+                        LoadObject();
+                    }
+                }
+                    
                 return _object;
             }
             set
             {
+                
                 //don't think this should be settable
                 throw new Exception("see if this ever gets hit");
                 _object = value;

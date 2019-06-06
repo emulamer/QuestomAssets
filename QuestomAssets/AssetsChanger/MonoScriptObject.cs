@@ -15,8 +15,8 @@ namespace QuestomAssets.AssetsChanger
             Parse(reader);
         }
 
-        public MonoScriptObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
-        { }
+        //public MonoScriptObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
+        //{ }
 
         protected override void Parse(AssetsReader reader)
         {
