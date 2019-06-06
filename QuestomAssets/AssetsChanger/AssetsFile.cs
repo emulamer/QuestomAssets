@@ -92,16 +92,23 @@ namespace QuestomAssets.AssetsChanger
         }
         public T CopyAsset<T>(T source) where T : AssetsObject
         {
+            if (source.ObjectInfo.ParentFile != this)
+                throw new NotImplementedException("Haven't implemented cloning objects to another file yet.");
+
             T newObj = null;
             using (var ms = new MemoryStream())
             {
-                IObjectInfo<AssetsObject> newInfo = ObjectInfo<AssetsObject>.FromScriptHash(this, source.ObjectInfo.Type.ScriptHash);
+                IObjectInfo<T> newInfo = (IObjectInfo<T>)ObjectInfo<T>.FromTypeIndex(this, source.ObjectInfo.TypeIndex);
+                
                 newInfo.DataSize = source.ObjectInfo.DataSize;
+                //newInfo.ObjectID
                 using (var writer = new AssetsWriter(ms))
                     source.Write(writer);
                 ms.Seek(0, SeekOrigin.Begin);
                 using (var reader = new AssetsReader(ms))
+                {
                     newObj = (T)Activator.CreateInstance(typeof(T), newInfo, reader);
+                }
             }
             return newObj;
         }

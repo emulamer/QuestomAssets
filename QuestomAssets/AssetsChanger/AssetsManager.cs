@@ -62,7 +62,7 @@ namespace QuestomAssets.AssetsChanger
         {
             if (_classCache.ContainsKey(className))
                 return _classCache[className];
-            var classObj = MassFindAsset<MonoScriptObject>(x => x.Object.Name == className);
+            var classObj = MassFirstOrDefaultAsset<MonoScriptObject>(x => x.Object.Name == className);
             if (classObj == null)
                 throw new Exception($"Unable to find a script with type name {className}!");
             _classCache.Add(className, classObj.Object);

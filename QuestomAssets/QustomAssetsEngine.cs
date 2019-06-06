@@ -32,6 +32,7 @@ namespace QuestomAssets
             _apkFilename = apkFilename;
             _apk = new Apkifier(apkFilename, !readOnly, readOnly?null:pemCertificateData, readOnly);
             _manager = new AssetsManager(_apk, BSConst.GetAssetTypeMap());
+            _manager.GetAssetsFile("globalgamemanagers");
         }
 
         public BeatSaberQuestomConfig GetCurrentConfig(bool suppressImages = false)
@@ -346,18 +347,14 @@ namespace QuestomAssets
 
 
             var packsToUnlink = mainLevelPack.BeatmapLevelPacks.Where(x => !HideOriginalPlaylists || !BSConst.KnownLevelPackIDs.Contains(x.Object.PackID)).ToList();
-            var packsToRemove = mainLevelPack.BeatmapLevelPacks.Where(x => !BSConst.KnownLevelPackIDs.Contains(x.Object.PackID));
+            var packsToRemove = mainLevelPack.BeatmapLevelPacks.Where(x => !BSConst.KnownLevelPackIDs.Contains(x.Object.PackID)).ToList();
             foreach (var unlink in packsToUnlink)
             {
-                mainLevelPack.BeatmapLevelPacks.RemoveRange(packsToUnlink);
+                mainLevelPack.BeatmapLevelPacks.Remove(unlink);
+                unlink.Dispose();
             }
 
-            if (BSConst.KnownLevelPackIDs.Contains(pack.PackID))
-            {
-                
-                    levelPackPointersToUnlink.Add(packPtr);
-                continue;
-            }
+
 
             var oldSongs = originalConfig.Playlists.SelectMany(x => x.SongList).Select(x => x.LevelData).Distinct();
             var newSongs = config.Playlists.SelectMany(x => x.SongList).Select(x => x.LevelData).Distinct();
@@ -377,12 +374,11 @@ namespace QuestomAssets
             List<string> audioFilesToDelete = new List<string>();
             removeSongs.ForEach(x => RemoveLevelAssets(x, audioFilesToDelete));
 
-            packsToRemove.ForEach(x => RemoveLevelPackAssets(x));
-
-            levelPackPointersToUnlink.ForEach(x => mainLevelPack.BeatmapLevelPacks.Remove(x));
+            packsToRemove.ForEach(x => x.Dispose());
+            packsToRemove.ForEach(x => RemoveLevelPackAssets(x.Object));
 
             //relink all the level packs in order
-            var addPacks = config.Playlists.Select(x => new PPtr(file17Index, x.LevelPackObject.ObjectInfo.ObjectID));
+            var addPacks = config.Playlists.Select(x => x.LevelPackObject.PtrFrom(mainLevelPack));
             mainLevelPack.BeatmapLevelPacks.AddRange(addPacks);
 
             //do a first loop to guess at the file size
@@ -394,7 +390,7 @@ namespace QuestomAssets
                 {
                     if (sng.SourceOgg != null)
                     {
-                        var clip = songsAssetFile.GetAssetByID<AudioClipObject>(sng.LevelData.AudioClip.PathID);
+                        var clip = sng.LevelData.AudioClip.Object;
                         sizeGuess += new FileInfo(sng.SourceOgg).Length;
                     }
                 }
@@ -434,7 +430,7 @@ namespace QuestomAssets
                 {
                     if (sng.SourceOgg != null)
                     {
-                        var clip = songsAssetFile.GetAssetByID<AudioClipObject>(sng.LevelData.AudioClip.PathID);
+                        var clip = sng.LevelData.AudioClip.Object;
                         _apk.Write(sng.SourceOgg, BSConst.KnownFiles.AssetsRootPath + clip.Resource.Source, true, false);
                         //saftey check to make sure we aren't removing a file we just put here
                         if (audioFilesToDelete.Contains(clip.Resource.Source))
@@ -457,7 +453,7 @@ namespace QuestomAssets
             }
 
             Log.LogMsg("Serializing all assets...");
-            WriteAllOpenAssets();
+            _manager.WriteAllOpenAssets();
         }
 
 

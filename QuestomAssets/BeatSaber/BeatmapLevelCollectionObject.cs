@@ -13,21 +13,16 @@ namespace QuestomAssets.BeatSaber
     {
         public BeatmapLevelCollectionObject(AssetsFile assetsFile) : base(assetsFile, assetsFile.Manager.GetScriptObject("BeatmapLevelCollectionSO"))
         {
-            BeatmapLevels = new List<SmartPtr<BeatmapLevelDataObject>>();
+            BeatmapLevels = new List<ISmartPtr<BeatmapLevelDataObject>>();
         }
 
         public BeatmapLevelCollectionObject(IObjectInfo<AssetsObject> objectInfo, AssetsReader reader) : base(objectInfo)
         {
-            BeatmapLevels = new List<SmartPtr<BeatmapLevelDataObject>>();
+            BeatmapLevels = new List<ISmartPtr<BeatmapLevelDataObject>>();
             Parse(reader);
         }
 
-        //public void UpdateTypes(AssetsMetadata metadata)
-        //{
-        //    base.UpdateType(metadata, BSConst.ScriptHash.BeatmapLevelCollectionScriptHash, BSConst.ScriptPtr.BeatmapLevelCollectionScriptPtr);
-        //}
-
-        public List<SmartPtr<BeatmapLevelDataObject>> BeatmapLevels { get; } 
+        public List<ISmartPtr<BeatmapLevelDataObject>> BeatmapLevels { get; } 
 
         protected override void Parse(AssetsReader reader)
         {

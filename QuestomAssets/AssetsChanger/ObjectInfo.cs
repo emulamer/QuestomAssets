@@ -68,13 +68,13 @@ namespace QuestomAssets.AssetsChanger
             var typeIndex = assetsFile.Metadata.Types.IndexOf(assetsFile.Metadata.Types.First(x => x.ClassID == classID));
             return FromTypeIndex(assetsFile, typeIndex);
         }
-        public static IObjectInfo<AssetsObject> FromScriptHash(AssetsFile assetsFile, Guid scriptHash)
+        public static IObjectInfo<AssetsObject> FromTypeHash(AssetsFile assetsFile, Guid typeHash)
         {
-            var typeIndex = assetsFile.Metadata.Types.IndexOf(assetsFile.Metadata.Types.First(x => x.ScriptHash == scriptHash));
+            var typeIndex = assetsFile.Metadata.Types.IndexOf(assetsFile.Metadata.Types.First(x => x.TypeHash == typeHash));
             return FromTypeIndex(assetsFile, typeIndex);
         }
 
-        private static IObjectInfo<AssetsObject> FromTypeIndex(AssetsFile assetsFile, int typeIndex)
+        public static IObjectInfo<AssetsObject> FromTypeIndex(AssetsFile assetsFile, int typeIndex)
         {
             var type = GetObjectType(assetsFile, typeIndex);
             var genericInfoType = typeof(ObjectInfo<>).MakeGenericType(type);
@@ -89,7 +89,7 @@ namespace QuestomAssets.AssetsChanger
             switch (objectType.ClassID)
             {
                 case AssetsConstants.ClassID.MonoBehaviourScriptType:
-                    var found = assetsFile.Manager.MassFindAsset<MonoScriptObject>(x => x.Object.PropertiesHash == objectType.TypeHash);
+                    var found = assetsFile.Manager.MassFirstOrDefaultAsset<MonoScriptObject>(x => x.Object.PropertiesHash == objectType.TypeHash);
                     
                     if (found != null && assetsFile.Manager.ClassNameToTypes.ContainsKey(found.Object.ClassName))
                     {

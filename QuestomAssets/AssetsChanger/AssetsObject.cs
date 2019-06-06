@@ -25,9 +25,9 @@ namespace QuestomAssets.AssetsChanger
             
         }
 
-        public AssetsObject(AssetsFile assetsFile, Guid scriptHash)
+        public AssetsObject(AssetsFile assetsFile, Guid typeHash)
         {
-            ObjectInfo = ObjectInfo<AssetsObject>.FromScriptHash(assetsFile, scriptHash);
+            ObjectInfo = ObjectInfo<AssetsObject>.FromTypeHash(assetsFile, typeHash);
         }
 
         protected AssetsObject(IObjectInfo<AssetsObject> objectInfo)
