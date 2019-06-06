@@ -18,7 +18,17 @@ namespace QuestomAssets.AssetsChanger
 
     public class SmartPtr<T> : ISmartPtr<T>, IDisposable where T : AssetsObject
     {
+        public SmartPtr(AssetsObject owner, T target)
+        {
+            Init(owner, (IObjectInfo<T>)target.ObjectInfo);
+        }
+
         public SmartPtr(AssetsObject owner, IObjectInfo<T> target)
+        {
+            Init(owner, target);
+        }
+
+        private void Init(AssetsObject owner, IObjectInfo<T> target)
         {
             Target = target ?? throw new NullReferenceException("Target cannot be null");
             Owner = owner ?? throw new NullReferenceException("Owner cannot be null");

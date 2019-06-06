@@ -69,7 +69,12 @@ namespace QuestomAssets.AssetsChanger
             return classObj.Object;
         }
 
-        public IObjectInfo<T> MassFindAsset<T>(Func<IObjectInfo<T>, bool> filter, bool deepSearch = true) where T : AssetsObject
+        public IObjectInfo<T> MassFirstAsset<T>(Func<IObjectInfo<T>, bool> filter, bool deepSearch = true) where T : AssetsObject
+        {
+            return MassFindAssets(filter, deepSearch).First();
+        }
+
+        public IObjectInfo<T> MassFirstOrDefaultAsset<T>(Func<IObjectInfo<T>, bool> filter, bool deepSearch = true) where T : AssetsObject
         {
             return MassFindAssets(filter, deepSearch).FirstOrDefault();
         }

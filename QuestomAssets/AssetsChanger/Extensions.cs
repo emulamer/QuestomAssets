@@ -10,7 +10,16 @@ namespace QuestomAssets.AssetsChanger
 {
     public static class Extensions
     {
-  
+        public static ISmartPtr<T> PtrFrom<T>(this T assetObject, AssetsObject owner) where T : AssetsObject
+        {
+            return new SmartPtr<T>(owner, assetObject);
+        }
+
+        public static ISmartPtr<T> PtrFrom<T>(this IObjectInfo<T> objectInfo, AssetsObject owner) where T : AssetsObject
+        {
+            return new SmartPtr<T>(owner, objectInfo);
+        }
+
         public static Stream ToStream(this byte[] bytes)
         {
             return new MemoryStream(bytes);

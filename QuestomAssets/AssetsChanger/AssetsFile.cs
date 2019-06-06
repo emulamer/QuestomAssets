@@ -92,21 +92,18 @@ namespace QuestomAssets.AssetsChanger
         }
         public T CopyAsset<T>(T source) where T : AssetsObject
         {
-            throw new NotImplementedException();
-            //T newObj = null;
-            //using (var ms = new MemoryStream())
-            //{
-            //    IObjectInfo<AssetsObject> newInfo = ObjectInfo<AssetsObject>.FromTypeIndex(this, source.ObjectInfo.TypeIndex);
-            //    newInfo.DataSize = source.ObjectInfo.DataSize;
-            //    using (var writer = new AssetsWriter(ms))
-            //        source.Write(writer);
-            //    ms.Seek(0, SeekOrigin.Begin);
-            //    using (var reader = new AssetsReader(ms))
-            //        newObj = (T)Activator.CreateInstance(typeof(T), newInfo, reader);
-
-
-            //}
-            //return newObj;
+            T newObj = null;
+            using (var ms = new MemoryStream())
+            {
+                IObjectInfo<AssetsObject> newInfo = ObjectInfo<AssetsObject>.FromScriptHash(this, source.ObjectInfo.Type.ScriptHash);
+                newInfo.DataSize = source.ObjectInfo.DataSize;
+                using (var writer = new AssetsWriter(ms))
+                    source.Write(writer);
+                ms.Seek(0, SeekOrigin.Begin);
+                using (var reader = new AssetsReader(ms))
+                    newObj = (T)Activator.CreateInstance(typeof(T), newInfo, reader);
+            }
+            return newObj;
         }
 
         public void Write(Stream outputStream)
