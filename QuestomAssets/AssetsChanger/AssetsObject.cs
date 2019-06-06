@@ -21,14 +21,13 @@ namespace QuestomAssets.AssetsChanger
         public AssetsObject(AssetsFile assetsFile, int classID)
         {
 
-            ObjectInfo = ObjectInfo<AssetsObject>.FromTypeIndex(assetsFile, assetsFile.Metadata.Types.IndexOf(assetsFile.Metadata.Types.First(x => x.ClassID == classID)));
+            ObjectInfo = ObjectInfo<AssetsObject>.FromClassID(assetsFile, classID);
             
         }
 
-
         public AssetsObject(AssetsFile assetsFile, Guid scriptHash)
         {
-            ObjectInfo = ObjectInfo<AssetsObject>.FromTypeIndex(assetsFile, assetsFile.Metadata.GetTypeIndexFromScriptHash(scriptHash));
+            ObjectInfo = ObjectInfo<AssetsObject>.FromScriptHash(assetsFile, scriptHash);
         }
 
         protected AssetsObject(IObjectInfo<AssetsObject> objectInfo)

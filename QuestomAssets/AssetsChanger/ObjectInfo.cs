@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 
 namespace QuestomAssets.AssetsChanger
@@ -20,10 +21,6 @@ namespace QuestomAssets.AssetsChanger
     }
     public class ObjectInfo<T> : IObjectInfo<T> where T: AssetsObject
     {
-        //TODO: pass this in somehow
-        private static Dictionary<Guid, Type> _scriptHashToTypes = BeatSaber.BSConst.GetAssetTypeMap();
-
-
         public Int64 ObjectID { get; set; }
         public Int32 DataOffset { get; set; }
         public Int32 DataSize { get; set; }
@@ -37,10 +34,6 @@ namespace QuestomAssets.AssetsChanger
             {
                 return ParentFile.Metadata.Types[TypeIndex];
             }
-            //set
-            //{
-            //    TypeIndex = ParentFile.Metadata.Types.IndexOf(value);
-            //}
         }
  
         
@@ -57,7 +50,7 @@ namespace QuestomAssets.AssetsChanger
             ParentFile = parentFile;
         }
 
-        public static IObjectInfo<AssetsObject> Parse(AssetsFile file, AssetsReader reader)
+        internal static IObjectInfo<AssetsObject> Parse(AssetsFile file, AssetsReader reader)
         {
             var objectID = reader.ReadInt64();
             var dataOffset = reader.ReadInt32();
@@ -70,24 +63,37 @@ namespace QuestomAssets.AssetsChanger
             return obji;
         }
 
-        public static IObjectInfo<AssetsObject> FromTypeIndex(AssetsFile file, int typeIndex)
+        public static IObjectInfo<AssetsObject> FromClassID(AssetsFile assetsFile, int classID)
         {
-            var type = GetObjectType(file.Metadata, typeIndex);
+            var typeIndex = assetsFile.Metadata.Types.IndexOf(assetsFile.Metadata.Types.First(x => x.ClassID == classID));
+            return FromTypeIndex(assetsFile, typeIndex);
+        }
+        public static IObjectInfo<AssetsObject> FromScriptHash(AssetsFile assetsFile, Guid scriptHash)
+        {
+            var typeIndex = assetsFile.Metadata.Types.IndexOf(assetsFile.Metadata.Types.First(x => x.ScriptHash == scriptHash));
+            return FromTypeIndex(assetsFile, typeIndex);
+        }
+
+        private static IObjectInfo<AssetsObject> FromTypeIndex(AssetsFile assetsFile, int typeIndex)
+        {
+            var type = GetObjectType(assetsFile, typeIndex);
             var genericInfoType = typeof(ObjectInfo<>).MakeGenericType(type);
-            var genericOI = (IObjectInfo<AssetsObject>)Activator.CreateInstance(genericInfoType, 0, 0, 0, typeIndex, file);
+            var genericOI = (IObjectInfo<AssetsObject>)Activator.CreateInstance(genericInfoType, (Int64)0, (int)0, (int)0, typeIndex, assetsFile);
             return genericOI;
         }
 
-        private static Type GetObjectType(AssetsMetadata meta, int typeIndex)
+        private static Type GetObjectType(AssetsFile assetsFile, int typeIndex)
         {
             Type type = null;
-            var objectType = meta.Types[typeIndex];
+            var objectType = assetsFile.Metadata.Types[typeIndex];
             switch (objectType.ClassID)
             {
                 case AssetsConstants.ClassID.MonoBehaviourScriptType:
-                    if (_scriptHashToTypes.ContainsKey(objectType.ScriptHash))
+                    var found = assetsFile.Manager.MassFindAsset<MonoScriptObject>(x => x.Object.PropertiesHash == objectType.TypeHash);
+                    
+                    if (found != null && assetsFile.Manager.ClassNameToTypes.ContainsKey(found.Object.ClassName))
                     {
-                        Type assetObjectType = _scriptHashToTypes[objectType.ScriptHash];
+                        Type assetObjectType = assetsFile.Manager.ClassNameToTypes[found.Object.ClassName];
                         if (!assetObjectType.IsSubclassOf(typeof(MonoBehaviourObject)))
                         {
                             throw new ArgumentException("Types provided in scriptHashToTypes must be a subclass of AssetsMonoBehaviourObject.");

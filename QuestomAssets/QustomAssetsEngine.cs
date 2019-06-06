@@ -16,6 +16,7 @@ namespace QuestomAssets
         private Apkifier _apk;
         private bool _readOnly;
 
+        private AssetsManager _manager;
         //TODO: fix cross-asset file loading of stuff before turning this to false, some of the OST Vol 1 songs are in another file
         public bool HideOriginalPlaylists { get; private set; } = true;
 
@@ -30,201 +31,169 @@ namespace QuestomAssets
             _readOnly = readOnly;
             _apkFilename = apkFilename;
             _apk = new Apkifier(apkFilename, !readOnly, readOnly?null:pemCertificateData, readOnly);
+            _manager = new AssetsManager(_apk, BSConst.GetAssetTypeMap());
         }
 
         public BeatSaberQuestomConfig GetCurrentConfig(bool suppressImages = false)
         {
-            //BeatSaberQuestomConfig config = new BeatSaberQuestomConfig();
-            //var file19 = OpenAssets(BSConst.KnownFiles.MainCollectionAssetsFilename);
-            //var file17 = OpenAssets(BSConst.KnownFiles.SongsAssetsFilename);
-            //var mainPack = GetMainLevelPack();
-            //foreach (var packPtr in mainPack.BeatmapLevelPacks)
-            //{
-            //    if (file19.GetFilenameForFileID(packPtr.FileID) != BSConst.KnownFiles.SongsAssetsFilename)
-            //        throw new NotImplementedException("Songs and packs are only supported in one file currently.");
-            //    var pack = file17.GetAssetByID<BeatmapLevelPackObject>(packPtr.PathID);
-            //    if (pack == null)
-            //    {
-            //        Log.LogErr($"Level pack with path ID {packPtr} was not found in {BSConst.KnownFiles.SongsAssetsFilename}!");
-            //        continue;
-            //    }
-            //    if (HideOriginalPlaylists && BSConst.KnownLevelPackIDs.Contains(pack.PackID))
-            //        continue;
+            BeatSaberQuestomConfig config = new BeatSaberQuestomConfig();
+            var file19 = _manager.GetAssetsFile(BSConst.KnownFiles.MainCollectionAssetsFilename);
+            var file17 = _manager.GetAssetsFile(BSConst.KnownFiles.SongsAssetsFilename);
+            var mainPack = GetMainLevelPack();
+            foreach (var packPtr in mainPack.BeatmapLevelPacks)
+            {
+                var pack = packPtr.Target.Object;
+                if (HideOriginalPlaylists && BSConst.KnownLevelPackIDs.Contains(pack.PackID))
+                    continue;
 
-            //    var packModel = new BeatSaberPlaylist() { PlaylistName = pack.PackName, PlaylistID = pack.PackID, LevelPackObject = pack };
-            //    //TODO: check file ref?  right now they're all in 17
-            //    var collection = file17.GetAssetByID<BeatmapLevelCollectionObject>(pack.BeatmapLevelCollection.PathID);
-            //    if (collection == null)
-            //    {
-            //        Log.LogErr($"Failed to find level pack collection object for playlist {pack.PackName}");
-            //        continue;
-            //    }
-            //    packModel.LevelCollection = collection;
+                var packModel = new BeatSaberPlaylist() { PlaylistName = pack.PackName, PlaylistID = pack.PackID, LevelPackObject = pack };
+                var collection = pack.BeatmapLevelCollection.Object;
+                packModel.LevelCollection = collection;
 
-            //    //get cover art for playlist
-            //    if (!suppressImages)
-            //    {
-            //        try
-            //        {
-            //            var coverSprite = file17.GetAssetByID<SpriteObject>(pack.CoverImage.PathID);
-            //            if (coverSprite == null)
-            //                throw new Exception("Unable to find cover art sprite.");
-            //            var coverTex = file17.GetAssetByID<Texture2DObject>(coverSprite.Texture.PathID);
-            //            if (coverTex == null)
-            //                throw new Exception("Unable to find cover art texture.");
-            //            packModel.CoverArt = coverTex.ToBitmap();
-            //            packModel.CoverArtBase64PNG = packModel.CoverArt.ToBase64PNG();
-            //        }
-            //        catch (Exception ex)
-            //        {
-            //            Log.LogErr($"Unable to convert texture for playlist ID '{pack.PackID}' cover art", ex);
-            //        }
-            //    }
-            //    foreach (var songPtr in collection.BeatmapLevels)
-            //    {
-            //        var songObj = file17.GetAssetByID<BeatmapLevelDataObject>(songPtr.PathID);
-            //        if (songObj == null)
-            //        {
-            //            Log.LogErr($"Failed to find beatmap level data for playlist {pack.PackName} with path id {songPtr.PathID}!");
-            //            continue;
-            //        }
-            //        var songModel = new BeatSaberSong()
-            //        {
-            //            LevelAuthorName = songObj.LevelAuthorName,
-            //            SongID = songObj.LevelID,
-            //            SongAuthorName = songObj.SongAuthorName,
-            //            SongName = songObj.SongName,
-            //            SongSubName = songObj.SongSubName,
-            //            LevelData = songObj
-            //        };
-            //        if (!suppressImages)
-            //        {
-            //            try
-            //            {
-            //                var songCover = file17.GetAssetByID<Texture2DObject>(songObj.CoverImageTexture2D.PathID);
-            //                if (songCover == null)
-            //                {
-            //                    Log.LogErr($"The cover image for song id '{songObj.LevelID}' could not be found!");
-            //                }
-            //                else
-            //                {
-            //                    try
-            //                    {
-            //                        songModel.CoverArt = songCover.ToBitmap();
-            //                        songModel.CoverArtBase64PNG = songModel.CoverArt.ToBase64PNG();
-            //                    }
-            //                    catch (Exception ex)
-            //                    {
-            //                        Log.LogErr($"Unable to convert texture for song ID '{songModel.SongID}' cover", ex);
-            //                    }
-            //                }
-            //            }
-            //            catch (Exception ex)
-            //            {
-            //                Log.LogErr($"Exception loading/converting the cover image for song id '{songObj.LevelID}'", ex);
-            //            }
-            //        }
-            //        packModel.SongList.Add(songModel);
-            //    }
-            //    config.Playlists.Add(packModel);
-            //}
-            //return config;
-            return null;
+                //get cover art for playlist
+                if (!suppressImages)
+                {
+                    try
+                    {
+                        var coverSprite = pack.CoverImage.Object;
+                        var coverTex = coverSprite.Texture.Object;
+                        packModel.CoverArt = coverTex.ToBitmap();
+                        packModel.CoverArtBase64PNG = packModel.CoverArt.ToBase64PNG();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.LogErr($"Unable to convert texture for playlist ID '{pack.PackID}' cover art", ex);
+                    }
+                }
+                foreach (var songPtr in collection.BeatmapLevels)
+                {
+                    var songObj = songPtr.Object;
+                    var songModel = new BeatSaberSong()
+                    {
+                        LevelAuthorName = songObj.LevelAuthorName,
+                        SongID = songObj.LevelID,
+                        SongAuthorName = songObj.SongAuthorName,
+                        SongName = songObj.SongName,
+                        SongSubName = songObj.SongSubName,
+                        LevelData = songObj
+                    };
+                    if (!suppressImages)
+                    {
+                        try
+                        {
+                            var songCover = songObj.CoverImageTexture2D.Object;
+                            try
+                            {
+                                songModel.CoverArt = songCover.ToBitmap();
+                                songModel.CoverArtBase64PNG = songModel.CoverArt.ToBase64PNG();
+                            }
+                            catch (Exception ex)
+                            {
+                                Log.LogErr($"Unable to convert texture for song ID '{songModel.SongID}' cover", ex);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.LogErr($"Exception loading/converting the cover image for song id '{songObj.LevelID}'", ex);
+                        }
+                    }
+                    packModel.SongList.Add(songModel);
+                }
+                config.Playlists.Add(packModel);
+            }
+            return config;            
         }
 
         private void UpdatePlaylistConfig(BeatSaberPlaylist playlist)
         {
-            //Log.LogMsg($"Processing playlist ID {playlist.PlaylistID}...");
-            //var songsAssetFile = OpenAssets(BSConst.KnownFiles.SongsAssetsFilename);
-            //BeatmapLevelPackObject levelPack = null;
-            //BeatmapLevelCollectionObject levelCollection = null;
-            //levelPack = songsAssetFile.FindAssets<BeatmapLevelPackObject>(x=>x.PackID == playlist.PlaylistID).FirstOrDefault();
-            ////create a new level pack if one waasn't found
-            //if (levelPack == null)
-            //{
-            //    Log.LogMsg($"Level pack for playlist '{playlist.PlaylistID}' was not found and will be created");
-            //    //don't try to find the cover name, just let it create a dupe, we'll try to clean up linked things we did later
-            //    //var packCover = CustomLevelLoader.LoadPackCover(playlist.PlaylistID, songsAssetFile, playlist.CoverArtFile);
-            //    //playlist.CoverArtSprite = packCover;
-            //    levelPack = new BeatmapLevelPackObject(songsAssetFile)
-            //    {
-            //        Enabled = 1,
-            //        GameObjectPtr = null,
-            //        IsPackAlwaysOwned = true,
-            //        PackID = playlist.PlaylistID,
-            //        Name = playlist.PlaylistID + BSConst.NameSuffixes.LevelPack,
-            //        PackName = playlist.PlaylistName
-            //    };
-            //    songsAssetFile.AddObject(levelPack, true);
-            //}
-            //else
-            //{
-            //    Log.LogMsg($"Level pack for playlist '{playlist.PlaylistID}' was found and will be updated");
-            //    levelCollection = songsAssetFile.GetAssetByID<BeatmapLevelCollectionObject>(levelPack.BeatmapLevelCollection.Target.ObjectID);
-            //    if (levelCollection == null)
-            //    {
-            //        Log.LogErr($"{nameof(BeatmapLevelCollectionObject)} was not found for playlist id {playlist.PlaylistID}!  It will be created, but something is wrong with the assets!");
-            //    }
-            //}
-            //if (levelCollection == null)
-            //{
-            //    levelCollection = new BeatmapLevelCollectionObject(songsAssetFile)
-            //    { Name = playlist.PlaylistID + BSConst.NameSuffixes.LevelCollection };
-            //    songsAssetFile.AddObject(levelCollection, true);
-            //    levelPack.BeatmapLevelCollection = levelCollection.ObjectInfo.LocalPtrTo;
-            //}
+            Log.LogMsg($"Processing playlist ID {playlist.PlaylistID}...");
+            var songsAssetFile = _manager.GetAssetsFile(BSConst.KnownFiles.SongsAssetsFilename);
+            BeatmapLevelPackObject levelPack = null;
+            BeatmapLevelCollectionObject levelCollection = null;
+            levelPack = songsAssetFile.FindAsset<BeatmapLevelPackObject>(x=> x.Object.PackID == playlist.PlaylistID)?.Object;
+            //create a new level pack if one waasn't found
+            if (levelPack == null)
+            {
+                Log.LogMsg($"Level pack for playlist '{playlist.PlaylistID}' was not found and will be created");
+                levelPack = new BeatmapLevelPackObject(songsAssetFile)
+                {
+                    Enabled = 1,
+                    GameObjectPtr = null,
+                    IsPackAlwaysOwned = true,
+                    PackID = playlist.PlaylistID,
+                    Name = playlist.PlaylistID + BSConst.NameSuffixes.LevelPack,
+                    PackName = playlist.PlaylistName
+                };
+                songsAssetFile.AddObject(levelPack, true);
+            }
+            else
+            {
+                Log.LogMsg($"Level pack for playlist '{playlist.PlaylistID}' was found and will be updated");
+                levelCollection = levelPack.BeatmapLevelCollection.Object;
+                if (levelCollection == null)
+                {
+                    Log.LogErr($"{nameof(BeatmapLevelCollectionObject)} was not found for playlist id {playlist.PlaylistID}!  It will be created, but something is wrong with the assets!");
+                }
+            }
+            if (levelCollection == null)
+            {
+                levelCollection = new BeatmapLevelCollectionObject(songsAssetFile)
+                { Name = playlist.PlaylistID + BSConst.NameSuffixes.LevelCollection };
+                songsAssetFile.AddObject(levelCollection, true);
+                levelPack.BeatmapLevelCollection = new SmartPtr(levelPack, levelCollection.ObjectInfo);
+            }
 
-            //playlist.LevelCollection = levelCollection;
-            //playlist.LevelPackObject = levelPack;
+            playlist.LevelCollection = levelCollection;
+            playlist.LevelPackObject = levelPack;
 
-            //levelPack.PackName = playlist.PlaylistName;
-            //if (playlist.CoverArt != null)
-            //{
-            //    Log.LogMsg($"Loading cover art for playlist ID '{playlist.PlaylistID}'");
+            levelPack.PackName = playlist.PlaylistName;
+            if (playlist.CoverArt != null)
+            {
+                Log.LogMsg($"Loading cover art for playlist ID '{playlist.PlaylistID}'");
 
-            //    playlist.CoverArtSprite = CustomLevelLoader.LoadPackCover(playlist.PlaylistID, songsAssetFile, playlist.CoverArt);
-            //    playlist.LevelPackObject.CoverImage = playlist.CoverArtSprite.ObjectInfo.LocalPtrTo;
-            //}
-            //if (playlist.LevelPackObject.CoverImage != null)
-            //{
-            //    playlist.CoverArtSprite = songsAssetFile.GetAssetByID<SpriteObject>(playlist.LevelPackObject.CoverImage.PathID);
-            //}
-            //else
-            //{
-            //    playlist.CoverArtSprite = CustomLevelLoader.LoadPackCover(playlist.PlaylistID, songsAssetFile, null);
-            //}
-            //playlist.LevelPackObject.CoverImage = playlist.CoverArtSprite.ObjectInfo.LocalPtrTo;
+                playlist.CoverArtSprite = CustomLevelLoader.LoadPackCover(playlist.PlaylistID, songsAssetFile, playlist.CoverArt);
+                playlist.LevelPackObject.CoverImage = playlist.CoverArtSprite.ObjectInfo.LocalPtrTo;
+            }
+            if (playlist.LevelPackObject.CoverImage != null)
+            {
+                playlist.CoverArtSprite = songsAssetFile.GetAssetByID<SpriteObject>(playlist.LevelPackObject.CoverImage.PathID);
+            }
+            else
+            {
+                playlist.CoverArtSprite = CustomLevelLoader.LoadPackCover(playlist.PlaylistID, songsAssetFile, null);
+            }
+            playlist.LevelPackObject.CoverImage = playlist.CoverArtSprite.ObjectInfo.LocalPtrTo;
 
-            ////clear out any levels, we'll add them back
-            //levelCollection.BeatmapLevels.Clear();
-            //int songCount = 0;
-            //Log.LogMsg($"Processing songs for playlist ID {playlist.PlaylistID}...");
-            //var totalSongs = playlist.SongList.Count();
-            //var songMod = Math.Ceiling((double)totalSongs / (double)10);
-            //if (songMod < 1)
-            //    songMod = 1;
-            //foreach (var song in playlist.SongList.ToList())
-            //{
-            //    songCount++;
-            //    if (songCount % songMod == 0)
-            //        Console.WriteLine($"{songCount.ToString().PadLeft(5)} of {totalSongs}...");
+            //clear out any levels, we'll add them back
+            levelCollection.BeatmapLevels.Clear();
+            int songCount = 0;
+            Log.LogMsg($"Processing songs for playlist ID {playlist.PlaylistID}...");
+            var totalSongs = playlist.SongList.Count();
+            var songMod = Math.Ceiling((double)totalSongs / (double)10);
+            if (songMod < 1)
+                songMod = 1;
+            foreach (var song in playlist.SongList.ToList())
+            {
+                songCount++;
+                if (songCount % songMod == 0)
+                    Console.WriteLine($"{songCount.ToString().PadLeft(5)} of {totalSongs}...");
 
-            //    if (UpdateSongConfig(song))
-            //    {
-            //        if (playlist.LevelCollection.BeatmapLevels.Any(x => x.PathID == song.LevelData.ObjectInfo.ObjectID))
-            //        {
-            //            Log.LogErr($"Playlist ID '{playlist.PlaylistID}' already contains song ID '{song.SongID}' once, removing the second link");
-            //        }
-            //        else
-            //        {
-            //            playlist.LevelCollection.BeatmapLevels.Add(song.LevelData.ObjectInfo.LocalPtrTo);
-            //            continue;
-            //        }
-            //    }
-                
-            //    playlist.SongList.Remove(song);
-            //}
-            //Console.WriteLine($"Proccessed {totalSongs} for playlist ID {playlist.PlaylistID}");
+                if (UpdateSongConfig(song))
+                {
+                    if (playlist.LevelCollection.BeatmapLevels.Any(x => x.PathID == song.LevelData.ObjectInfo.ObjectID))
+                    {
+                        Log.LogErr($"Playlist ID '{playlist.PlaylistID}' already contains song ID '{song.SongID}' once, removing the second link");
+                    }
+                    else
+                    {
+                        playlist.LevelCollection.BeatmapLevels.Add(song.LevelData.ObjectInfo.LocalPtrTo);
+                        continue;
+                    }
+                }
+
+                playlist.SongList.Remove(song);
+            }
+            Console.WriteLine($"Proccessed {totalSongs} for playlist ID {playlist.PlaylistID}");
         }
 
         private bool UpdateSongConfig(BeatSaberSong song)
@@ -542,34 +511,34 @@ namespace QuestomAssets
         //this is crap, I need to load all files and resolve file pointers properly
         private void UpdateKnownObjects()
         {
-            throw new NotImplementedException();
-            //var songsFile = OpenAssets(BeatSaber.BSConst.KnownFiles.SongsAssetsFilename);
-            //if (!songsFile.Metadata.ExternalFiles.Any(x => x.FileName == BSConst.KnownFiles.File19))
-            //{
-            //    songsFile.Metadata.ExternalFiles.Add(new ExternalFile()
-            //    {
-            //        FileName = BSConst.KnownFiles.File19,
-            //        AssetName = "",
-            //        ID = Guid.Empty,
-            //        Type = 0
-            //    });
-            //}
-            //songsFile = OpenAssets(BeatSaber.BSConst.KnownFiles.SongsAssetsFilename);
-            //if (!songsFile.Metadata.ExternalFiles.Any(x => x.FileName == BSConst.KnownFiles.File14))
-            //{
-            //    songsFile.Metadata.ExternalFiles.Add(new ExternalFile()
-            //    {
-            //        FileName = BSConst.KnownFiles.File19,
-            //        AssetName = "",
-            //        ID = Guid.Empty,
-            //        Type = 0
-            //    });
-            //}
-            //int file19 = songsFile.GetFileIDForFilename(BSConst.KnownFiles.File19);
-            //int file14 = songsFile.GetFileIDForFilename(BSConst.KnownFiles.File14);
+            //throw new NotImplementedException();
+            var songsFile = OpenAssets(BeatSaber.BSConst.KnownFiles.SongsAssetsFilename);
+            if (!songsFile.Metadata.ExternalFiles.Any(x => x.FileName == BSConst.KnownFiles.File19))
+            {
+                songsFile.Metadata.ExternalFiles.Add(new ExternalFile()
+                {
+                    FileName = BSConst.KnownFiles.File19,
+                    AssetName = "",
+                    ID = Guid.Empty,
+                    Type = 0
+                });
+            }
+            songsFile = OpenAssets(BeatSaber.BSConst.KnownFiles.SongsAssetsFilename);
+            if (!songsFile.Metadata.ExternalFiles.Any(x => x.FileName == BSConst.KnownFiles.File14))
+            {
+                songsFile.Metadata.ExternalFiles.Add(new ExternalFile()
+                {
+                    FileName = BSConst.KnownFiles.File19,
+                    AssetName = "",
+                    ID = Guid.Empty,
+                    Type = 0
+                });
+            }
+            int file19 = songsFile.GetFileIDForFilename(BSConst.KnownFiles.File19);
+            int file14 = songsFile.GetFileIDForFilename(BSConst.KnownFiles.File14);
 
-            //KnownObjects.File17.MonstercatEnvironment = new PPtr(file19, KnownObjects.File17.MonstercatEnvironment.PathID);
-            //KnownObjects.File17.NiceEnvironment = new PPtr(file14, KnownObjects.File17.NiceEnvironment.PathID);
+            KnownObjects.File17.MonstercatEnvironment = new PPtr(file19, KnownObjects.File17.MonstercatEnvironment.PathID);
+            KnownObjects.File17.NiceEnvironment = new PPtr(file14, KnownObjects.File17.NiceEnvironment.PathID);
         }
 
         #region Helper Functions

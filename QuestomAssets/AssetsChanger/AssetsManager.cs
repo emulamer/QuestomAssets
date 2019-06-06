@@ -9,13 +9,16 @@ namespace QuestomAssets.AssetsChanger
 {
     public class AssetsManager
     {
-        
+
+        public Dictionary<string, Type> ClassNameToTypes { get; private set; } = new Dictionary<string, Type>();
+
         private Apkifier _apk;
         //TODO: to make it useful for anything else, shouldn't be an APK path, should be something that implements an interface
-        public AssetsManager(Apkifier apk, bool lazyLoad = false)
+        public AssetsManager(Apkifier apk, Dictionary<string, Type> classNameToTypes, bool lazyLoad = false)
         {
             _apk = apk;
             LazyLoad = lazyLoad;
+            ClassNameToTypes = classNameToTypes;
         }
         private Dictionary<string, AssetsFile> _openAssetsFiles = new Dictionary<string, AssetsFile>();
         public bool LazyLoad { get; private set; }
@@ -95,7 +98,7 @@ namespace QuestomAssets.AssetsChanger
             }
             yield return null;
         }
-        public IEnumerable<IObjectInfo<T>> MassFindAssets<T>(Func<IObjectInfo<T>, bool> filter, bool deepSearch = false) where T : AssetsObject
+        public IEnumerable<IObjectInfo<T>> MassFindAssets<T>(Func<IObjectInfo<T>, bool> filter, bool deepSearch = true) where T : AssetsObject
         {
             List<AssetsFile> searched = new List<AssetsFile>();
             List<AssetsFile> deepSearched = new List<AssetsFile>();

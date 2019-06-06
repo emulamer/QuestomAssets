@@ -52,19 +52,17 @@ namespace QuestomAssets.AssetsChanger
             return new AssetsReader(BaseStream);
         }
 
-        private Dictionary<Guid, Type> _scriptHashToTypes = new Dictionary<Guid, Type>();
+        
 
         public Stream BaseStream { get; private set; }
 
-        public AssetsFile(AssetsManager manager, string assetsFileName, Stream assetsFileStream, Dictionary<Guid, Type> scriptHashToTypes)
+        public AssetsFile(AssetsManager manager, string assetsFileName, Stream assetsFileStream, Dictionary<string, Type> classNameToTypes)
         {
             Manager = manager;
             if (!assetsFileStream.CanSeek)
                 throw new NotSupportedException("Stream must support seeking!");
             BaseStream = assetsFileStream;
             AssetsFileName = assetsFileName;
-            _scriptHashToTypes = scriptHashToTypes;
-            //Objects = new List<AssetsObject>();
 
             assetsFileStream.Seek(0, SeekOrigin.Begin);
 
@@ -79,6 +77,11 @@ namespace QuestomAssets.AssetsChanger
             }
             assetsFileStream.Seek(Header.ObjectDataOffset, SeekOrigin.Begin);
 
+            foreach (var ext in Metadata.ExternalFiles)
+            {
+                manager.GetAssetsFile(ext.FileName);
+            }
+
             if (!manager.LazyLoad)
             {
                 foreach (var oi in Metadata.ObjectInfos)
@@ -89,20 +92,21 @@ namespace QuestomAssets.AssetsChanger
         }
         public T CopyAsset<T>(T source) where T : AssetsObject
         {
-            T newObj = null;
-            using (var ms = new MemoryStream())
-            {
-                IObjectInfo<AssetsObject> newInfo = ObjectInfo<AssetsObject>.FromTypeIndex(this, source.ObjectInfo.TypeIndex);
-                newInfo.DataSize = source.ObjectInfo.DataSize;
-                using (var writer = new AssetsWriter(ms))
-                    source.Write(writer);
-                ms.Seek(0, SeekOrigin.Begin);
-                using (var reader = new AssetsReader(ms))
-                    newObj = (T)Activator.CreateInstance(typeof(T), newInfo, reader);
+            throw new NotImplementedException();
+            //T newObj = null;
+            //using (var ms = new MemoryStream())
+            //{
+            //    IObjectInfo<AssetsObject> newInfo = ObjectInfo<AssetsObject>.FromTypeIndex(this, source.ObjectInfo.TypeIndex);
+            //    newInfo.DataSize = source.ObjectInfo.DataSize;
+            //    using (var writer = new AssetsWriter(ms))
+            //        source.Write(writer);
+            //    ms.Seek(0, SeekOrigin.Begin);
+            //    using (var reader = new AssetsReader(ms))
+            //        newObj = (T)Activator.CreateInstance(typeof(T), newInfo, reader);
 
 
-            }
-            return newObj;
+            //}
+            //return newObj;
         }
 
         public void Write(Stream outputStream)

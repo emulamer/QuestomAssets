@@ -63,9 +63,9 @@ namespace QuestomAssets.AssetsChanger
         public override void Write(AssetsWriter writer)
         {
             WriteBase(writer);
-        } 
+        }
 
-        public List<ISmartPtr<AssetsObject>> Component { get; set; }
+        public List<ISmartPtr<AssetsObject>> Component { get; set; } = new List<ISmartPtr<AssetsObject>>();
 
         public UInt32 Layer { get; set; }
 

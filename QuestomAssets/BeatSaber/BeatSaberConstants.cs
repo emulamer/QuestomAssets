@@ -39,24 +39,25 @@ namespace QuestomAssets.BeatSaber
 
         public static class ScriptHash
         {
-            public static Guid BeatmapLevelPackScriptHash { get { return new Guid("252e448f-a4c9-c8aa-dabe-c88917b0dc7d"); } }
-            public static Guid BeatmapLevelCollectionScriptHash { get { return new Guid("59dd0c93-dbc2-fac4-6745-01914a570ac2"); } }
-            public static Guid MainLevelsCollectionHash { get { return new Guid("8398a1c6-7d3b-cc41-e8d7-83cd6a11bfd4"); } }
-            public static Guid BeatmapLevelDataHash { get { return new Guid("4690eca3-1201-f506-cd10-9314850602e3"); } }
-            public static Guid BeatmapDataHash { get { return new Guid("8d3caf95-6f40-5cf3-9da1-51e0ee1e0013"); } }
+            //public static Guid BeatmapLevelPackScriptHash { get { return new Guid("252e448f-a4c9-c8aa-dabe-c88917b0dc7d"); } }
+            //public static Guid BeatmapLevelCollectionScriptHash { get { return new Guid("59dd0c93-dbc2-fac4-6745-01914a570ac2"); } }
+            //public static Guid MainLevelsCollectionHash { get { return new Guid("8398a1c6-7d3b-cc41-e8d7-83cd6a11bfd4"); } }
+            //public static Guid BeatmapLevelDataHash { get { return new Guid("4690eca3-1201-f506-cd10-9314850602e3"); } }
+            //public static Guid BeatmapDataHash { get { return new Guid("8d3caf95-6f40-5cf3-9da1-51e0ee1e0013"); } }
+
         }
 
         
 
 
-        public static Dictionary<Guid, Type> GetAssetTypeMap()
+        public static Dictionary<string, Type> GetAssetTypeMap()
         {
-            Dictionary<Guid, Type> scriptHashToTypes = new Dictionary<Guid, Type>();
-            scriptHashToTypes.Add(ScriptHash.BeatmapLevelPackScriptHash, typeof(BeatmapLevelPackObject));
-            scriptHashToTypes.Add(ScriptHash.BeatmapLevelCollectionScriptHash, typeof(BeatmapLevelCollectionObject));
-            scriptHashToTypes.Add(ScriptHash.MainLevelsCollectionHash, typeof(MainLevelPackCollectionObject));
-            scriptHashToTypes.Add(ScriptHash.BeatmapDataHash, typeof(BeatmapDataObject));
-            scriptHashToTypes.Add(ScriptHash.BeatmapLevelDataHash, typeof(BeatmapLevelDataObject));
+            Dictionary<string, Type> scriptHashToTypes = new Dictionary<string, Type>();
+            scriptHashToTypes.Add("BeatmapLevelPackSO", typeof(BeatmapLevelPackObject));
+            scriptHashToTypes.Add("BeatmapLevelCollectionSO", typeof(BeatmapLevelCollectionObject));
+            scriptHashToTypes.Add("BeatmapLevelPackCollectionSO", typeof(MainLevelPackCollectionObject));
+            scriptHashToTypes.Add("BeatmapDataSO", typeof(BeatmapDataObject));
+            scriptHashToTypes.Add("BeatmapLevelSO", typeof(BeatmapLevelDataObject));
             return scriptHashToTypes;
         }
 

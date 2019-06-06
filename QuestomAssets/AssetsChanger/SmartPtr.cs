@@ -13,6 +13,7 @@ namespace QuestomAssets.AssetsChanger
         void Dispose();
         void WritePtr(AssetsWriter writer);
         bool Changes { get; set; }
+        T Object { get; }
     }
 
     public class SmartPtr<T> : ISmartPtr<T>, IDisposable where T : AssetsObject
@@ -25,6 +26,12 @@ namespace QuestomAssets.AssetsChanger
             Changes = true;
             Target.ParentFile.AddPtrRef(this);
             Owner.ObjectInfo.ParentFile.AddPtrRef(this);
+        }
+
+        public T Object { get
+            {
+                return Target.Object;
+            }
         }
 
         public static SmartPtr<T> Read(AssetsFile assetsFile, AssetsObject owner, AssetsReader reader)

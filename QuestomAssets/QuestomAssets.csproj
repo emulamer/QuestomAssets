@@ -27,7 +27,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Cauldron.BasicInterceptors" Version="3.2.3" />
     <PackageReference Include="lz4net.netcore.signed" Version="1.0.15.93" />
     <PackageReference Include="LZMA-SDK" Version="18.1.0" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />

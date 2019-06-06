@@ -9,7 +9,7 @@ namespace QuestomAssets.AssetsChanger
 {
     public class MonoBehaviourObject : AssetsObject, IHaveName
     {
-        public MonoBehaviourObject(AssetsFile assetsFile, MonoScriptObject scriptObject) : base(assetsFile, scriptObject.PropertiesHash)
+        public MonoBehaviourObject(AssetsFile assetsFile, MonoScriptObject scriptObject) : base(assetsFile, assetsFile.Metadata.Types.FirstOrDefault(x=> x.ScriptHash == scriptObject.PropertiesHash).ClassID)
         {
             Enabled = 1;
             MonoscriptTypePtr = new SmartPtr<MonoScriptObject>(this, (IObjectInfo<MonoScriptObject>)scriptObject.ObjectInfo);

@@ -57,6 +57,7 @@ namespace QuestomAssets.BeatSaber
                 if (correctName != null)
                     return correctName;
             }
+
             throw new ArgumentException("The file doesn't exist in the APK with any name!");
         }
         public static void WriteCombinedAssets(this Apkifier apk, AssetsFile assetsFile, string assetsFilePath)

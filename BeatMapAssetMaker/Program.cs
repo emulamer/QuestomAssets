@@ -214,14 +214,6 @@ namespace BeatmapAssetMaker
 
         static int FolderMode(FolderMode args)
         {
-            using (var apk = new Apkifier(args.ApkFile, false, null, true))
-            {
-                AssetsManager m = new AssetsManager(apk, false);
-
-                m.GetAssetsFile(BSConst.KnownFiles.SongsAssetsFilename);
-                var all = m.MassFindAssets<BeatmapLevelDataObject>(x => true).ToList();
-            }
-            return -1;
             QuestomAssets.Log.SetLogSink(new ConsoleSink());
             if (!string.IsNullOrWhiteSpace(args.CoverArt) && !File.Exists(args.CoverArt))
             {
