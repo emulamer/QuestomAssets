@@ -99,6 +99,7 @@ namespace BeatmapAssetMaker
 
         static int UpdateConfig(UpdateConfig args)
         {
+
             QuestomAssets.Log.SetLogSink(new ConsoleSink());
 
             try
@@ -106,6 +107,7 @@ namespace BeatmapAssetMaker
                 Log.LogMsg($"Opening APK at '{args.ApkFile}'");
                 using (QuestomAssetsEngine q = new QuestomAssetsEngine(args.ApkFile))
                 {
+                    
                     BeatSaberQuestomConfig config = null;
                     TextReader inReader = null;
                     string from = string.IsNullOrWhiteSpace(args.InputFile) ? "stdin" : args.InputFile;

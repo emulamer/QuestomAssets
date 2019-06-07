@@ -33,7 +33,7 @@ namespace QuestomAssets.AssetsChanger
             writer.Write(Size);
         }
 
-        public string Source { get; private set; }
+        public string Source { get;  set; }
         public UInt64 Offset { get; private set; }
         public UInt64 Size { get; private set; }
     }
