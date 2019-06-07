@@ -24,6 +24,18 @@ namespace QuestomAssets
         /// </summary>
         public SaberModel Saber { get; set; }
 
+        /// <summary>
+        /// The Colors to use, must always be an array of size 2 [Right, Left].
+        /// Providing null to either or both is supported.
+        /// Providing two nulls will reset the color to the default.
+        /// </summary>
+        public SimpleColorSO[] Colors { get; set; } = new SimpleColorSO[2];
+
+        /// <summary>
+        /// The texts to change. Provide a key and a value for each text to change.
+        /// Keys can be found here: https://github.com/sc2ad/QuestModdingTools/blob/master/BeatSaberLocale.txt
+        /// </summary>
+        public List<(string, string)> TextChanges { get; set; } = new List<(string, string)>();
         /*
 Input structure should look like this:          
 {
@@ -42,18 +54,44 @@ Input structure should look like this:
                                     //this is the base path where info.dat and other files for the custom song exists
             ]                        
         }
-        ],
-        //NULL if you don't want to change it
-        Saber: {
-            SaberID: string,            //SaberID should be passed for sabers that already exist
-                                        //"Basic" is the default
-                                        //OR
-            CustomSaberFolder string,   //CustomSaberFolder should be passed for new sabers that are being loaded
-                                        //this is the base path where saberinfo.dat and other files for the custom saber exist
+    ],
+    //NULL if you don't want to change it
+    Saber: {
+        SaberID: string,            //SaberID should be passed for sabers that already exist
+                                    //"Basic" is the default
+                                    //OR
+        CustomSaberFolder string,   //CustomSaberFolder should be passed for new sabers that are being loaded
+                                    //this is the base path where saberinfo.dat and other files for the custom saber exist
                       
                       
+    },
+    //NULL FOR BOTH ITEMS if you don't want to change it (or just ignore this field)
+    Colors: [
+        {
+            "_color": {
+                "R": float,
+                "G": float,
+                "B": float,
+                "A": float
+            }
+        },
+        {
+            "_color": {
+                "R": float,
+                "G": float,
+                "B": float,
+                "A": float
+            }
         }
-    }
+    ],
+    // Ignore this field if you don't want to change any text
+    TextChanges: [
+        {
+            "Item1": string,
+            "Item2": string
+        }
+    ]
+}
              
 Example saberinfo.dat file:             
 {

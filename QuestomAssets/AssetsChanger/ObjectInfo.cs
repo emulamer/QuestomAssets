@@ -149,6 +149,9 @@ namespace QuestomAssets.AssetsChanger
                 case AssetsConstants.ClassID.GameObjectClassID:
                     type = typeof(GameObject);
                     break;
+                case AssetsConstants.ClassID.TextAssetClassID:
+                    type = typeof(TextAsset);
+                    break;
                 case AssetsConstants.ClassID.SpriteClassID:
                     type = typeof(SpriteObject);
                     break;
