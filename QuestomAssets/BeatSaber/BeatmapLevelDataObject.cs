@@ -11,25 +11,18 @@ namespace QuestomAssets.BeatSaber
 {
     public sealed class BeatmapLevelDataObject : MonoBehaviourObject, INeedAssetsMetadata
     {
-        public BeatmapLevelDataObject()
-        { }
 
-        public BeatmapLevelDataObject(ObjectInfo objectInfo) : base(objectInfo)
-        { }
 
-        public BeatmapLevelDataObject(ObjectInfo objectInfo, AssetsReader reader) : base(objectInfo)
+        //public BeatmapLevelDataObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
+        //{ }
+
+        public BeatmapLevelDataObject(IObjectInfo<AssetsObject> objectInfo, AssetsReader reader) : base(objectInfo)
         {
             Parse(reader);
         }
 
-        public BeatmapLevelDataObject(AssetsMetadata metadata) : base(metadata, BSConst.ScriptHash.BeatmapLevelDataHash, BSConst.ScriptPtr.BeatmapLevelDataScriptPtr)
+        public BeatmapLevelDataObject(AssetsFile assetsFile) : base(assetsFile, assetsFile.Manager.GetScriptObject("BeatmapLevelSO"))
         { }
-
-        //public void UpdateTypes(AssetsMetadata metadata)
-        //{
-        //    base.UpdateType(metadata, BSConst.ScriptHash.BeatmapLevelDataHash, BSConst.ScriptPtr.BeatmapLevelDataScriptPtr);
-        //}
-
 
         public override byte[] ScriptParametersData
         {
@@ -108,13 +101,13 @@ namespace QuestomAssets.BeatSaber
 
         //unity asset format properties
         [JsonIgnore]
-        public PPtr CoverImageTexture2D { get; set; }
+        public ISmartPtr<Texture2DObject> CoverImageTexture2D { get; set; }
 
         [JsonIgnore]
-        public PPtr EnvironmentSceneInfo { get; set; }
+        public ISmartPtr<AssetsObject> EnvironmentSceneInfo { get; set; }
 
         [JsonIgnore]
-        public PPtr AudioClip { get; set; }
+        public ISmartPtr<AudioClipObject> AudioClip { get; set; }
 
 
         public override void Write(AssetsWriter writer)
@@ -149,16 +142,16 @@ namespace QuestomAssets.BeatSaber
             SongSubName = reader.ReadString();
             SongAuthorName = reader.ReadString();
             LevelAuthorName = reader.ReadString();
-            AudioClip = new PPtr(reader);
+            AudioClip = SmartPtr<AudioClipObject>.Read(ObjectInfo.ParentFile, this, reader);
             BeatsPerMinute = reader.ReadSingle();
             SongTimeOffset = reader.ReadSingle();
             Shuffle = reader.ReadSingle();
             ShufflePeriod = reader.ReadSingle();
             PreviewStartTime = reader.ReadSingle();
             PreviewDuration = reader.ReadSingle();
-            CoverImageTexture2D = new PPtr(reader);
-            EnvironmentSceneInfo = new PPtr(reader);
-            DifficultyBeatmapSets = reader.ReadArrayOf(x => new DifficultyBeatmapSet(x));
+            CoverImageTexture2D = SmartPtr<Texture2DObject>.Read(ObjectInfo.ParentFile, this, reader);
+            EnvironmentSceneInfo = SmartPtr<AssetsObject>.Read(ObjectInfo.ParentFile, this, reader);
+            DifficultyBeatmapSets = reader.ReadArrayOf(x => new DifficultyBeatmapSet(ObjectInfo.ParentFile, this, x));
         }
 
         

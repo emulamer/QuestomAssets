@@ -9,13 +9,13 @@ namespace QuestomAssets.AssetsChanger
 {
     public class MonoBehaviourObject : AssetsObject, IHaveName
     {
-        public MonoBehaviourObject(AssetsMetadata metadata, Guid scriptHash, PPtr monoscriptTypePtr) : base(metadata, scriptHash)
+        public MonoBehaviourObject(AssetsFile assetsFile, MonoScriptObject scriptObject) : base(assetsFile, scriptObject.PropertiesHash)
         {
             Enabled = 1;
-            MonoscriptTypePtr = monoscriptTypePtr;
+            MonoscriptTypePtr = new SmartPtr<MonoScriptObject>(this, (IObjectInfo<MonoScriptObject>)scriptObject.ObjectInfo);
         }
 
-        public MonoBehaviourObject(ObjectInfo objectInfo, AssetsReader reader) : base(objectInfo)
+        public MonoBehaviourObject(IObjectInfo<AssetsObject> objectInfo, AssetsReader reader) : base(objectInfo)
         {
             Parse(reader);
             ParseDetails(reader);
@@ -27,10 +27,10 @@ namespace QuestomAssets.AssetsChanger
         //    MonoscriptTypePtr = monoscriptTypePtr;           
         //}
 
-        public MonoBehaviourObject()
-        { Enabled = 1; }
+        //public MonoBehaviourObject()
+        //{ Enabled = 1; }
 
-        public MonoBehaviourObject(ObjectInfo objectInfo) : base(objectInfo)
+        protected MonoBehaviourObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
         { Enabled = 1; }
 
         //public AssetsMonoBehaviourObject(AssetsObjectInfo objectInfo, AssetsReader reader) : base(objectInfo, reader)
@@ -39,13 +39,13 @@ namespace QuestomAssets.AssetsChanger
         private byte[] _scriptParametersData;
 
         [JsonIgnore]
-        public PPtr GameObjectPtr { get; set; } = new PPtr();
+        public ISmartPtr<GameObject> GameObjectPtr { get; set; } = null;
 
         [JsonIgnore]
         public int Enabled { get; set; } = 1;
 
         [JsonIgnore]
-        public PPtr MonoscriptTypePtr { get; set; }
+        public ISmartPtr<MonoScriptObject> MonoscriptTypePtr { get; set; }
 
         [JsonIgnore]
         public string Name { get; set; }
@@ -79,9 +79,9 @@ namespace QuestomAssets.AssetsChanger
         protected override void Parse(AssetsReader reader)
         {
             base.Parse(reader);
-            GameObjectPtr = new PPtr(reader);
+            GameObjectPtr = SmartPtr<GameObject>.Read(ObjectInfo.ParentFile, this, reader);
             Enabled = reader.ReadInt32();
-            MonoscriptTypePtr = new PPtr(reader);
+            MonoscriptTypePtr = SmartPtr<MonoScriptObject>.Read(ObjectInfo.ParentFile, this, reader);
             Name = reader.ReadString();
         }
 

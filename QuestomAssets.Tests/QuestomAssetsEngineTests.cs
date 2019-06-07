@@ -3,13 +3,13 @@ using System.IO;
 using QuestomAssets;
 using System.Collections.Generic;
 using System.Linq;
-using System.Collections.Immutable;
+
 
 namespace Tests
 {
     public class QuestomAssetsEngineTests
     {
-        private const string BS_APK_FILE = @"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\platform-tools\base.apk";
+        private const string BS_APK_FILE = @"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\platform-tools\1.0.2baseoriginal.apk";
         private const string TEST_SONG_FOLDER = @"TestSong";
         public const string COVER_ART_FILE = @"TestCover.png";
         private const string _apkFile = "beatsaber_TESTS.apk";
@@ -173,6 +173,8 @@ namespace Tests
                 Assert.AreEqual(string.Format(SongIDFormat, 1, 0), testConfig.Playlists[1].SongList[0].SongID);
                 Assert.AreEqual(string.Format(SongIDFormat, 1, 1), testConfig.Playlists[1].SongList[1].SongID);
                 Assert.AreEqual(string.Format(SongIDFormat, 0, 0), testConfig.Playlists[1].SongList[2].SongID);
+                Assert.AreEqual(oldConfig.Playlists[0].PlaylistName, testConfig.Playlists[0].PlaylistName);
+                Assert.AreEqual(oldConfig.Playlists[1].PlaylistName, testConfig.Playlists[1].PlaylistName);
             }
             Assert.Pass();
         }

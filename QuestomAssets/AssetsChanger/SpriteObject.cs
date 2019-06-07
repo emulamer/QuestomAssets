@@ -10,20 +10,17 @@ namespace QuestomAssets.AssetsChanger
     /// </summary>
     public class SpriteObject : AssetsObject, IHaveName
     {
-        public SpriteObject(AssetsMetadata metadata) : base(metadata, AssetsConstants.ClassID.SpriteClassID)
+        public SpriteObject(AssetsFile assetsFile) : base(assetsFile, AssetsConstants.ClassID.SpriteClassID)
         {
         }
 
-        public SpriteObject(ObjectInfo objectInfo, AssetsReader reader) : base(objectInfo)
+        public SpriteObject(IObjectInfo<AssetsObject> objectInfo, AssetsReader reader) : base(objectInfo)
         {
             Parse(reader);
         }
 
-        public SpriteObject()
-        { }
-
-        public SpriteObject(ObjectInfo objectInfo) : base(objectInfo)
-        { }
+        //public SpriteObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
+        //{ }
         
         protected override void Parse(AssetsReader reader)
         {
@@ -31,7 +28,7 @@ namespace QuestomAssets.AssetsChanger
             int startPosition = reader.Position;
             Name = reader.ReadString();
             UnparsedData1 = reader.ReadBytes(100);
-            Texture = new PPtr(reader);
+            Texture = SmartPtr<Texture2DObject>.Read(ObjectInfo.ParentFile, this, reader);
             int readLen = ObjectInfo.DataSize - (reader.Position - startPosition);
             UnparsedData2 = reader.ReadBytes(readLen);
         }
@@ -54,7 +51,7 @@ namespace QuestomAssets.AssetsChanger
 
         public byte[] UnparsedData1 { get; set; }
 
-        public PPtr Texture { get; set; }
+        public ISmartPtr<Texture2DObject> Texture { get; set; }
 
         public byte[] UnparsedData2 { get; set; }
 

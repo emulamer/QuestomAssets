@@ -5,16 +5,19 @@ using QuestomAssets.AssetsChanger;
 using QuestomAssets.BeatSaber;
 using System.Collections.Generic;
 using System.Linq;
-
+using QuestomAssets.Utils;
+using Newtonsoft.Json;
 
 namespace QuestomAssets
 {
+
     public class QuestomAssetsEngine : IDisposable
     {
         private string _apkFilename;
         private Apkifier _apk;
         private bool _readOnly;
 
+        private AssetsManager _manager;
         //TODO: fix cross-asset file loading of stuff before turning this to false, some of the OST Vol 1 songs are in another file
         public bool HideOriginalPlaylists { get; private set; } = true;
 
@@ -29,77 +32,33 @@ namespace QuestomAssets
             _readOnly = readOnly;
             _apkFilename = apkFilename;
             _apk = new Apkifier(apkFilename, !readOnly, readOnly?null:pemCertificateData, readOnly);
-        }
-
-        private Dictionary<string, AssetsFile> _openAssetsFiles = new Dictionary<string, AssetsFile>();
-
-        private AssetsFile OpenAssets(string assetsFilename)
-        { 
-            if (_openAssetsFiles.ContainsKey(assetsFilename))
-                return _openAssetsFiles[assetsFilename];
-            AssetsFile assetsFile = new AssetsFile(assetsFilename, _apk.ReadCombinedAssets(BSConst.KnownFiles.AssetsRootPath+assetsFilename), BSConst.GetAssetTypeMap());
-            _openAssetsFiles.Add(assetsFilename, assetsFile);
-            return assetsFile;
-        }
-
-        private void WriteAllOpenAssets()
-        {
-            foreach (var assetsFileName in _openAssetsFiles.Keys.ToList())
-            {
-                var assetsFile = _openAssetsFiles[assetsFileName];
-                try
-                {
-                    _apk.WriteCombinedAssets(assetsFile, BSConst.KnownFiles.AssetsRootPath+assetsFileName);
-                }
-                catch (Exception ex)
-                {
-                    Log.LogErr($"Exception writing assets file {assetsFileName}", ex);
-                    throw;
-                }
-                _openAssetsFiles.Remove(assetsFileName);
-            }
+            _manager = new AssetsManager(_apk, BSConst.GetAssetTypeMap(), true);
+            _manager.GetAssetsFile("globalgamemanagers");
         }
 
         public BeatSaberQuestomConfig GetCurrentConfig(bool suppressImages = false)
         {
             BeatSaberQuestomConfig config = new BeatSaberQuestomConfig();
-            var file19 = OpenAssets(BSConst.KnownFiles.MainCollectionAssetsFilename);
-            var file17 = OpenAssets(BSConst.KnownFiles.SongsAssetsFilename);
+            var file19 = _manager.GetAssetsFile(BSConst.KnownFiles.MainCollectionAssetsFilename);
+            var file17 = _manager.GetAssetsFile(BSConst.KnownFiles.SongsAssetsFilename);
             var mainPack = GetMainLevelPack();
             foreach (var packPtr in mainPack.BeatmapLevelPacks)
             {
-                if (file19.GetFilenameForFileID(packPtr.FileID) != BSConst.KnownFiles.SongsAssetsFilename)
-                    throw new NotImplementedException("Songs and packs are only supported in one file currently.");
-                var pack = file17.GetAssetByID<BeatmapLevelPackObject>(packPtr.PathID);
-                if (pack == null)
-                {
-                    Log.LogErr($"Level pack with path ID {packPtr} was not found in {BSConst.KnownFiles.SongsAssetsFilename}!");
-                    continue;
-                }
+                var pack = packPtr.Target.Object;
                 if (HideOriginalPlaylists && BSConst.KnownLevelPackIDs.Contains(pack.PackID))
                     continue;
 
                 var packModel = new BeatSaberPlaylist() { PlaylistName = pack.PackName, PlaylistID = pack.PackID, LevelPackObject = pack };
-                //TODO: check file ref?  right now they're all in 17
-                var collection = file17.GetAssetByID<BeatmapLevelCollectionObject>(pack.BeatmapLevelCollection.PathID);
-                if (collection == null)
-                {
-                    Log.LogErr($"Failed to find level pack collection object for playlist {pack.PackName}");
-                    continue;
-                }
-                packModel.LevelCollection = collection;
+                var collection = pack.BeatmapLevelCollection.Object;
+                //packModel.LevelCollection = collection;
 
                 //get cover art for playlist
                 if (!suppressImages)
                 {
                     try
                     {
-                        var coverSprite = file17.GetAssetByID<SpriteObject>(pack.CoverImage.PathID);
-                        if (coverSprite == null)
-                            throw new Exception("Unable to find cover art sprite.");
-                        var coverTex = file17.GetAssetByID<Texture2DObject>(coverSprite.Texture.PathID);
-                        if (coverTex == null)
-                            throw new Exception("Unable to find cover art texture.");
+                        var coverSprite = pack.CoverImage.Object;
+                        var coverTex = coverSprite.Texture.Object;
                         packModel.CoverArt = coverTex.ToBitmap();
                         packModel.CoverArtBase64PNG = packModel.CoverArt.ToBase64PNG();
                     }
@@ -110,12 +69,7 @@ namespace QuestomAssets
                 }
                 foreach (var songPtr in collection.BeatmapLevels)
                 {
-                    var songObj = file17.GetAssetByID<BeatmapLevelDataObject>(songPtr.PathID);
-                    if (songObj == null)
-                    {
-                        Log.LogErr($"Failed to find beatmap level data for playlist {pack.PackName} with path id {songPtr.PathID}!");
-                        continue;
-                    }
+                    var songObj = songPtr.Object;
                     var songModel = new BeatSaberSong()
                     {
                         LevelAuthorName = songObj.LevelAuthorName,
@@ -129,22 +83,15 @@ namespace QuestomAssets
                     {
                         try
                         {
-                            var songCover = file17.GetAssetByID<Texture2DObject>(songObj.CoverImageTexture2D.PathID);
-                            if (songCover == null)
+                            var songCover = songObj.CoverImageTexture2D.Object;
+                            try
                             {
-                                Log.LogErr($"The cover image for song id '{songObj.LevelID}' could not be found!");
+                                songModel.CoverArt = songCover.ToBitmap();
+                                songModel.CoverArtBase64PNG = songModel.CoverArt.ToBase64PNG();
                             }
-                            else
+                            catch (Exception ex)
                             {
-                                try
-                                {
-                                    songModel.CoverArt = songCover.ToBitmap();
-                                    songModel.CoverArtBase64PNG = songModel.CoverArt.ToBase64PNG();
-                                }
-                                catch (Exception ex)
-                                {
-                                    Log.LogErr($"Unable to convert texture for song ID '{songModel.SongID}' cover", ex);
-                                }
+                                Log.LogErr($"Unable to convert texture for song ID '{songModel.SongID}' cover", ex);
                             }
                         }
                         catch (Exception ex)
@@ -156,73 +103,62 @@ namespace QuestomAssets
                 }
                 config.Playlists.Add(packModel);
             }
-            return config;
+            return config;            
         }
 
         private void UpdatePlaylistConfig(BeatSaberPlaylist playlist)
         {
             Log.LogMsg($"Processing playlist ID {playlist.PlaylistID}...");
-            var songsAssetFile = OpenAssets(BSConst.KnownFiles.SongsAssetsFilename);
-            BeatmapLevelPackObject levelPack = null;
-            BeatmapLevelCollectionObject levelCollection = null;
-            levelPack = songsAssetFile.FindAssets<BeatmapLevelPackObject>(x=>x.PackID == playlist.PlaylistID).FirstOrDefault();
+            var songsAssetFile = _manager.GetAssetsFile(BSConst.KnownFiles.SongsAssetsFilename);
+            CustomLevelLoader loader = new CustomLevelLoader(songsAssetFile);
+            BeatmapLevelPackObject levelPack = songsAssetFile.FindAsset<BeatmapLevelPackObject>(x => x.Object.PackID == playlist.PlaylistID)?.Object;
             //create a new level pack if one waasn't found
             if (levelPack == null)
             {
                 Log.LogMsg($"Level pack for playlist '{playlist.PlaylistID}' was not found and will be created");
-                //don't try to find the cover name, just let it create a dupe, we'll try to clean up linked things we did later
-                //var packCover = CustomLevelLoader.LoadPackCover(playlist.PlaylistID, songsAssetFile, playlist.CoverArtFile);
-                //playlist.CoverArtSprite = packCover;
-                levelPack = new BeatmapLevelPackObject(songsAssetFile.Metadata)
+                levelPack = new BeatmapLevelPackObject(songsAssetFile)
                 {
                     Enabled = 1,
-                    GameObjectPtr = new PPtr(),
+                    GameObjectPtr = null,
                     IsPackAlwaysOwned = true,
                     PackID = playlist.PlaylistID,
                     Name = playlist.PlaylistID + BSConst.NameSuffixes.LevelPack,
                     PackName = playlist.PlaylistName
                 };
                 songsAssetFile.AddObject(levelPack, true);
-            }
-            else
-            {
-                Log.LogMsg($"Level pack for playlist '{playlist.PlaylistID}' was found and will be updated");
-                levelCollection = songsAssetFile.GetAssetByID<BeatmapLevelCollectionObject>(levelPack.BeatmapLevelCollection.PathID);
-                if (levelCollection == null)
-                {
-                    Log.LogErr($"{nameof(BeatmapLevelCollectionObject)} was not found for playlist id {playlist.PlaylistID}!  It will be created, but something is wrong with the assets!");
-                }
-            }
-            if (levelCollection == null)
-            {
-                levelCollection = new BeatmapLevelCollectionObject(songsAssetFile.Metadata)
+                var col = new BeatmapLevelCollectionObject(songsAssetFile)
                 { Name = playlist.PlaylistID + BSConst.NameSuffixes.LevelCollection };
-                songsAssetFile.AddObject(levelCollection, true);
-                levelPack.BeatmapLevelCollection = levelCollection.ObjectInfo.LocalPtrTo;
+                songsAssetFile.AddObject(col, true);
+                levelPack.BeatmapLevelCollection = col.PtrFrom(levelPack);
             }
 
-            playlist.LevelCollection = levelCollection;
             playlist.LevelPackObject = levelPack;
+            
 
-            levelPack.PackName = playlist.PlaylistName;
+            levelPack.PackName = playlist.PlaylistName??levelPack.PackName;
             if (playlist.CoverArt != null)
             {
                 Log.LogMsg($"Loading cover art for playlist ID '{playlist.PlaylistID}'");
 
-                playlist.CoverArtSprite = CustomLevelLoader.LoadPackCover(playlist.PlaylistID, songsAssetFile, playlist.CoverArt);
-                playlist.LevelPackObject.CoverImage = playlist.CoverArtSprite.ObjectInfo.LocalPtrTo;
-            }
-            if (playlist.LevelPackObject.CoverImage != null)
-            {
-                playlist.CoverArtSprite = songsAssetFile.GetAssetByID<SpriteObject>(playlist.LevelPackObject.CoverImage.PathID);
+                playlist.CoverArtSprite = loader.LoadPackCover(playlist.PlaylistID, playlist.CoverArt);
+                playlist.LevelPackObject.CoverImage = playlist.CoverArtSprite.PtrFrom(playlist.LevelPackObject);
             }
             else
             {
-                playlist.CoverArtSprite = CustomLevelLoader.LoadPackCover(playlist.PlaylistID, songsAssetFile, null);
+                if (playlist.LevelPackObject.CoverImage != null)
+                {
+                    playlist.CoverArtSprite = playlist.LevelPackObject.CoverImage.Object;
+                }
+                else
+                {
+                    playlist.CoverArtSprite = loader.LoadPackCover(playlist.PlaylistID, null);
+                }
+                playlist.LevelPackObject.CoverImage = playlist.CoverArtSprite.PtrFrom(playlist.LevelPackObject);
             }
-            playlist.LevelPackObject.CoverImage = playlist.CoverArtSprite.ObjectInfo.LocalPtrTo;
 
             //clear out any levels, we'll add them back
+            var levelCollection = levelPack.BeatmapLevelCollection.Object;
+            levelCollection.BeatmapLevels.ForEach(x => x.Dispose());
             levelCollection.BeatmapLevels.Clear();
             int songCount = 0;
             Log.LogMsg($"Processing songs for playlist ID {playlist.PlaylistID}...");
@@ -236,34 +172,35 @@ namespace QuestomAssets
                 if (songCount % songMod == 0)
                     Console.WriteLine($"{songCount.ToString().PadLeft(5)} of {totalSongs}...");
 
-                if (UpdateSongConfig(song))
+                if (UpdateSongConfig(song, loader))
                 {
-                    if (playlist.LevelCollection.BeatmapLevels.Any(x => x.PathID == song.LevelData.ObjectInfo.ObjectID))
+                    if (levelCollection.BeatmapLevels.Any(x => x.Object.LevelID == song.LevelData.LevelID))
                     {
                         Log.LogErr($"Playlist ID '{playlist.PlaylistID}' already contains song ID '{song.SongID}' once, removing the second link");
                     }
                     else
                     {
-                        playlist.LevelCollection.BeatmapLevels.Add(song.LevelData.ObjectInfo.LocalPtrTo);
+                        levelCollection.BeatmapLevels.Add(song.LevelData.PtrFrom(levelCollection));
                         continue;
                     }
                 }
-                
+
                 playlist.SongList.Remove(song);
             }
             Console.WriteLine($"Proccessed {totalSongs} for playlist ID {playlist.PlaylistID}");
         }
 
-        private bool UpdateSongConfig(BeatSaberSong song)
+        private bool UpdateSongConfig(BeatSaberSong song, CustomLevelLoader loader)
         {
-            var songsAssetFile = OpenAssets(BSConst.KnownFiles.SongsAssetsFilename);
+
+            var songsAssetFile = _manager.GetAssetsFile(BSConst.KnownFiles.SongsAssetsFilename);
             BeatmapLevelDataObject level = null;
             if (!string.IsNullOrWhiteSpace(song.SongID))
             {
-                var levels = songsAssetFile.FindAssets<BeatmapLevelDataObject>(x => x.LevelID == song.SongID);
-                if (levels.Count > 0)
+                var levels = songsAssetFile.FindAssets<BeatmapLevelDataObject>(x => x.Object.LevelID == song.SongID).Select(x=>x.Object).ToList();
+                if (levels.Count() > 0)
                 {
-                    if (levels.Count > 1)
+                    if (levels.Count() > 1)
                         Log.LogErr($"Song ID {song.SongID} already has more than one entry in the assets, this may cause problems!");
                     else
                         Log.LogMsg($"Song ID {song.SongID} exists already and won't be loaded");
@@ -288,15 +225,15 @@ namespace QuestomAssets
                 try
                 {
                     string oggPath;
-                    var deser = CustomLevelLoader.DeserializeFromJson(songsAssetFile, song.CustomSongFolder, song.SongID);
-                    var found = songsAssetFile.FindAssets<BeatmapLevelDataObject>(x => x.LevelID == deser.LevelID).FirstOrDefault();
+                    var deser = loader.DeserializeFromJson(song.CustomSongFolder, song.SongID);
+                    var found = songsAssetFile.FindAssets<BeatmapLevelDataObject>(x => x.Object.LevelID == deser.LevelID).Select(x=> x.Object).FirstOrDefault();
                     if (found != null)
                     {
                         Log.LogErr($"No song id was specified, but the level {found.LevelID} is already in the assets, skipping it.");
                         song.LevelData = found;
                         return true;
                     }
-                    level = CustomLevelLoader.LoadSongToAsset(deser, song.CustomSongFolder, songsAssetFile, out oggPath, true);
+                    level = loader.LoadSongToAsset(deser, song.CustomSongFolder, out oggPath, true);
                     song.SourceOgg = oggPath;
                 }
                 catch (Exception ex)
@@ -315,17 +252,18 @@ namespace QuestomAssets
                 return true;
             }
             //level == null && string.IsNullOrWhiteSpace(song.CustomSongFolder)
-            
+
             Log.LogErr($"Song ID '{song.SongID}' either was not specified or could not be found and no CustomSongFolder was specified, skipping it.");
             return false;
-            
+
         }
 
         private void RemoveLevelAssets(BeatmapLevelDataObject level, List<string> audioFilesToDelete)
         {
             Log.LogMsg($"Removing assets for song id '{level.LevelID}'");
-            var file17 = OpenAssets(BSConst.KnownFiles.SongsAssetsFilename);
-            var cover = file17.GetAssetByID<Texture2DObject>(level.CoverImageTexture2D.PathID);
+            var file17 = _manager.GetAssetsFile(BSConst.KnownFiles.SongsAssetsFilename);
+            file17.DeleteObject(level);
+            var cover = level.CoverImageTexture2D.Object;
             if (cover == null)
             {
                 Log.LogErr($"Could not find cover for song id '{level.LevelID}' to remove it");
@@ -337,11 +275,11 @@ namespace QuestomAssets
             foreach (var diff in level.DifficultyBeatmapSets)
             {
                 foreach (var diffbm in diff.DifficultyBeatmaps)
-                {                    
-                    file17.DeleteObject(file17.GetAssetByID<AssetsObject>(diffbm.BeatmapDataPtr.PathID));
+                {
+                    file17.DeleteObject(diffbm.BeatmapDataPtr.Object);
                 }
             }
-            var audioClip = file17.GetAssetByID<AudioClipObject>(level.AudioClip.PathID);
+            var audioClip = level.AudioClip.Object;
             if (audioClip == null)
             {
                 Log.LogErr($"Could not find audio clip asset for song id '{level.LevelID}' to remove it");
@@ -351,22 +289,21 @@ namespace QuestomAssets
                 audioFilesToDelete.Add(audioClip.Resource.Source);
                 file17.DeleteObject(audioClip);
             }
-            file17.DeleteObject(level);
+            
         }
 
         private void RemoveLevelPackAssets(BeatmapLevelPackObject levelPack)
         {
-            var songsAssetFile = OpenAssets(BSConst.KnownFiles.SongsAssetsFilename);
+            var songsAssetFile = _manager.GetAssetsFile(BSConst.KnownFiles.SongsAssetsFilename);
 
             Log.LogMsg($"Removing assets for playlist ID '{ levelPack.PackID}'");
-            var file17 = OpenAssets(BSConst.KnownFiles.SongsAssetsFilename);
-            var collection = file17.GetAssetByID<BeatmapLevelCollectionObject>(levelPack.BeatmapLevelCollection.PathID);
-            file17.DeleteObject(collection);
-            file17.DeleteObject(levelPack);
-            var sprite = songsAssetFile.GetAssetByID<SpriteObject>(levelPack.CoverImage.PathID);
+            var collection = levelPack.BeatmapLevelCollection.Object;
+            var sprite = levelPack.CoverImage.Object;
+            var texture = sprite.Texture.Object;
+            songsAssetFile.DeleteObject(levelPack);
+            songsAssetFile.DeleteObject(collection);            
+            songsAssetFile.DeleteObject(texture);            
             songsAssetFile.DeleteObject(sprite);
-            var texture = songsAssetFile.GetAssetByID<Texture2DObject>(sprite.Texture.PathID);
-            songsAssetFile.DeleteObject(texture);
         }
 
 
@@ -375,8 +312,7 @@ namespace QuestomAssets
             //todo: basic validation of the config
             if (_readOnly)
                 throw new InvalidOperationException("Cannot update in read only mode.");
-            UpdateKnownObjects();
-
+ 
             //get the old config before we start on this
             var originalConfig = GetCurrentConfig();
 
@@ -384,72 +320,32 @@ namespace QuestomAssets
             //compare with new ones
             //generate a diff
             //etc.
-            var songsAssetFile = OpenAssets(BSConst.KnownFiles.SongsAssetsFilename);
-
+            var songsAssetFile = _manager.GetAssetsFile(BSConst.KnownFiles.SongsAssetsFilename);
             foreach (var playlist in config.Playlists)
             {
-                UpdatePlaylistConfig(playlist);            
+                UpdatePlaylistConfig(playlist);
             }
 
 
             //open the assets with the main levels collection, find the file index of sharedassets17.assets, and add the playlists to it
-            var mainLevelsFile = OpenAssets(BSConst.KnownFiles.MainCollectionAssetsFilename);
+            var mainLevelsFile = _manager.GetAssetsFile(BSConst.KnownFiles.MainCollectionAssetsFilename);
             var file17Index = mainLevelsFile.GetFileIDForFilename(BSConst.KnownFiles.SongsAssetsFilename);
-            var mainLevelPack = mainLevelsFile.FindAsset<MainLevelPackCollectionObject>();
+            var mainLevelPack = GetMainLevelPack();
 
 
-            //TODO: move this all to RemoveLevelPackAsset
-            List<BeatmapLevelPackObject> packsToRemove = new List<BeatmapLevelPackObject>();
-            List<PPtr> levelPackPointersToUnlink = new List<PPtr>();
-            //List<BeatmapLevelCollectionObject> collectionsToRemove = new List<BeatmapLevelCollectionObject>();
-            foreach (var packPtr in mainLevelPack.BeatmapLevelPacks)
+            var packsToUnlink = mainLevelPack.BeatmapLevelPacks.Where(x => !HideOriginalPlaylists || !BSConst.KnownLevelPackIDs.Contains(x.Object.PackID)).ToList();
+            var packsToRemove = mainLevelPack.BeatmapLevelPacks.Where(x => !BSConst.KnownLevelPackIDs.Contains(x.Object.PackID) && !config.Playlists.Any(y=> y.PlaylistID == x.Object.PackID)).Select(x=>x.Object).ToList();
+            foreach (var unlink in packsToUnlink)
             {
-                if (packPtr.FileID != file17Index)
-                {
-                    Log.LogMsg("One of the beatmap level packs is in another file, not removing it");
-                    continue;
-                }
-                var pack = songsAssetFile.GetAssetByID<BeatmapLevelPackObject>(packPtr.PathID);
-                //not sure if I should remove it or leave it here... if one ends up in another asset file it'll break
-                if (pack == null)
-                {
-                    Log.LogErr("Unable to locate one of the beatmap level packs referenced in the main collection, removing the link");
-                    levelPackPointersToUnlink.Add(packPtr);
-                    continue;
-                }
-                
-                if (pack.BeatmapLevelCollection.FileID != 0)
-                {
-                    Log.LogMsg("One of the beatmap level pack collections is in another file, not removing it");
-                    continue;
-                }
-                var packCollection = songsAssetFile.GetAssetByID<BeatmapLevelCollectionObject>(pack.BeatmapLevelCollection.PathID);
-                if (packCollection == null)
-                {
-                    Log.LogErr($"Unable to locate the level collection for '{pack.PackID}', removing the link");
-                    levelPackPointersToUnlink.Add(packPtr);
-                    continue;
-                }
-                if (config.Playlists.Any(x => x.LevelPackObject.ObjectInfo.ObjectID == pack.ObjectInfo.ObjectID))
-                {
-                    //unlink it so we can relink it in order
-                    levelPackPointersToUnlink.Add(packPtr);
-                    continue;
-                }
-                if (BSConst.KnownLevelPackIDs.Contains(pack.PackID))
-                {
-                    if (!HideOriginalPlaylists)
-                        levelPackPointersToUnlink.Add(packPtr);
-                    continue;
-                }
-
-                levelPackPointersToUnlink.Add(packPtr);
-                packsToRemove.Add(pack);
+                mainLevelPack.BeatmapLevelPacks.Remove(unlink);
+                unlink.Dispose();
             }
-  
+
+
+
             var oldSongs = originalConfig.Playlists.SelectMany(x => x.SongList).Select(x => x.LevelData).Distinct();
             var newSongs = config.Playlists.SelectMany(x => x.SongList).Select(x => x.LevelData).Distinct();
-                        
+
             //don't allow removal of the actual tracks or level packs that are built in, although you can unlink them from the main list
             var removeSongs = oldSongs.Where(x => !newSongs.Contains(x) && !BSConst.KnownLevelIDs.Contains(x.LevelID)).Distinct().ToList();
 
@@ -466,11 +362,10 @@ namespace QuestomAssets
             removeSongs.ForEach(x => RemoveLevelAssets(x, audioFilesToDelete));
 
             packsToRemove.ForEach(x => RemoveLevelPackAssets(x));
-
-            levelPackPointersToUnlink.ForEach(x => mainLevelPack.BeatmapLevelPacks.Remove(x));
+            
 
             //relink all the level packs in order
-            var addPacks = config.Playlists.Select(x => new PPtr(file17Index, x.LevelPackObject.ObjectInfo.ObjectID));
+            var addPacks = config.Playlists.Select(x => x.LevelPackObject.PtrFrom(mainLevelPack));
             mainLevelPack.BeatmapLevelPacks.AddRange(addPacks);
 
             //do a first loop to guess at the file size
@@ -482,7 +377,7 @@ namespace QuestomAssets
                 {
                     if (sng.SourceOgg != null)
                     {
-                        var clip = songsAssetFile.GetAssetByID<AudioClipObject>(sng.LevelData.AudioClip.PathID);
+                        var clip = sng.LevelData.AudioClip.Object;
                         sizeGuess += new FileInfo(sng.SourceOgg).Length;
                     }
                 }
@@ -504,7 +399,7 @@ namespace QuestomAssets
             Log.LogMsg($"Original APK size:     {originalApkSize:n0}");
             Log.LogMsg($"Guesstimated new size: {sizeGuess:n0}");
             Log.LogMsg("");
-            
+
 
             if (sizeGuess > Int32.MaxValue)
             {
@@ -522,8 +417,8 @@ namespace QuestomAssets
                 {
                     if (sng.SourceOgg != null)
                     {
-                        var clip = songsAssetFile.GetAssetByID<AudioClipObject>(sng.LevelData.AudioClip.PathID);
-                        _apk.Write(sng.SourceOgg, BSConst.KnownFiles.AssetsRootPath+clip.Resource.Source, true, false);
+                        var clip = sng.LevelData.AudioClip.Object;
+                        _apk.Write(sng.SourceOgg, BSConst.KnownFiles.AssetsRootPath + clip.Resource.Source, true, false);
                         //saftey check to make sure we aren't removing a file we just put here
                         if (audioFilesToDelete.Contains(clip.Resource.Source))
                         {
@@ -545,54 +440,54 @@ namespace QuestomAssets
             }
 
             Log.LogMsg("Serializing all assets...");
-            WriteAllOpenAssets();
+            _manager.WriteAllOpenAssets();
         }
 
 
 
         private MainLevelPackCollectionObject GetMainLevelPack()
         {
-            var file19 = OpenAssets(BSConst.KnownFiles.MainCollectionAssetsFilename);
-            var mainLevelPack = file19.FindAsset<MainLevelPackCollectionObject>();
+            var mainLevelPack = _manager.MassFirstOrDefaultAsset<MainLevelPackCollectionObject>(x => true)?.Object;
             if (mainLevelPack == null)
                 throw new Exception("Unable to find the main level pack collection object!");
             return mainLevelPack;
         }
 
-        public bool ApplyBeatmapSignaturePatch()
+
+        public bool ApplyPatchSettingsFile()
         {
-            return Utils.Patcher.PatchBeatmapSigCheck(_apk);
+            string filename = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location), "patchsettings.json");
+            if (!File.Exists(filename))
+            {
+                Log.LogErr($"Can't apply patch settings from file, {filename} does not exist!");
+                return false;
+            }
+            List<FilePatch> patches = null;
+            using (StreamReader sr = new StreamReader(filename))
+            using (JsonReader jr = new JsonTextReader(sr))
+                patches = new JsonSerializer().Deserialize<List<FilePatch>>(jr);
+            Log.LogMsg($"Found {patches.Count} files to patch in {filename}");
+            foreach (var patch in patches)
+            {
+                if (!ApplyPatch(patch))
+                {
+                    Log.LogErr($"Failed to apply patch... aborting any further patching...");
+                    return false;
+                }
+            }
+            return true;
         }
 
-        //this is crap, I need to load all files and resolve file pointers properly
-        private void UpdateKnownObjects()
+        public bool ApplyPatch(FilePatch patch)
         {
-            var songsFile = OpenAssets(BeatSaber.BSConst.KnownFiles.SongsAssetsFilename);
-            if (!songsFile.Metadata.ExternalFiles.Any(x => x.FileName == BSConst.KnownFiles.File19))
+            
+            if (!Patcher.PatchBeatmapSigCheck(_apk, patch))
             {
-                songsFile.Metadata.ExternalFiles.Add(new ExternalFile()
-                {
-                    FileName = BSConst.KnownFiles.File19,
-                    AssetName = "",
-                    ID = Guid.Empty,
-                    Type = 0
-                });
+                Log.LogErr($"File {patch.Filename} failed to patch!");
+                return false;
             }
-            songsFile = OpenAssets(BeatSaber.BSConst.KnownFiles.SongsAssetsFilename);
-            //if (!songsFile.Metadata.ExternalFiles.Any(x => x.FileName == BSConst.KnownFiles.File14))
-            //{
-            //    songsFile.Metadata.ExternalFiles.Add(new ExternalFile()
-            //    {
-            //        FileName = BSConst.KnownFiles.File14,
-            //        AssetName = "",
-            //        ID = Guid.Empty,
-            //        Type = 0
-            //    });
-            //}
-            int file19 = songsFile.GetFileIDForFilename(BSConst.KnownFiles.File19);
-            //int file14 = songsFile.GetFileIDForFilename(BSConst.KnownFiles.File14);
-            KnownObjects.File17.MonstercatEnvironment = new PPtr(file19, KnownObjects.File17.MonstercatEnvironment.PathID);
-            //KnownObjects.File17.NiceEnvironment = new PPtr(file14, KnownObjects.File17.NiceEnvironment.PathID);
+
+            return true;
         }
 
         #region Helper Functions

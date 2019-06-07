@@ -13,7 +13,7 @@ namespace QuestomAssets.BeatSaber
 
         //unity asset format only
         [JsonIgnore]
-        public PPtr BeatmapCharacteristic { get; set; }
+        public ISmartPtr<AssetsObject> BeatmapCharacteristic { get; set; }
 
         //json format only
         [JsonProperty("_beatmapCharacteristicName")]
@@ -25,15 +25,15 @@ namespace QuestomAssets.BeatSaber
         public DifficultyBeatmapSet()
         { }
 
-        public DifficultyBeatmapSet(AssetsReader reader)
+        public DifficultyBeatmapSet(AssetsFile assetsFile, AssetsObject owner, AssetsReader reader)
         {
-            Parse(reader);
+            Parse(assetsFile, owner, reader);
         }
 
-        private void Parse(AssetsReader reader)
+        private void Parse(AssetsFile assetsFile, AssetsObject owner, AssetsReader reader)
         {
-            BeatmapCharacteristic = new PPtr(reader);
-            DifficultyBeatmaps = reader.ReadArrayOf(x => new DifficultyBeatmap(x));
+            BeatmapCharacteristic = SmartPtr<AssetsObject>.Read(assetsFile, owner, reader);
+            DifficultyBeatmaps = reader.ReadArrayOf(x => new DifficultyBeatmap(assetsFile, owner, x));
         }
 
         public void Write(AssetsWriter writer)

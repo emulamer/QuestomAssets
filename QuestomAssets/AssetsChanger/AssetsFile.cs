@@ -10,6 +10,7 @@ namespace QuestomAssets.AssetsChanger
 {
     public class AssetsFile
     {
+        public AssetsManager Manager { get; private set; }
         public string AssetsFileName { get; private set; }
 
         public int GetOrAddExternalFileIDRef(AssetsFile targetFile)
@@ -27,19 +28,58 @@ namespace QuestomAssets.AssetsChanger
             return Metadata.ExternalFiles.IndexOf(file) + 1;
         }
 
+        private List<ISmartPtr<AssetsObject>> _knownPointers = new List<ISmartPtr<AssetsObject>>();
+
+        public void AddPtrRef(ISmartPtr<AssetsObject> ptr)
+        {
+            if (!_knownPointers.Contains(ptr))
+                _knownPointers.Add(ptr);
+        }
+
+        public void RemovePtrRef(ISmartPtr<AssetsObject> ptr)
+        {
+            _knownPointers.Remove(ptr);
+        }
+
         public AssetsFileHeader Header { get; set; }
 
         public AssetsMetadata Metadata { get; set; }
 
-        public List<AssetsObject> Objects { get; set; }
+        // public List<AssetsObject> Objects { get; set; }
 
-        private Dictionary<Guid, Type> _scriptHashToTypes = new Dictionary<Guid, Type>();
-
-        public AssetsFile(string assetsFileName, Stream assetsFileStream, Dictionary<Guid, Type> scriptHashToTypes)
+        public AssetsReader GetReaderAtDataOffset()
         {
+            BaseStream.Seek(Header.ObjectDataOffset, SeekOrigin.Begin);
+            return new AssetsReader(BaseStream);
+        }
+
+        public bool HasChanges
+        {
+            get
+            {
+                var newPtrs = _knownPointers.Where(x => x.Owner.ObjectInfo.ParentFile == this && x.IsNew).ToList();
+                if (newPtrs.Any())
+                {
+                    return true;
+                }
+                var newObjInfos = Metadata.ObjectInfos.Where(x => x.IsNew).ToList();
+                if (newObjInfos.Any())
+                {
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        public Stream BaseStream { get; private set; }
+
+        public AssetsFile(AssetsManager manager, string assetsFileName, Stream assetsFileStream, Dictionary<string, Type> classNameToTypes)
+        {
+            Manager = manager;
+            if (!assetsFileStream.CanSeek)
+                throw new NotSupportedException("Stream must support seeking!");
+            BaseStream = assetsFileStream;
             AssetsFileName = assetsFileName;
-            _scriptHashToTypes = scriptHashToTypes;
-            Objects = new List<AssetsObject>();
 
             assetsFileStream.Seek(0, SeekOrigin.Begin);
 
@@ -49,80 +89,27 @@ namespace QuestomAssets.AssetsChanger
             }
             using (AssetsReader reader = new AssetsReader(assetsFileStream, false))
             {
-                Metadata = new AssetsMetadata(this, reader);
+                Metadata = new AssetsMetadata(this);
+                Metadata.Parse(reader);
             }
             assetsFileStream.Seek(Header.ObjectDataOffset, SeekOrigin.Begin);
-            using (AssetsReader reader = new AssetsReader(assetsFileStream))
+
+
+
+            if (!manager.LazyLoad)
             {
-                foreach (var objectInfo in Metadata.ObjectInfos)
+                //foreach (var ext in Metadata.ExternalFiles)
+                //{
+                //    manager.GetAssetsFile(ext.FileName);
+                //}
+                foreach (var oi in Metadata.ObjectInfos)
                 {
-                    AssetsObject assetsObject = ReadObject(reader, objectInfo);
-                    Objects.Add(assetsObject);
+                    var o = oi.Object;
                 }
+                BaseStream.Close();
+                BaseStream.Dispose();
+                BaseStream = null;
             }
-        }
-
-        private AssetsObject ReadObject(AssetsReader reader, ObjectInfo objectInfo)
-        {
-            AssetsObject assetsObject;
-            var objectType = Metadata.Types[objectInfo.TypeIndex];
-            switch (objectType.ClassID)
-            {
-                case AssetsConstants.ClassID.MonoBehaviourScriptType:
-                    if (_scriptHashToTypes.ContainsKey(objectType.ScriptHash))
-                    {
-                        Type assetObjectType = _scriptHashToTypes[objectType.ScriptHash];
-                        if (!assetObjectType.IsSubclassOf(typeof(MonoBehaviourObject)))
-                        {
-                            throw new ArgumentException("Types provided in scriptHashToTypes must be a subclass of AssetsMonoBehaviourObject.");
-                        }
-                        assetsObject = (AssetsObject)Activator.CreateInstance(assetObjectType, objectInfo, reader);
-                    }
-                    else
-                    {
-                        assetsObject = new MonoBehaviourObject(objectInfo, reader);
-                    }
-                    break;
-                case AssetsConstants.ClassID.AudioClipClassID:
-                    assetsObject = new AudioClipObject(objectInfo, reader);
-                    break;
-                case AssetsConstants.ClassID.Texture2DClassID:
-                    assetsObject = new Texture2DObject(objectInfo, reader);
-                    break;
-                case AssetsConstants.ClassID.GameObjectClassID:
-                    assetsObject = new GameObject(objectInfo, reader);
-                    break;
-                case AssetsConstants.ClassID.SpriteClassID:
-                    assetsObject = new SpriteObject(objectInfo, reader);
-                    break;
-                default:
-                    assetsObject = new AssetsObject(objectInfo, reader);
-                    break;
-            }
-            // is this needed?
-            //reader.AlignToObjectData(8);
-            return assetsObject;
-        }
-
-        public T CopyAsset<T>(T source) where T : AssetsObject
-        {
-            T newObj = null;
-            using (var ms = new MemoryStream())
-            {
-                var newInfo = new ObjectInfo()
-                {
-                    TypeIndex = source.ObjectInfo.TypeIndex,
-                    DataSize = source.ObjectInfo.DataSize
-                };
-                using (var writer = new AssetsWriter(ms))
-                    source.Write(writer);
-                ms.Seek(0, SeekOrigin.Begin);
-                using (var reader = new AssetsReader(ms))
-                    newObj = (T)Activator.CreateInstance(typeof(T), newInfo, reader);
-
-
-            }
-            return newObj;
         }
 
         public void Write(Stream outputStream)
@@ -132,7 +119,7 @@ namespace QuestomAssets.AssetsChanger
             using (AssetsWriter writer = new AssetsWriter(objectsMS))
             {
                 int ctr = 0;
-                foreach (var obj in Objects)
+                foreach (var obj in Metadata.ObjectInfos.Select(x => x.Object))
                 {
                     ctr++;
                     obj.ObjectInfo.DataOffset = (int)objectsMS.Position;
@@ -213,7 +200,7 @@ namespace QuestomAssets.AssetsChanger
                 throw new ArgumentException("ObjectInfo.ObjectID already exists in this file.");
 
             Metadata.ObjectInfos.Add(assetsObject.ObjectInfo);
-            Objects.Add(assetsObject);
+            //Objects.Add(assetsObject);
         }
 
         public string GetFilenameForFileID(int fileID)
@@ -234,57 +221,86 @@ namespace QuestomAssets.AssetsChanger
             return Metadata.ExternalFiles.IndexOf(file)+1;
         }
 
-        public T FindAsset<T>(string name = null) where T: AssetsObject
+        public IObjectInfo<T> FindAsset<T>(Func<IObjectInfo<T>, bool> filter) where T: AssetsObject
         {
-            return Objects.FirstOrDefault(x => x as T != null && (name == null || ((x as IHaveName)?.Name == name))) as T;
+            return FindAssets(filter).FirstOrDefault();
         }
 
-        public List<T> FindAssets<T>(Func<T, bool> filter) where T: AssetsObject
+        public IEnumerable<IObjectInfo<T>> FindAssets<T>(Func<IObjectInfo<T>, bool> filter) where T: AssetsObject
         {
-            return Objects.Where(x => x as T != null && filter(x as T)).Cast<T>().ToList();
+            return Metadata.ObjectInfos.Where(x => typeof(IObjectInfo<T>).IsAssignableFrom(x.GetType()) && filter((IObjectInfo<T>)x)).Select(x => (x as IObjectInfo<T>));
         }
 
         public T GetAssetByID<T>(long objectID) where T : AssetsObject
         {
-            return (T)Objects.FirstOrDefault(x => x.ObjectInfo.ObjectID == objectID);               
+            return Metadata.ObjectInfos.Where(x => x is ObjectInfo<T> && x.ObjectID == objectID).Cast<ObjectInfo<T>>().FirstOrDefault()?.Object;
         }
+
+        public IObjectInfo<T> GetObjectInfo<T>(int fileID, Int64 pathID)
+        {
+            if (fileID == 0)
+            {
+                var objInfo = Metadata.ObjectInfos.FirstOrDefault(x => x.ObjectID == pathID);
+                if (objInfo == null)
+                    throw new Exception($"Object info could not be found for path id {pathID} in file {AssetsFileName}");
+                var objTypedInfo = objInfo as IObjectInfo<T>;
+                if (objTypedInfo == null)
+                    throw new Exception($"Object was the wrong type!  Pointer expected {typeof(T).Name}, target was actually {(objInfo.GetType().GenericTypeArguments[0]?.Name)}");
+                return objTypedInfo;
+            }
+            else
+            {
+                var file = Metadata.ExternalFiles[fileID-1];
+                var externFile = Manager.GetAssetsFile(file.FileName);
+                return externFile.GetObjectInfo<T>(0, pathID);
+            }
+        }
+
+        private void CleanupPtrs(IObjectInfo<AssetsObject> objectInfo)
+        {
+
+            //TODO implement for colections, go over this logic and make it right
+            foreach (var ptr in _knownPointers.Where(x=> x.Owner == objectInfo.Object || x.Target == objectInfo.Object).ToList())
+            {
+                if (ptr.Owner == objectInfo.Object)
+                {
+                    //is this a problem?
+                    Log.LogMsg($"Pointer is being removed that is owned by this file, cleaning up the target ref.  Owner type: {ptr.Owner.GetType().Name}");
+                    if (ptr.Target != null)
+                    {
+                        //is this ok?
+                        ptr.Target.ParentFile.RemovePtrRef(ptr);
+                    }
+                    ptr.Dispose();
+                }
+                else if (ptr.Target == objectInfo.Object)
+                {
+                    if (ptr.Owner != null)
+                    {
+                        Log.LogErr($"Pointer is still set to target an object of type {ptr.Target.GetType().Name} being removed that is still alive!  Owner type: {ptr.Owner.GetType().Name}.");
+                        throw new Exception("Pointer owner is still using this object!");
+                    }
+                }
+                
+            }
+        }
+
+
 
         public void DeleteObject(AssetsObject assetsObject)
         {
-            Objects.Remove(assetsObject);
+            //TODO: implement dispose on these or something?
+            var obj = Metadata.ObjectInfos.FirstOrDefault(x => x.Object == assetsObject);
+            if (obj == null)
+            {
+                Log.LogErr("Tried to delete an object that wasn't part of this file");
+                return;
+            }
+            
             Metadata.ObjectInfos.Remove(assetsObject.ObjectInfo);
             //TODO: IDs need to be shored up at all?  reflection loop through all objects looking for refs?
-        }
 
-        /// <summary>
-        /// This is REALLY unsafe, as it can break lots of things if it guesses they aren't in use but they are referenced from another file
-        /// </summary>
-        public void DeleteObjectRecursive(AssetsObject assetsObject)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// This is unsafe and will only validate against objects in this file that have known/parsed types
-        /// </summary>
-        public bool ObjectInUseInFile(PPtr objectPtr)
-        {
-            //this is probably going to be slow
-            foreach (AssetsObject obj in Objects)
-            {
-                foreach (var prop in obj.GetType().GetProperties().Where(x=>x.PropertyType == typeof(PPtr)))
-                {
-                    var ptr = prop.GetValue(obj, null) as PPtr;
-                    if (ptr == null)
-                        continue;
-                    //if the pointer doesn't point to this file, skip it
-                    if (ptr.FileID != 0)
-                        continue;
-                    if (ptr.PathID == objectPtr.PathID)
-                        return true;
-                }
-            }
-            return false;
+            CleanupPtrs(assetsObject.ObjectInfo);
         }
 
         

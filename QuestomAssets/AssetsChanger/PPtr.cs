@@ -5,15 +5,15 @@ using System.Text;
 
 namespace QuestomAssets.AssetsChanger
 {
-    public class PPtr
+    public class RawPtr
     {
         public override bool Equals(object obj)
         {
             if (obj == null)
                 return false;
-            if (!(obj is PPtr))
+            if (!(obj is RawPtr))
                 return false;
-            return this == (PPtr)obj;
+            return this == (RawPtr)obj;
         }
 
         public override int GetHashCode()
@@ -21,7 +21,7 @@ namespace QuestomAssets.AssetsChanger
             return FileID.GetHashCode() ^ PathID.GetHashCode();
         }
 
-        public PPtr(UPtr uptr)
+        public RawPtr(UPtr uptr)
         {
             FileID = uptr.FileID;
             PathID = uptr.PathID;
@@ -29,17 +29,17 @@ namespace QuestomAssets.AssetsChanger
         public int FileID { get; private set; }
         public Int64 PathID { get; private set; }
 
-        public static bool operator == (PPtr a, PPtr b)
+        public static bool operator ==(RawPtr a, RawPtr b)
         {
             return AreEqual(a, b);
         }
 
-        public static bool operator != (PPtr a, PPtr b)
+        public static bool operator !=(RawPtr a, RawPtr b)
         {
             return !AreEqual(a, b);
         }
 
-        private static bool AreEqual(PPtr a, PPtr b)
+        private static bool AreEqual(RawPtr a, RawPtr b)
         {
             if (object.ReferenceEquals(a, b))
                 return true;
@@ -48,17 +48,18 @@ namespace QuestomAssets.AssetsChanger
             return (a.PathID == b.PathID && a.FileID == b.FileID);
         }
 
-        public PPtr() {
+        public RawPtr()
+        {
             FileID = 0;
             PathID = 0;
         }
-        public PPtr(int fileID, Int64 pathID)
+        public RawPtr(int fileID, Int64 pathID)
         {
             FileID = fileID;
             PathID = pathID;
         }
 
-        public PPtr(AssetsReader reader)
+        public RawPtr(AssetsReader reader)
         {
             Parse(reader);
         }

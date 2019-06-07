@@ -13,34 +13,29 @@ namespace QuestomAssets.AssetsChanger
         public virtual byte[] Data { get; set; }
 
         [JsonIgnore]
-        public ObjectInfo ObjectInfo { get; set; }
+        public IObjectInfo<AssetsObject> ObjectInfo { get; set; }
 
         public AssetsObject()
         { }
 
-        public AssetsObject(AssetsMetadata metadata, int classID)
+        public AssetsObject(AssetsFile assetsFile, int classID)
         {
-            ObjectInfo = new ObjectInfo()
-            {
-                TypeIndex = metadata.Types.IndexOf(metadata.Types.First(x => x.ClassID == classID))
-            };
+
+            ObjectInfo = ObjectInfo<AssetsObject>.FromClassID(assetsFile, classID, this);
+            
         }
 
-
-        public AssetsObject(AssetsMetadata metadata, Guid scriptHash)
+        public AssetsObject(AssetsFile assetsFile, Guid typeHash)
         {
-            ObjectInfo = new ObjectInfo()
-            {
-                TypeIndex = metadata.GetTypeIndexFromScriptHash(scriptHash)
-            };
+            ObjectInfo = ObjectInfo<AssetsObject>.FromTypeHash(assetsFile, typeHash, this);
         }
 
-        public AssetsObject(ObjectInfo objectInfo)
+        protected AssetsObject(IObjectInfo<AssetsObject> objectInfo)
         {
             ObjectInfo = objectInfo;
         }
 
-        public AssetsObject(ObjectInfo objectInfo, AssetsReader reader)
+        public AssetsObject(IObjectInfo<AssetsObject> objectInfo, AssetsReader reader)
         {
             ObjectInfo = objectInfo;
             Parse(reader);

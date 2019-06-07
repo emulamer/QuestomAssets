@@ -1,46 +1,76 @@
 ﻿using Emulamer.Utils;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Text;
+using System.Linq;
 
 namespace QuestomAssets.Utils
 {
+    public class FilePatch
+    {
+        public string Filename { get; set; }
+        public UInt32 ExpectedFileSize { get; set; }
+        public List<Patch> Patches { get; set; }
+    }
+    public class Patch
+    {
+        public string Name { get; set; }
+        public UInt32 Address { get; set; }
+        public List<byte> ExpectedData { get; set; }
+        public List<byte> PatchData { get; set; }
+    }
     public class Patcher
     {
-        public static bool PatchBeatmapSigCheck(Apkifier apk)
+        
+        public static bool PatchBeatmapSigCheck(Apkifier apk, FilePatch patch)
         {
-            string binaryFile = "lib/armeabi-v7a/libil2cpp.so";
+            string binaryFile = patch.Filename;
             if (!apk.FileExists(binaryFile))
             {
                 Console.WriteLine("Binary file to patch doesn't exist in the APK!");
                 return false;
             }
             byte[] binaryBytes = apk.Read(binaryFile);
-            if (binaryBytes.Length != 26901596)
+            if (binaryBytes.Length != patch.ExpectedFileSize)
             {
                 Console.WriteLine("Binary file to patch is the wrong length!");
                 return false;
             }
-            Console.WriteLine("Patching binary...");
+            List<Patch> toApply = new List<Patch>();
+            Console.WriteLine("Verifying patches binary...");
             using (MemoryStream msBinary = new MemoryStream(binaryBytes))
             {
-                msBinary.Seek(0x491578, SeekOrigin.Begin);
-                byte[] readVals = new byte[4];
-                msBinary.Read(readVals, 0, 4);
-                if (readVals[0] != 0x00 || readVals[1] != 0x00 || readVals[2] != 0xA0 || readVals[3] != 0xE3)
+                //verify each of the patches can be applied or already are applied
+                foreach (Patch p in patch.Patches)
                 {
-                    if (readVals[0] == 0x01 && readVals[1] == 0x00 && readVals[2] == 0xA0 && readVals[3] == 0xE3)
+                    msBinary.Seek(p.Address, SeekOrigin.Begin);
+                    byte[] readVals = new byte[p.ExpectedData.Count];
+                    msBinary.Read(readVals, 0, p.ExpectedData.Count);
+
+                    if (!readVals.SequenceEqual(p.ExpectedData))
                     {
-                        Console.WriteLine("It already appears to be patched.");
-                        return true;
-                    }
-                    else
-                    {
-                        Console.WriteLine("Can't patch this binary, the code at the patch location doesn't look familiar...");
-                        return false;
+                        msBinary.Seek(p.Address, SeekOrigin.Begin);
+                        readVals = new byte[p.PatchData.Count];
+                        msBinary.Read(readVals, 0, p.PatchData.Count);
+                        if (readVals.SequenceEqual(p.PatchData))
+                        {
+                            Console.WriteLine($"Patch {p.Name} already appears to be applied.");
+                            continue;
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Patch {p.Name} can't be applied to this binary, the code at the patch location doesn't match what was expected.  Aborting any patching...");
+                            //if one patch can't be applied, abort the whole thing
+                            return false;
+                        }
                     }
                 }
-                msBinary.Seek(0x491578, SeekOrigin.Begin);
-                msBinary.Write(new byte[] { 0x01, 0x00, 0xA0, 0xE3 }, 0, 4);
+                foreach (Patch p in toApply)
+                {
+                    msBinary.Seek(p.Address, SeekOrigin.Begin);
+                    msBinary.Write(p.PatchData.ToArray(), 0, p.PatchData.Count);
+                }
                 msBinary.Seek(0, SeekOrigin.Begin);
                 byte[] binaryOutData = msBinary.ToArray();
                 apk.Write(msBinary, binaryFile, true, true);
@@ -48,7 +78,6 @@ namespace QuestomAssets.Utils
             Console.WriteLine("Done patching binary!");
             return true;
         }
-
 
     }
 }

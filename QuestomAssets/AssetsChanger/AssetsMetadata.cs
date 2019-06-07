@@ -8,23 +8,25 @@ namespace QuestomAssets.AssetsChanger
 {
     public class AssetsMetadata
     {
-        public AssetsMetadata(AssetsFile owner, AssetsReader reader)
+        public AssetsMetadata(AssetsFile owner)
         {
             Types = new List<AssetsType>();
-            ObjectInfos = new List<ObjectInfo>();
-            Adds = new List<PPtr>();
+            ObjectInfos = new List<IObjectInfo<AssetsObject>>();
+            Adds = new List<RawPtr>();
             ExternalFiles = new List<ExternalFile>();
-            Parse(reader);
-            Owner = owner;
+            ParentFile = owner;
         }
+
+
         public string Version { get; set; }
         public Int32 Platform { get; set; }
         public bool HasTypeTrees { get; set; }
         public List<AssetsType> Types { get; set; }
-        public List<ObjectInfo> ObjectInfos { get; set; }
-        public List<PPtr> Adds { get; set; }
+        public List<IObjectInfo<AssetsObject>> ObjectInfos { get; set; }
+        //TODO: figure out what adds are
+        public List<RawPtr> Adds { get; set; }
         public List<ExternalFile> ExternalFiles { get; set; }
-        public AssetsFile Owner { get; set; }
+        public AssetsFile ParentFile { get; set; }
 
         public void Parse(AssetsReader reader)
         {
@@ -40,15 +42,14 @@ namespace QuestomAssets.AssetsChanger
             for (int i = 0; i < numObj; i++)
             {
                 reader.AlignTo(4);
-                var obj = new ObjectInfo(reader);
-                obj.ParentFile = Owner;
+                var obj = ObjectInfo<AssetsObject>.Parse(ParentFile, reader);
                 ObjectInfos.Add(obj);
             }
             int numAdds = reader.ReadInt32();
             for (int i = 0; i < numAdds; i++)
             {
                 reader.AlignTo(4);
-                Adds.Add(new PPtr(reader));
+                Adds.Add(new RawPtr(reader));
             }
             int numExt = reader.ReadInt32();
             for (int i = 0; i < numExt; i++)
@@ -76,29 +77,29 @@ namespace QuestomAssets.AssetsChanger
             ExternalFiles.ForEach(x => x.Write(writer));
             writer.WriteCString("");
         }
-        public int GetTypeIndexFromClassID(int classID)
-        {
-            var type = Types.FirstOrDefault(x => x.ClassID == classID);
-            if (type == null)
-                throw new ArgumentException("ClassID was not found in metadata.");
+        //public int GetTypeIndexFromClassID(int classID)
+        //{
+        //    var type = Types.FirstOrDefault(x => x.ClassID == classID);
+        //    if (type == null)
+        //        throw new ArgumentException("ClassID was not found in metadata.");
 
-            return Types.IndexOf(type);
-        }
+        //    return Types.IndexOf(type);
+        //}
 
-        public int GetTypeIndexFromScriptHash(Guid hash)
-        {
-            var type = Types.FirstOrDefault(x => x.ScriptHash == hash);
-            if (type == null)
-                throw new ArgumentException("Script hash was not found in metadata.");
-            return Types.IndexOf(type);
-        }
+        //public int GetTypeIndexFromScriptHash(Guid hash)
+        //{
+        //    var type = Types.FirstOrDefault(x => x.ScriptHash == hash);
+        //    if (type == null)
+        //        throw new ArgumentException("Script hash was not found in metadata.");
+        //    return Types.IndexOf(type);
+        //}
 
-        public int GetClassIDFromTypeIndex(int typeIndex)
-        {
-            if (typeIndex < 1 || typeIndex > Types.Count() - 1)
-                throw new ArgumentException("There is no type at this index.");
-            return Types[typeIndex].ClassID;
-        }
+        //public int GetClassIDFromTypeIndex(int typeIndex)
+        //{
+        //    if (typeIndex < 1 || typeIndex > Types.Count() - 1)
+        //        throw new ArgumentException("There is no type at this index.");
+        //    return Types[typeIndex].ClassID;
+        //}
     }
 }
 

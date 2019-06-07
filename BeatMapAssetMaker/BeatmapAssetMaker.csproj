@@ -3,6 +3,7 @@
   <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputType>Exe</OutputType>
     <TargetFrameworks>netcoreapp2.2;net462</TargetFrameworks>
+	<RuntimeIdentifiers>win10-x64;osx.10.11-x64;ubuntu.16.04-x64;android-21</RuntimeIdentifiers>
     <AssemblyTitle>BeatmapAssetMaker</AssemblyTitle>
     <Product>BeatmapAssetMaker</Product>
     <Copyright>Copyright ©  2019</Copyright>
@@ -54,7 +55,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Update="BeatmapAssetMaker.runtimeconfig.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 </Project>

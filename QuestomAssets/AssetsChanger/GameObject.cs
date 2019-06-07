@@ -9,12 +9,12 @@ namespace QuestomAssets.AssetsChanger
 {
     public class GameObject : AssetsObject, IHaveName
     {
-        public GameObject(AssetsMetadata metadata) : base(metadata, AssetsConstants.ClassID.GameObjectClassID)
+        public GameObject(AssetsFile assetsFile) : base(assetsFile, AssetsConstants.ClassID.GameObjectClassID)
         {
             IsActive = true;
         }
 
-        public GameObject(ObjectInfo objectInfo, AssetsReader reader) : base(objectInfo)
+        public GameObject(IObjectInfo<AssetsObject> objectInfo, AssetsReader reader) : base(objectInfo)
         {
             Parse(reader);
             ParseDetails(reader);
@@ -25,10 +25,10 @@ namespace QuestomAssets.AssetsChanger
         //    base.UpdateType(metadata, scriptHash);
         //}
 
-        public GameObject()
-        { IsActive = true; }
+        //public GameObject()
+        //{ IsActive = true; }
 
-        public GameObject(ObjectInfo objectInfo) : base(objectInfo)
+        protected GameObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
         { IsActive = true; }
 
 
@@ -41,7 +41,7 @@ namespace QuestomAssets.AssetsChanger
         {
             int count = reader.ReadInt32();
             for (int i = 0; i < count; i++)
-                Component.Add(new PPtr(reader));
+                Component.Add(SmartPtr<AssetsObject>.Read(ObjectInfo.ParentFile, this, reader));
             Layer = reader.ReadUInt32();
             Name = reader.ReadString();
             Tag = reader.ReadUInt16();
@@ -63,9 +63,9 @@ namespace QuestomAssets.AssetsChanger
         public override void Write(AssetsWriter writer)
         {
             WriteBase(writer);
-        } 
+        }
 
-        public List<PPtr> Component { get; set; }
+        public List<ISmartPtr<AssetsObject>> Component { get; set; } = new List<ISmartPtr<AssetsObject>>();
 
         public UInt32 Layer { get; set; }
 

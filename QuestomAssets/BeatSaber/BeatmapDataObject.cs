@@ -12,28 +12,23 @@ namespace QuestomAssets.BeatSaber
 {
     public class BeatmapDataObject: MonoBehaviourObject
     {
-        public BeatmapDataObject(ObjectInfo objectInfo, AssetsReader reader) : base(objectInfo)
+        public BeatmapDataObject(IObjectInfo<AssetsObject> objectInfo, AssetsReader reader) : base(objectInfo)
         {
             Parse(reader);
         }
 
-        public BeatmapDataObject(ObjectInfo objectInfo) : base(objectInfo)
+        //public BeatmapDataObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
+        //{ }
+
+        public BeatmapDataObject(AssetsFile assetsFile) : base(assetsFile, assetsFile.Manager.GetScriptObject("BeatmapDataSO"))
         { }
 
-        public BeatmapDataObject(AssetsMetadata metadata) : base(metadata, BSConst.ScriptHash.BeatmapDataHash, BSConst.ScriptPtr.BeatmapDataScriptPtr)
-        { }
-
-        //public void UpdateTypes(AssetsMetadata metadata)
+        
+        
+        //public BeatmapDataObject(AssetsReader reader)
         //{
-        //    base.UpdateType(metadata, BSConst.ScriptHash.BeatmapDataHash, BSConst.ScriptPtr.BeatmapDataScriptPtr);
+        //    Parse(reader);
         //}
-        public BeatmapDataObject()
-        {  }
-
-        public BeatmapDataObject(AssetsReader reader)
-        {
-            Parse(reader);
-        }
 
         protected override void Parse(AssetsReader reader)
         {

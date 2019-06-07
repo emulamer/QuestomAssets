@@ -8,15 +8,15 @@ namespace QuestomAssets.AssetsChanger
 {
     public sealed class Texture2DObject : AssetsObject, IHaveName
     {
-        public Texture2DObject(ObjectInfo objectInfo, AssetsReader reader) : base(objectInfo)
+        public Texture2DObject(IObjectInfo<AssetsObject> objectInfo, AssetsReader reader) : base(objectInfo)
         {
             Parse(reader);
         }
 
-        public Texture2DObject(ObjectInfo objectInfo) : base(objectInfo)
-        { }
+        //public Texture2DObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
+        //{ }
 
-        public Texture2DObject(AssetsMetadata metadata) : base(metadata, AssetsConstants.ClassID.Texture2DClassID)
+        public Texture2DObject(AssetsFile assetsFile) : base(assetsFile, AssetsConstants.ClassID.Texture2DClassID)
         { }
 
         protected override void Parse(AssetsReader reader)

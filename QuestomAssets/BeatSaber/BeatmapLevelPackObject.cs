@@ -10,30 +10,26 @@ namespace QuestomAssets.BeatSaber
 {
     public sealed class BeatmapLevelPackObject : MonoBehaviourObject, INeedAssetsMetadata
     {
-        public BeatmapLevelPackObject(AssetsMetadata metadata) : base(metadata, BSConst.ScriptHash.BeatmapLevelPackScriptHash, BSConst.ScriptPtr.BeatmapLevelPackScriptPtr)
+
+        public BeatmapLevelPackObject(AssetsFile assetsFile) : base(assetsFile, assetsFile.Manager.GetScriptObject("BeatmapLevelPackSO"))
         { }
 
-        public BeatmapLevelPackObject(ObjectInfo objectInfo, AssetsReader reader) : base(objectInfo)
+        public BeatmapLevelPackObject(IObjectInfo<AssetsObject> objectInfo, AssetsReader reader) : base(objectInfo)
         {
             Parse(reader);
         }
-        public BeatmapLevelPackObject(ObjectInfo objectInfo) : base(objectInfo)
-        { }
-
-        //public void UpdateTypes(AssetsMetadata metadata)
-        //{
-        //    base.UpdateType(metadata, BSConst.ScriptHash.BeatmapLevelPackScriptHash, BSConst.ScriptPtr.BeatmapLevelPackScriptPtr);
-        //}
+        //public BeatmapLevelPackObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
+        //{ }
 
         public string PackID { get; set; }
 
         public string PackName { get; set; }
 
-        public PPtr CoverImage { get; set; }
+        public ISmartPtr<SpriteObject> CoverImage { get; set; }
 
         public bool IsPackAlwaysOwned { get; set; }
 
-        public PPtr BeatmapLevelCollection { get; set; }
+        public ISmartPtr<BeatmapLevelCollectionObject> BeatmapLevelCollection { get; set; }
 
         public override void Write(AssetsWriter writer)
         {
@@ -50,9 +46,9 @@ namespace QuestomAssets.BeatSaber
             base.Parse(reader);
             PackID = reader.ReadString();
             PackName = reader.ReadString();
-            CoverImage = new PPtr(reader);
+            CoverImage = SmartPtr<SpriteObject>.Read(ObjectInfo.ParentFile, this, reader);
             IsPackAlwaysOwned = reader.ReadBoolean();
-            BeatmapLevelCollection = new PPtr(reader);
+            BeatmapLevelCollection = SmartPtr<BeatmapLevelCollectionObject>.Read(ObjectInfo.ParentFile, this, reader);
         }
 
         public override byte[] ScriptParametersData

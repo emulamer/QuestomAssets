@@ -10,15 +10,15 @@ namespace QuestomAssets.BeatSaber
 {
     public sealed class MainLevelPackCollectionObject : MonoBehaviourObject
     {
-        public MainLevelPackCollectionObject(ObjectInfo objectInfo, AssetsReader reader) : base(objectInfo)
+        public MainLevelPackCollectionObject(IObjectInfo<AssetsObject> objectInfo, AssetsReader reader) : base(objectInfo)
         {
             Parse(reader);
         }
 
-        public MainLevelPackCollectionObject(ObjectInfo objectInfo) : base(objectInfo)
-        { }
+        //public MainLevelPackCollectionObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
+        //{ }
 
-        public MainLevelPackCollectionObject(AssetsMetadata metadata) : base(metadata, BSConst.ScriptHash.MainLevelsCollectionHash, BSConst.ScriptPtr.MainLevelsCollectionScriptPtr)
+        public MainLevelPackCollectionObject(AssetsFile assetsFile) : base(assetsFile, assetsFile.Manager.GetScriptObject("BeatmapLevelPackCollectionSO"))
         { }
 
         //public void UpdateTypes(AssetsMetadata metadata)
@@ -26,14 +26,16 @@ namespace QuestomAssets.BeatSaber
         //    base.UpdateType(metadata, BSConst.ScriptHash.MainLevelsCollectionHash, BSConst.ScriptPtr.MainLevelsCollectionScriptPtr);
         //}
 
-        public List<PPtr> BeatmapLevelPacks { get; set; } = new List<PPtr>();
-        public List<PPtr> PreviewBeatmapLevelPacks { get; set; } = new List<PPtr>();
+        public List<ISmartPtr<BeatmapLevelPackObject>> BeatmapLevelPacks { get; set; } = new List<ISmartPtr<BeatmapLevelPackObject>>();
+        public List<ISmartPtr<MonoBehaviourObject>> PreviewBeatmapLevelPacks { get; set; } = new List<ISmartPtr<MonoBehaviourObject>>();
 
         protected override void Parse(AssetsReader reader)
         {
+            //new PPtr(x)
+            //to SmartPtr<BeatmapLevelPackObject>.Read(ObjectInfo.ParentFile,x)
             base.Parse(reader);
-            BeatmapLevelPacks = reader.ReadArrayOf(x => new PPtr(x));
-            PreviewBeatmapLevelPacks = reader.ReadArrayOf(x => new PPtr(x));
+            BeatmapLevelPacks = reader.ReadArrayOf(x => SmartPtr<BeatmapLevelPackObject>.Read(ObjectInfo.ParentFile, this, x) ).Cast<ISmartPtr<BeatmapLevelPackObject>>().ToList();
+            PreviewBeatmapLevelPacks = reader.ReadArrayOf(x => SmartPtr<MonoBehaviourObject>.Read(ObjectInfo.ParentFile, this, x)).Cast<ISmartPtr<MonoBehaviourObject>>().ToList();
         }
 
         public override void Write(AssetsWriter writer)
