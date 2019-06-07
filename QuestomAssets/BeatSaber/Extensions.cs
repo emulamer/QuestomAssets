@@ -69,7 +69,7 @@ namespace QuestomAssets.BeatSaber
                 assetsFile.Write(ws);            
         }
 
-        public static Stream ReadCombinedAssets(this IApkFileIO apk, string assetsFilePath)
+        public static MemoryStream ReadCombinedAssetsToMemoryStream(this IApkFileIO apk, string assetsFilePath)
         {
             string actualName = apk.CorrectAssetFilename(assetsFilePath);
 
@@ -81,7 +81,7 @@ namespace QuestomAssets.BeatSaber
             }
             else
             {
-                return apk.Read(actualName).ToStream();
+                return apk.Read(actualName).ToMemoryStream();
             }
             MemoryStream msFullFile = new MemoryStream();
             foreach (string assetsFile in assetFiles)

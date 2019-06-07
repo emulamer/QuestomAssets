@@ -20,7 +20,7 @@ namespace QuestomAssets.AssetsChanger
             return new SmartPtr<T>(owner, objectInfo);
         }
 
-        public static Stream ToStream(this byte[] bytes)
+        public static MemoryStream ToMemoryStream(this byte[] bytes)
         {
             return new MemoryStream(bytes);
         }

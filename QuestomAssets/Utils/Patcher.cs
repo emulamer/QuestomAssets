@@ -23,7 +23,7 @@ namespace QuestomAssets.Utils
     public class Patcher
     {
         
-        public static bool PatchBeatmapSigCheck(Apkifier apk, FilePatch patch)
+        public static bool PatchBeatmapSigCheck(IApkFileIO apk, FilePatch patch)
         {
             string binaryFile = patch.Filename;
             if (!apk.FileExists(binaryFile))

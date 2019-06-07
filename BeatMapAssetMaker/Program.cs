@@ -133,8 +133,16 @@ namespace BeatmapAssetMaker
                     }
                     
                     Log.LogMsg($"Config parsed");
-                    
 
+                    if (!args.NoPatch)
+                    {
+                        Log.LogMsg($"Applying patches...");
+                        if (!q.ApplyPatchSettingsFile())
+                        {
+                            Log.LogErr("Failed to apply patches.  Cannot continue.");
+                            return -1;
+                        }
+                    }
 
                     Log.LogMsg("Applying new configuration...");
                     q.UpdateConfig(config);

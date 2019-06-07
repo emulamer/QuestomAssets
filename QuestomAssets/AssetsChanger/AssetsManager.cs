@@ -8,23 +8,23 @@ using System.Text;
 
 namespace QuestomAssets.AssetsChanger
 {
+    public interface IApkFileIOProvider 
+    {
+        IApkFileIO GetApkFileIO(bool readOnly);
+    }
+
     public class AssetsManager : IDisposable
     {
-        private IApkFileIO _apkReader;
+
         public Dictionary<string, Type> ClassNameToTypes { get; private set; } = new Dictionary<string, Type>();
         public bool UseTempFiles {get; private set;}
-        //private Apkifier _apkReader;
-        //TODO: to make it useful for anything else, shouldn't be an APK path, should be something that implements an interface
-        public AssetsManager(IApkFileIO apkReader, Dictionary<string, Type> classNameToTypes, bool lazyLoad = false, bool useTempFiles = false)
+        private IApkFileIOProvider _apkProvider;
+        public AssetsManager(IApkFileIOProvider apkProvider, Dictionary<string, Type> classNameToTypes, bool lazyLoad = false, bool useTempFiles = false)
         {
-            _apkReader = apkReader;
+            _apkProvider = apkProvider;
             LazyLoad = lazyLoad;
             ClassNameToTypes = classNameToTypes;
             UseTempFiles = useTempFiles;
-        }
-        public void SetReader(IApkFileIO reader)
-        {
-            _apkReader = reader;
         }
         private Dictionary<string, AssetsFile> _openAssetsFiles = new Dictionary<string, AssetsFile>();
         public bool LazyLoad { get; private set; }
@@ -41,7 +41,9 @@ namespace QuestomAssets.AssetsChanger
         {
             if (_openAssetsFiles.ContainsKey(assetsFilename))
                 return _openAssetsFiles[assetsFilename];
-            Stream stream = _apkReader.ReadCombinedAssets(BSConst.KnownFiles.AssetsRootPath + assetsFilename);
+            Stream stream = null;
+            using (IApkFileIO apk = _apkProvider.GetApkFileIO(true))
+                stream = apk.ReadCombinedAssetsToMemoryStream(BSConst.KnownFiles.AssetsRootPath + assetsFilename);
             if (UseTempFiles)
             {
                 var tempFile = Path.GetTempFileName();
@@ -60,25 +62,28 @@ namespace QuestomAssets.AssetsChanger
             return assetsFile;
         }
 
-        public void WriteAllOpenAssets(IApkFileIO apkWriter)
+        public void WriteAllOpenAssets()
         {
             foreach (var assetsFileName in _openAssetsFiles.Keys.ToList())
             {
-                var assetsFile = _openAssetsFiles[assetsFileName];
-                if (assetsFile.HasChanges)
+                using (IApkFileIO apk = _apkProvider.GetApkFileIO(false))
                 {
-                    Log.LogMsg($"File {assetsFileName} has changed, writing new contents.");
-                    try
+                    var assetsFile = _openAssetsFiles[assetsFileName];
+                    if (assetsFile.HasChanges)
                     {
-                        apkWriter.WriteCombinedAssets(assetsFile, BSConst.KnownFiles.AssetsRootPath + assetsFileName);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.LogErr($"Exception writing assets file {assetsFileName}", ex);
-                        throw;
+                        Log.LogMsg($"File {assetsFileName} has changed, writing new contents.");
+                        try
+                        {
+
+                            apk.WriteCombinedAssets(assetsFile, BSConst.KnownFiles.AssetsRootPath + assetsFileName);
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.LogErr($"Exception writing assets file {assetsFileName}", ex);
+                            throw;
+                        }
                     }
                 }
-                //_openAssetsFiles.Remove(assetsFileName);
             }
         }
 
