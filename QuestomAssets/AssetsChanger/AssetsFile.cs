@@ -45,8 +45,6 @@ namespace QuestomAssets.AssetsChanger
 
         public AssetsMetadata Metadata { get; set; }
 
-        // public List<AssetsObject> Objects { get; set; }
-
         public AssetsReader GetReaderAtDataOffset()
         {
             BaseStream.Seek(Header.ObjectDataOffset, SeekOrigin.Begin);
@@ -93,8 +91,6 @@ namespace QuestomAssets.AssetsChanger
                 Metadata.Parse(reader);
             }
             assetsFileStream.Seek(Header.ObjectDataOffset, SeekOrigin.Begin);
-
-
 
             if (!manager.LazyLoad)
             {
@@ -200,7 +196,6 @@ namespace QuestomAssets.AssetsChanger
                 throw new ArgumentException("ObjectInfo.ObjectID already exists in this file.");
 
             Metadata.ObjectInfos.Add(assetsObject.ObjectInfo);
-            //Objects.Add(assetsObject);
         }
 
         public string GetFilenameForFileID(int fileID)

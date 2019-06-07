@@ -32,7 +32,7 @@ namespace QuestomAssets
             _readOnly = readOnly;
             _apkFilename = apkFilename;
             _apk = new Apkifier(apkFilename, !readOnly, readOnly?null:pemCertificateData, readOnly);
-            _manager = new AssetsManager(_apk, BSConst.GetAssetTypeMap(), true);
+            _manager = new AssetsManager(_apk, BSConst.GetAssetTypeMap(), false);
             _manager.GetAssetsFile("globalgamemanagers");
         }
 
