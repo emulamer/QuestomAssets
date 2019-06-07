@@ -14,10 +14,10 @@ namespace QuestomAssets
     public class QuestomAssetsEngine : IDisposable
     {
         private string _apkFilename;
-        private Apkifier _apk;
         private bool _readOnly;
-
+        private Apkifier _apkReader;
         private AssetsManager _manager;
+        private string _pemData;
         //TODO: fix cross-asset file loading of stuff before turning this to false, some of the OST Vol 1 songs are in another file
         public bool HideOriginalPlaylists { get; private set; } = true;
 
@@ -29,11 +29,13 @@ namespace QuestomAssets
         /// <param name="pemCertificateData">The contents of the PEM certificate that will be used to sign the APK.  If omitted, a new self signed cert will be generated.</param>
         public QuestomAssetsEngine(string apkFilename, bool readOnly = false, string pemCertificateData = BSConst.DebugCertificatePEM)
         {
+            _pemData = pemCertificateData;
             _readOnly = readOnly;
             _apkFilename = apkFilename;
-            _apk = new Apkifier(apkFilename, !readOnly, readOnly?null:pemCertificateData, readOnly);
-            _manager = new AssetsManager(_apk, BSConst.GetAssetTypeMap(), true);
+            OpenReader();
+            _manager = new AssetsManager(_apkReader, BSConst.GetAssetTypeMap(), true, true);
             _manager.GetAssetsFile("globalgamemanagers");
+
         }
 
         public BeatSaberQuestomConfig GetCurrentConfig(bool suppressImages = false)
@@ -306,15 +308,31 @@ namespace QuestomAssets
             songsAssetFile.DeleteObject(sprite);
         }
 
+        private void CloseReader()
+        {
+            if (_apkReader != null)
+            {
+                _apkReader.Dispose();
+                _apkReader = null;
+            }
+            _manager.SetReader(null);
+        }
+
+        private void OpenReader()
+        {
+            _apkReader = new Apkifier(_apkFilename, false, null, true);
+            if (_manager != null)
+                _manager.SetReader(_apkReader);
+        }
 
         public void UpdateConfig(BeatSaberQuestomConfig config)
         {
             //todo: basic validation of the config
             if (_readOnly)
                 throw new InvalidOperationException("Cannot update in read only mode.");
- 
+
             //get the old config before we start on this
-            var originalConfig = GetCurrentConfig();
+            var originalConfig = GetCurrentConfig(true);
 
             //get existing playlists and their songs
             //compare with new ones
@@ -334,7 +352,7 @@ namespace QuestomAssets
 
 
             var packsToUnlink = mainLevelPack.BeatmapLevelPacks.Where(x => !HideOriginalPlaylists || !BSConst.KnownLevelPackIDs.Contains(x.Object.PackID)).ToList();
-            var packsToRemove = mainLevelPack.BeatmapLevelPacks.Where(x => !BSConst.KnownLevelPackIDs.Contains(x.Object.PackID) && !config.Playlists.Any(y=> y.PlaylistID == x.Object.PackID)).Select(x=>x.Object).ToList();
+            var packsToRemove = mainLevelPack.BeatmapLevelPacks.Where(x => !BSConst.KnownLevelPackIDs.Contains(x.Object.PackID) && !config.Playlists.Any(y => y.PlaylistID == x.Object.PackID)).Select(x => x.Object).ToList();
             foreach (var unlink in packsToUnlink)
             {
                 mainLevelPack.BeatmapLevelPacks.Remove(unlink);
@@ -362,7 +380,7 @@ namespace QuestomAssets
             removeSongs.ForEach(x => RemoveLevelAssets(x, audioFilesToDelete));
 
             packsToRemove.ForEach(x => RemoveLevelPackAssets(x));
-            
+
 
             //relink all the level packs in order
             var addPacks = config.Playlists.Select(x => x.LevelPackObject.PtrFrom(mainLevelPack));
@@ -384,7 +402,7 @@ namespace QuestomAssets
             }
             foreach (var toDelete in audioFilesToDelete)
             {
-                sizeGuess -= _apk.GetFileSize(BSConst.KnownFiles.AssetsRootPath + toDelete);
+                sizeGuess -= _apkReader.GetFileSize(BSConst.KnownFiles.AssetsRootPath + toDelete);
             }
 
             Log.LogMsg("");
@@ -409,38 +427,59 @@ namespace QuestomAssets
                 Log.LogErr("***************ERROR*****************");
                 Log.LogErr($"Proceeding anyways, but you've been warned");
             }
-
-            ////////START WRITING DATA
-            foreach (var pl in config.Playlists)
+            CloseReader();
+            Apkifier apkWriter = null;
+            try
             {
-                foreach (var sng in pl.SongList)
+                apkWriter = new Apkifier(_apkFilename, false, null, false);
+                long sizeCount = 0;
+                ////////START WRITING DATA
+                foreach (var pl in config.Playlists)
                 {
-                    if (sng.SourceOgg != null)
+                    foreach (var sng in pl.SongList)
                     {
-                        var clip = sng.LevelData.AudioClip.Object;
-                        _apk.Write(sng.SourceOgg, BSConst.KnownFiles.AssetsRootPath + clip.Resource.Source, true, false);
-                        //saftey check to make sure we aren't removing a file we just put here
-                        if (audioFilesToDelete.Contains(clip.Resource.Source))
+                        if (sng.SourceOgg != null)
                         {
-                            Log.LogErr($"Level id '{sng.LevelData.LevelID}' wrote file '{clip.Resource.Source}' that was on the delete list...");
-                            audioFilesToDelete.Remove(clip.Resource.Source);
+                            var clip = sng.LevelData.AudioClip.Object;
+                            apkWriter.Write(sng.SourceOgg, BSConst.KnownFiles.AssetsRootPath + clip.Resource.Source, true, false);
+                            //saftey check to make sure we aren't removing a file we just put here
+                            if (audioFilesToDelete.Contains(clip.Resource.Source))
+                            {
+                                Log.LogErr($"Level id '{sng.LevelData.LevelID}' wrote file '{clip.Resource.Source}' that was on the delete list...");
+                                audioFilesToDelete.Remove(clip.Resource.Source);
+                            }
+                            sizeCount = sizeCount + new FileInfo(sng.SourceOgg).Length;
                         }
+                        //if (sizeCount > 300000000)
+                        //{
+                        //    apkWriter.Dispose();
+                        //    apkWriter = new Apkifier(_apkFilename, false, null, false);
+                        //}
                     }
                 }
-            }
 
-            if (audioFilesToDelete.Count > 0)
-            {
-                Log.LogMsg($"Deleting {audioFilesToDelete.ToString()} audio files");
-                foreach (var toDelete in audioFilesToDelete)
+                if (audioFilesToDelete.Count > 0)
                 {
-                    //Log.LogMsg($"Deleting audio file {toDelete}");
-                    _apk.Delete(BSConst.KnownFiles.AssetsRootPath + toDelete);
+                    Log.LogMsg($"Deleting {audioFilesToDelete.ToString()} audio files");
+                    foreach (var toDelete in audioFilesToDelete)
+                    {
+                        //Log.LogMsg($"Deleting audio file {toDelete}");
+                        apkWriter.Delete(BSConst.KnownFiles.AssetsRootPath + toDelete);
+                    }
                 }
-            }
 
-            Log.LogMsg("Serializing all assets...");
-            _manager.WriteAllOpenAssets();
+                Log.LogMsg("Serializing all assets...");
+                _manager.WriteAllOpenAssets(apkWriter);
+            }
+        finally
+            {
+                if (apkWriter != null)
+                    apkWriter.Dispose();
+                
+            }
+        
+
+            OpenReader();
         }
 
 
@@ -480,11 +519,24 @@ namespace QuestomAssets
 
         public bool ApplyPatch(FilePatch patch)
         {
-            
-            if (!Patcher.PatchBeatmapSigCheck(_apk, patch))
+            CloseReader();
+            Apkifier apkWriter = null;
+            try
             {
-                Log.LogErr($"File {patch.Filename} failed to patch!");
-                return false;
+                apkWriter = new Apkifier(_apkFilename);
+                if (!Patcher.PatchBeatmapSigCheck(apkWriter, patch))
+                {
+                    Log.LogErr($"File {patch.Filename} failed to patch!");
+                    return false;
+                }
+            }
+            finally
+            {
+                if (apkWriter != null)
+                {
+                    apkWriter.Dispose();
+                }
+                OpenReader();
             }
 
             return true;
@@ -503,9 +555,11 @@ namespace QuestomAssets
             {
                 if (disposing)
                 {
-                    // TODO: dispose managed state (managed objects).
-                    if (_apk != null)
-                        _apk.Dispose();
+                    if (_manager != null)
+                        _manager.Dispose();
+                    if (_apkReader != null)
+                        _apkReader.Dispose();
+                    
                 }
 
                 disposedValue = true;

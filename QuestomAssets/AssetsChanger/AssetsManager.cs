@@ -2,23 +2,29 @@
 using QuestomAssets.BeatSaber;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 
 namespace QuestomAssets.AssetsChanger
 {
-    public class AssetsManager
+    public class AssetsManager : IDisposable
     {
-
+        private IApkFileIO _apkReader;
         public Dictionary<string, Type> ClassNameToTypes { get; private set; } = new Dictionary<string, Type>();
-
-        private Apkifier _apk;
+        public bool UseTempFiles {get; private set;}
+        //private Apkifier _apkReader;
         //TODO: to make it useful for anything else, shouldn't be an APK path, should be something that implements an interface
-        public AssetsManager(Apkifier apk, Dictionary<string, Type> classNameToTypes, bool lazyLoad = false)
+        public AssetsManager(IApkFileIO apkReader, Dictionary<string, Type> classNameToTypes, bool lazyLoad = false, bool useTempFiles = false)
         {
-            _apk = apk;
+            _apkReader = apkReader;
             LazyLoad = lazyLoad;
             ClassNameToTypes = classNameToTypes;
+            UseTempFiles = useTempFiles;
+        }
+        public void SetReader(IApkFileIO reader)
+        {
+            _apkReader = reader;
         }
         private Dictionary<string, AssetsFile> _openAssetsFiles = new Dictionary<string, AssetsFile>();
         public bool LazyLoad { get; private set; }
@@ -30,16 +36,31 @@ namespace QuestomAssets.AssetsChanger
             }
         }
 
+        private Dictionary<string, string> _tempFileMap = new Dictionary<string, string>();
         public AssetsFile GetAssetsFile(string assetsFilename)
         {
             if (_openAssetsFiles.ContainsKey(assetsFilename))
                 return _openAssetsFiles[assetsFilename];
-            AssetsFile assetsFile = new AssetsFile(this, assetsFilename, _apk.ReadCombinedAssets(BSConst.KnownFiles.AssetsRootPath + assetsFilename), BSConst.GetAssetTypeMap());
+            Stream stream = _apkReader.ReadCombinedAssets(BSConst.KnownFiles.AssetsRootPath + assetsFilename);
+            if (UseTempFiles)
+            {
+                var tempFile = Path.GetTempFileName();
+                var fileStream = File.Open(tempFile, FileMode.Create, FileAccess.ReadWrite);
+                using (stream)
+                {
+                    stream.Seek(0, SeekOrigin.Begin);
+                    stream.CopyTo(fileStream);
+                }
+                _tempFileMap.Add(assetsFilename, tempFile);
+                stream = fileStream;
+                stream.Seek(0, SeekOrigin.Begin);
+            }            
+            AssetsFile assetsFile = new AssetsFile(this, assetsFilename, stream, BSConst.GetAssetTypeMap());
             _openAssetsFiles.Add(assetsFilename, assetsFile);
             return assetsFile;
         }
 
-        public void WriteAllOpenAssets()
+        public void WriteAllOpenAssets(IApkFileIO apkWriter)
         {
             foreach (var assetsFileName in _openAssetsFiles.Keys.ToList())
             {
@@ -49,7 +70,7 @@ namespace QuestomAssets.AssetsChanger
                     Log.LogMsg($"File {assetsFileName} has changed, writing new contents.");
                     try
                     {
-                        _apk.WriteCombinedAssets(assetsFile, BSConst.KnownFiles.AssetsRootPath + assetsFileName);
+                        apkWriter.WriteCombinedAssets(assetsFile, BSConst.KnownFiles.AssetsRootPath + assetsFileName);
                     }
                     catch (Exception ex)
                     {
@@ -57,7 +78,7 @@ namespace QuestomAssets.AssetsChanger
                         throw;
                     }
                 }
-                _openAssetsFiles.Remove(assetsFileName);
+                //_openAssetsFiles.Remove(assetsFileName);
             }
         }
 
@@ -125,5 +146,63 @@ namespace QuestomAssets.AssetsChanger
                         yield return res;
             }
         }
+
+        #region IDisposable Support
+        private bool disposedValue = false; // To detect redundant calls
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    
+                    // TODO: dispose managed state (managed objects).
+                    foreach (var assetsFileName in _openAssetsFiles.Keys.ToList())
+                    {
+                        try
+                        {
+                            if (UseTempFiles)
+                            {
+                                var assetFile = _openAssetsFiles[assetsFileName];
+                                assetFile.BaseStream.Close();
+                                assetFile.BaseStream.Dispose();
+                                try
+                                {
+                                    File.Delete(_tempFileMap[assetsFileName]);
+                                }
+                                catch (Exception ex)
+                                { Log.LogErr("Failed to delete a temp file.", ex); }
+                            }
+                            _openAssetsFiles.Remove(assetsFileName);
+                        }
+                        catch
+                        { }
+                    }
+                }
+
+                // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
+                // TODO: set large fields to null.
+
+                disposedValue = true;
+            }
+        }
+
+        // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
+        // ~AssetsManager()
+        // {
+        //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+        //   Dispose(false);
+        // }
+
+        // This code added to correctly implement the disposable pattern.
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(true);
+            // TODO: uncomment the following line if the finalizer is overridden above.
+            // GC.SuppressFinalize(this);
+        }
+        #endregion
     }
 }

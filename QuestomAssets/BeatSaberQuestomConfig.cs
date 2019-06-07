@@ -12,8 +12,8 @@ namespace QuestomAssets
     /// </summary>
     public class BeatSaberQuestomConfig
     {
-
-
+        
+        
         /// <summary>
         /// The list of playlists (i.e.. level packs) that will show up in Beat Saber
         /// </summary>

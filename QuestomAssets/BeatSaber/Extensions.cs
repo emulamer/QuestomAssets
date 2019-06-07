@@ -10,7 +10,7 @@ namespace QuestomAssets.BeatSaber
 {
     public static class Extensions
     {
-        private static string FindFirstOfSplit(Apkifier apk, string assetsFile)
+        private static string FindFirstOfSplit(IApkFileIO apk, string assetsFile)
         {
             int lastDot = assetsFile.LastIndexOf('.');
             if (lastDot > 0)
@@ -42,7 +42,7 @@ namespace QuestomAssets.BeatSaber
             
         }
 
-        public static string CorrectAssetFilename(this Apkifier apk, string assetsFile)
+        public static string CorrectAssetFilename(this IApkFileIO apk, string assetsFile)
         {
             var correctName = FindFirstOfSplit(apk, assetsFile);
             if (correctName != null)
@@ -60,7 +60,7 @@ namespace QuestomAssets.BeatSaber
 
             throw new ArgumentException("The file doesn't exist in the APK with any name!");
         }
-        public static void WriteCombinedAssets(this Apkifier apk, AssetsFile assetsFile, string assetsFilePath)
+        public static void WriteCombinedAssets(this IApkFileIO apk, AssetsFile assetsFile, string assetsFilePath)
         {
             if (assetsFilePath.EndsWith("split0"))
                 throw new ArgumentException("Don't pass in filenames with split0, pass in the original.");
@@ -69,7 +69,7 @@ namespace QuestomAssets.BeatSaber
                 assetsFile.Write(ws);            
         }
 
-        public static Stream ReadCombinedAssets(this Apkifier apk, string assetsFilePath)
+        public static Stream ReadCombinedAssets(this IApkFileIO apk, string assetsFilePath)
         {
             string actualName = apk.CorrectAssetFilename(assetsFilePath);
 
