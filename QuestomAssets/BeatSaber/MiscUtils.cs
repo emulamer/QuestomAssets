@@ -8,10 +8,10 @@ namespace QuestomAssets.BeatSaber
 {
     public class MiscUtils
     {
-
+        private static HashSet<char> InvalidChars = new HashSet<char>(System.IO.Path.GetInvalidPathChars().Union(System.IO.Path.GetInvalidFileNameChars()).Union(new char[] { ' ' }));
         public static string GetLevelID(string songName)
         {
-            return new string(songName.Where(c => char.IsLetter(c)).ToArray());
+            return new string(songName.Where(c => !InvalidChars.Contains(c)).ToArray());
         }
         //string playlist = @"C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\Playlists\SongBrowserPluginFavorites.json";
         //string customSongsFolder2 = @"C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\CustomSongs";

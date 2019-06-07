@@ -1,5 +1,4 @@
-﻿using Emulamer.Utils;
-using System;
+﻿using System;
 using System.IO;
 using QuestomAssets.AssetsChanger;
 using QuestomAssets.BeatSaber;
@@ -11,13 +10,12 @@ using Newtonsoft.Json;
 namespace QuestomAssets
 {
 
-    public class QuestomAssetsEngine : IDisposable
+    public class QuestomAssetsEngine
     {
         private string _apkFilename;
-        private Apkifier _apk;
         private bool _readOnly;
+        private string _pemData;
 
-        private AssetsManager _manager;
         //TODO: fix cross-asset file loading of stuff before turning this to false, some of the OST Vol 1 songs are in another file
         public bool HideOriginalPlaylists { get; private set; } = true;
 
@@ -31,83 +29,21 @@ namespace QuestomAssets
         {
             _readOnly = readOnly;
             _apkFilename = apkFilename;
-            _apk = new Apkifier(apkFilename, !readOnly, readOnly?null:pemCertificateData, readOnly);
-            _manager = new AssetsManager(_apk, BSConst.GetAssetTypeMap(), false);
-            _manager.GetAssetsFile("globalgamemanagers");
+            _pemData = pemCertificateData;
         }
 
-        public BeatSaberQuestomConfig GetCurrentConfig(bool suppressImages = false)
+        private MainLevelPackCollectionObject GetMainLevelPack(AssetsManager manager)
         {
-            BeatSaberQuestomConfig config = new BeatSaberQuestomConfig();
-            var mainPack = GetMainLevelPack();
-            foreach (var packPtr in mainPack.BeatmapLevelPacks)
-            {
-                var pack = packPtr.Target.Object;
-                if (HideOriginalPlaylists && BSConst.KnownLevelPackIDs.Contains(pack.PackID))
-                    continue;
-
-                var packModel = new BeatSaberPlaylist() { PlaylistName = pack.PackName, PlaylistID = pack.PackID, LevelPackObject = pack };
-                var collection = pack.BeatmapLevelCollection.Object;
-                //packModel.LevelCollection = collection;
-
-                //get cover art for playlist
-                if (!suppressImages)
-                {
-                    try
-                    {
-                        var coverSprite = pack.CoverImage.Object;
-                        var coverTex = coverSprite.Texture.Object;
-                        packModel.CoverArt = coverTex.ToBitmap();
-                        packModel.CoverArtBase64PNG = packModel.CoverArt.ToBase64PNG();
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.LogErr($"Unable to convert texture for playlist ID '{pack.PackID}' cover art", ex);
-                    }
-                }
-                foreach (var songPtr in collection.BeatmapLevels)
-                {
-                    var songObj = songPtr.Object;
-                    var songModel = new BeatSaberSong()
-                    {
-                        LevelAuthorName = songObj.LevelAuthorName,
-                        SongID = songObj.LevelID,
-                        SongAuthorName = songObj.SongAuthorName,
-                        SongName = songObj.SongName,
-                        SongSubName = songObj.SongSubName,
-                        LevelData = songObj
-                    };
-                    if (!suppressImages)
-                    {
-                        try
-                        {
-                            var songCover = songObj.CoverImageTexture2D.Object;
-                            try
-                            {
-                                songModel.CoverArt = songCover.ToBitmap();
-                                songModel.CoverArtBase64PNG = songModel.CoverArt.ToBase64PNG();
-                            }
-                            catch (Exception ex)
-                            {
-                                Log.LogErr($"Unable to convert texture for song ID '{songModel.SongID}' cover", ex);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Log.LogErr($"Exception loading/converting the cover image for song id '{songObj.LevelID}'", ex);
-                        }
-                    }
-                    packModel.SongList.Add(songModel);
-                }
-                config.Playlists.Add(packModel);
-            }
-            return config;
+            var mainLevelPack = manager.MassFirstOrDefaultAsset<MainLevelPackCollectionObject>(x => true)?.Object;
+            if (mainLevelPack == null)
+                throw new Exception("Unable to find the main level pack collection object!");
+            return mainLevelPack;
         }
 
-        private void UpdatePlaylistConfig(BeatSaberPlaylist playlist)
+        private void UpdatePlaylistConfig(AssetsManager manager, BeatSaberPlaylist playlist)
         {
             Log.LogMsg($"Processing playlist ID {playlist.PlaylistID}...");
-            var songsAssetFile = _manager.GetAssetsFile(BSConst.KnownFiles.SongsAssetsFilename);
+            var songsAssetFile = manager.GetAssetsFile(BSConst.KnownFiles.SongsAssetsFilename);
             CustomLevelLoader loader = new CustomLevelLoader(songsAssetFile);
             BeatmapLevelPackObject levelPack = songsAssetFile.FindAsset<BeatmapLevelPackObject>(x => x.Object.PackID == playlist.PlaylistID)?.Object;
             //create a new level pack if one waasn't found
@@ -170,7 +106,7 @@ namespace QuestomAssets
                 if (songCount % songMod == 0)
                     Console.WriteLine($"{songCount.ToString().PadLeft(5)} of {totalSongs}...");
 
-                if (UpdateSongConfig(song, loader))
+                if (UpdateSongConfig(manager, song, loader))
                 {
                     if (levelCollection.BeatmapLevels.Any(x => x.Object.LevelID == song.LevelData.LevelID))
                     {
@@ -188,10 +124,10 @@ namespace QuestomAssets
             Console.WriteLine($"Proccessed {totalSongs} for playlist ID {playlist.PlaylistID}");
         }
 
-        private bool UpdateSongConfig(BeatSaberSong song, CustomLevelLoader loader)
+        private bool UpdateSongConfig(AssetsManager manager, BeatSaberSong song, CustomLevelLoader loader)
         {
 
-            var songsAssetFile = _manager.GetAssetsFile(BSConst.KnownFiles.SongsAssetsFilename);
+            var songsAssetFile = manager.GetAssetsFile(BSConst.KnownFiles.SongsAssetsFilename);
             BeatmapLevelDataObject level = null;
             if (!string.IsNullOrWhiteSpace(song.SongID))
             {
@@ -256,10 +192,10 @@ namespace QuestomAssets
 
         }
 
-        private void RemoveLevelAssets(BeatmapLevelDataObject level, List<string> audioFilesToDelete)
+        private void RemoveLevelAssets(AssetsManager manager, BeatmapLevelDataObject level, List<string> audioFilesToDelete)
         {
             Log.LogMsg($"Removing assets for song id '{level.LevelID}'");
-            var file17 = _manager.GetAssetsFile(BSConst.KnownFiles.SongsAssetsFilename);
+            var file17 = manager.GetAssetsFile(BSConst.KnownFiles.SongsAssetsFilename);
             file17.DeleteObject(level);
             var cover = level.CoverImageTexture2D.Object;
             if (cover == null)
@@ -290,9 +226,9 @@ namespace QuestomAssets
             
         }
 
-        private void RemoveLevelPackAssets(BeatmapLevelPackObject levelPack)
+        private void RemoveLevelPackAssets(AssetsManager manager, BeatmapLevelPackObject levelPack)
         {
-            var songsAssetFile = _manager.GetAssetsFile(BSConst.KnownFiles.SongsAssetsFilename);
+            var songsAssetFile = manager.GetAssetsFile(BSConst.KnownFiles.SongsAssetsFilename);
 
             Log.LogMsg($"Removing assets for playlist ID '{ levelPack.PackID}'");
             var collection = levelPack.BeatmapLevelCollection.Object;
@@ -304,146 +240,247 @@ namespace QuestomAssets
             songsAssetFile.DeleteObject(sprite);
         }
 
+        public BeatSaberQuestomConfig GetCurrentConfig(bool suppressImages = false)
+        {
+            using (var apkFileProvider = new ApkAssetsFileProvider(_apkFilename, ApkAssetsFileProvider.FileCacheMode.Memory, true))
+            {
+                var manager = new AssetsManager(apkFileProvider, BSConst.GetAssetTypeMap(), false);
+                manager.GetAssetsFile("globalgamemanagers");
+
+                var config = GetConfig(manager, suppressImages);
+
+                //clear out any of the internal refs that were used so the GC can clean things up
+                foreach (var p in config.Playlists)
+                {
+                    p.CoverArtSprite = null;
+                    p.LevelPackObject = null;
+                    foreach (var song in p.SongList)
+                    {
+                        song.LevelData = null;
+                        song.SourceOgg = null;
+                    }
+                }
+                return config;
+            }
+        }
+
+        private BeatSaberQuestomConfig GetConfig(AssetsManager manager, bool suppressImages)
+        {
+            BeatSaberQuestomConfig config = new BeatSaberQuestomConfig();
+            var file19 = manager.GetAssetsFile(BSConst.KnownFiles.MainCollectionAssetsFilename);
+            var file17 = manager.GetAssetsFile(BSConst.KnownFiles.SongsAssetsFilename);
+            var mainPack = GetMainLevelPack(manager);
+            foreach (var packPtr in mainPack.BeatmapLevelPacks)
+            {
+                var pack = packPtr.Target.Object;
+                if (HideOriginalPlaylists && BSConst.KnownLevelPackIDs.Contains(pack.PackID))
+                    continue;
+
+                var packModel = new BeatSaberPlaylist() { PlaylistName = pack.PackName, PlaylistID = pack.PackID, LevelPackObject = pack };
+                var collection = pack.BeatmapLevelCollection.Object;
+
+                //get cover art for playlist
+                if (!suppressImages)
+                {
+                    try
+                    {
+                        var coverSprite = pack.CoverImage.Object;
+                        var coverTex = coverSprite.Texture.Object;
+                        packModel.CoverArt = coverTex.ToBitmap();
+                        packModel.CoverArtBase64PNG = packModel.CoverArt.ToBase64PNG();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.LogErr($"Unable to convert texture for playlist ID '{pack.PackID}' cover art", ex);
+                    }
+                }
+                foreach (var songPtr in collection.BeatmapLevels)
+                {
+                    var songObj = songPtr.Object;
+                    var songModel = new BeatSaberSong()
+                    {
+                        LevelAuthorName = songObj.LevelAuthorName,
+                        SongID = songObj.LevelID,
+                        SongAuthorName = songObj.SongAuthorName,
+                        SongName = songObj.SongName,
+                        SongSubName = songObj.SongSubName,
+                        LevelData = songObj
+                    };
+                    if (!suppressImages)
+                    {
+                        try
+                        {
+                            var songCover = songObj.CoverImageTexture2D.Object;
+                            try
+                            {
+                                songModel.CoverArt = songCover.ToBitmap();
+                                songModel.CoverArtBase64PNG = songModel.CoverArt.ToBase64PNG();
+                            }
+                            catch (Exception ex)
+                            {
+                                Log.LogErr($"Unable to convert texture for song ID '{songModel.SongID}' cover", ex);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.LogErr($"Exception loading/converting the cover image for song id '{songObj.LevelID}'", ex);
+                        }
+                    }
+                    packModel.SongList.Add(songModel);
+                }
+                config.Playlists.Add(packModel);
+            }
+            return config;
+        }
 
         public void UpdateConfig(BeatSaberQuestomConfig config)
         {
             //todo: basic validation of the config
             if (_readOnly)
                 throw new InvalidOperationException("Cannot update in read only mode.");
- 
-            //get the old config before we start on this
-            var originalConfig = GetCurrentConfig();
 
-            //get existing playlists and their songs
-            //compare with new ones
-            //generate a diff
-            //etc.
-
-            UpdateColorConfig(config.Colors);
-
-            UpdateTextConfig(config.TextChanges);
-
-            var songsAssetFile = _manager.GetAssetsFile(BSConst.KnownFiles.SongsAssetsFilename);
-            foreach (var playlist in config.Playlists)
+            using (var apkFileProvider = new ApkAssetsFileProvider(_apkFilename, ApkAssetsFileProvider.FileCacheMode.Memory, false))
             {
-                UpdatePlaylistConfig(playlist);
-            }
+                var manager = new AssetsManager(apkFileProvider, BSConst.GetAssetTypeMap(), false);
+                manager.GetAssetsFile("globalgamemanagers");
 
+                //get the old config before we start on this
+                var originalConfig = GetConfig(manager, false);
 
-            //open the assets with the main levels collection, find the file index of sharedassets17.assets, and add the playlists to it
-            var mainLevelsFile = _manager.GetAssetsFile(BSConst.KnownFiles.MainCollectionAssetsFilename);
-            var file17Index = mainLevelsFile.GetFileIDForFilename(BSConst.KnownFiles.SongsAssetsFilename);
-            var mainLevelPack = GetMainLevelPack();
+                //get existing playlists and their songs
+                //compare with new ones
+                //generate a diff
+                //etc.
 
+                UpdateColorConfig(config.Colors);
 
-            var packsToUnlink = mainLevelPack.BeatmapLevelPacks.Where(x => !HideOriginalPlaylists || !BSConst.KnownLevelPackIDs.Contains(x.Object.PackID)).ToList();
-            var packsToRemove = mainLevelPack.BeatmapLevelPacks.Where(x => !BSConst.KnownLevelPackIDs.Contains(x.Object.PackID) && !config.Playlists.Any(y=> y.PlaylistID == x.Object.PackID)).Select(x=>x.Object).ToList();
-            foreach (var unlink in packsToUnlink)
-            {
-                mainLevelPack.BeatmapLevelPacks.Remove(unlink);
-                unlink.Dispose();
-            }
+                UpdateTextConfig(config.TextChanges);
 
-
-
-            var oldSongs = originalConfig.Playlists.SelectMany(x => x.SongList).Select(x => x.LevelData).Distinct();
-            var newSongs = config.Playlists.SelectMany(x => x.SongList).Select(x => x.LevelData).Distinct();
-
-            //don't allow removal of the actual tracks or level packs that are built in, although you can unlink them from the main list
-            var removeSongs = oldSongs.Where(x => !newSongs.Contains(x) && !BSConst.KnownLevelIDs.Contains(x.LevelID)).Distinct().ToList();
-
-            var addedSongs = newSongs.Where(x => !oldSongs.Contains(x));
-
-            var removedPlaylistCount = originalConfig.Playlists.Where(x => !config.Playlists.Any(y => y.PlaylistID == x.PlaylistID)).Count();
-            var newPlaylistCount = config.Playlists.Where(x => !originalConfig.Playlists.Any(y => y.PlaylistID == x.PlaylistID)).Count();
-            //
-            //
-            //TODO: clean up cover art, it's leaking!
-            //
-            //
-            List<string> audioFilesToDelete = new List<string>();
-            removeSongs.ForEach(x => RemoveLevelAssets(x, audioFilesToDelete));
-
-            packsToRemove.ForEach(x => RemoveLevelPackAssets(x));
-            
-
-            //relink all the level packs in order
-            var addPacks = config.Playlists.Select(x => x.LevelPackObject.PtrFrom(mainLevelPack));
-            mainLevelPack.BeatmapLevelPacks.AddRange(addPacks);
-
-            //do a first loop to guess at the file size
-            Int64 originalApkSize = new FileInfo(_apkFilename).Length;
-            Int64 sizeGuess = originalApkSize;
-            foreach (var pl in config.Playlists)
-            {
-                foreach (var sng in pl.SongList)
+                var songsAssetFile = manager.GetAssetsFile(BSConst.KnownFiles.SongsAssetsFilename);
+                foreach (var playlist in config.Playlists)
                 {
-                    if (sng.SourceOgg != null)
-                    {
-                        var clip = sng.LevelData.AudioClip.Object;
-                        sizeGuess += new FileInfo(sng.SourceOgg).Length;
-                    }
+                    UpdatePlaylistConfig(manager, playlist);
                 }
-            }
-            foreach (var toDelete in audioFilesToDelete)
-            {
-                sizeGuess -= _apk.GetFileSize(BSConst.KnownFiles.AssetsRootPath + toDelete);
-            }
 
-            Log.LogMsg("");
-            Log.LogMsg("Playlists:");
-            Log.LogMsg($"  Added:   {newPlaylistCount}");
-            Log.LogMsg($"  Removed: {removedPlaylistCount}");
-            Log.LogMsg("");
-            Log.LogMsg("Songs:");
-            Log.LogMsg($"  Added:   {addedSongs.Count()}");
-            Log.LogMsg($"  Removed: {removeSongs.Count()}");
-            Log.LogMsg("");
-            Log.LogMsg($"Original APK size:     {originalApkSize:n0}");
-            Log.LogMsg($"Guesstimated new size: {sizeGuess:n0}");
-            Log.LogMsg("");
+                //open the assets with the main levels collection, find the file index of sharedassets17.assets, and add the playlists to it
+                var mainLevelsFile = manager.GetAssetsFile(BSConst.KnownFiles.MainCollectionAssetsFilename);
+                var file17Index = mainLevelsFile.GetFileIDForFilename(BSConst.KnownFiles.SongsAssetsFilename);
+                var mainLevelPack = GetMainLevelPack(manager);
 
 
-            if (sizeGuess > Int32.MaxValue)
-            {
-                Log.LogErr("***************ERROR*****************");
-                Log.LogErr($"Guesstimating a file size around {sizeGuess / (Int64)1000000}MB , this will crash immediately upon launch.");
-                Log.LogErr($"The file size MUST be less than {Int32.MaxValue / (int)1000000}MB");
-                Log.LogErr("***************ERROR*****************");
-                Log.LogErr($"Proceeding anyways, but you've been warned");
-            }
-
-            ////////START WRITING DATA
-            foreach (var pl in config.Playlists)
-            {
-                foreach (var sng in pl.SongList)
+                var packsToUnlink = mainLevelPack.BeatmapLevelPacks.Where(x => !HideOriginalPlaylists || !BSConst.KnownLevelPackIDs.Contains(x.Object.PackID)).ToList();
+                var packsToRemove = mainLevelPack.BeatmapLevelPacks.Where(x => !BSConst.KnownLevelPackIDs.Contains(x.Object.PackID) && !config.Playlists.Any(y => y.PlaylistID == x.Object.PackID)).Select(x => x.Object).ToList();
+                foreach (var unlink in packsToUnlink)
                 {
-                    if (sng.SourceOgg != null)
+                    mainLevelPack.BeatmapLevelPacks.Remove(unlink);
+                    unlink.Dispose();
+                }
+
+                var oldSongs = originalConfig.Playlists.SelectMany(x => x.SongList).Select(x => x.LevelData).Distinct();
+                var newSongs = config.Playlists.SelectMany(x => x.SongList).Select(x => x.LevelData).Distinct();
+
+                //don't allow removal of the actual tracks or level packs that are built in, although you can unlink them from the main list
+                var removeSongs = oldSongs.Where(x => !newSongs.Contains(x) && !BSConst.KnownLevelIDs.Contains(x.LevelID)).Distinct().ToList();
+
+                var addedSongs = newSongs.Where(x => !oldSongs.Contains(x));
+
+                var removedPlaylistCount = originalConfig.Playlists.Where(x => !config.Playlists.Any(y => y.PlaylistID == x.PlaylistID)).Count();
+                var newPlaylistCount = config.Playlists.Where(x => !originalConfig.Playlists.Any(y => y.PlaylistID == x.PlaylistID)).Count();
+                //
+                //
+                //TODO: clean up cover art, it's leaking!
+                //
+                //
+                List<string> audioFilesToDelete = new List<string>();
+                removeSongs.ForEach(x => RemoveLevelAssets(manager, x, audioFilesToDelete));
+
+                packsToRemove.ForEach(x => RemoveLevelPackAssets(manager, x));
+
+                //relink all the level packs in order
+                var addPacks = config.Playlists.Select(x => x.LevelPackObject.PtrFrom(mainLevelPack));
+                mainLevelPack.BeatmapLevelPacks.AddRange(addPacks);
+
+                //do a first loop to guess at the file size
+                Int64 originalApkSize = new FileInfo(_apkFilename).Length;
+                Int64 sizeGuess = originalApkSize;
+                foreach (var pl in config.Playlists)
+                {
+                    foreach (var sng in pl.SongList)
                     {
-                        var clip = sng.LevelData.AudioClip.Object;
-                        _apk.Write(sng.SourceOgg, BSConst.KnownFiles.AssetsRootPath + clip.Resource.Source, true, false);
-                        //saftey check to make sure we aren't removing a file we just put here
-                        if (audioFilesToDelete.Contains(clip.Resource.Source))
+                        if (sng.SourceOgg != null)
                         {
-                            Log.LogErr($"Level id '{sng.LevelData.LevelID}' wrote file '{clip.Resource.Source}' that was on the delete list...");
-                            audioFilesToDelete.Remove(clip.Resource.Source);
+                            var clip = sng.LevelData.AudioClip.Object;
+                            sizeGuess += new FileInfo(sng.SourceOgg).Length;
                         }
                     }
                 }
-            }
-
-            if (audioFilesToDelete.Count > 0)
-            {
-                Log.LogMsg($"Deleting {audioFilesToDelete.ToString()} audio files");
                 foreach (var toDelete in audioFilesToDelete)
                 {
-                    //Log.LogMsg($"Deleting audio file {toDelete}");
-                    _apk.Delete(BSConst.KnownFiles.AssetsRootPath + toDelete);
+                    sizeGuess -= apkFileProvider.GetFileSize(BSConst.KnownFiles.AssetsRootPath + toDelete);
                 }
-            }
 
-            Log.LogMsg("Serializing all assets...");
-            _manager.WriteAllOpenAssets();
+                Log.LogMsg("");
+                Log.LogMsg("Playlists:");
+                Log.LogMsg($"  Added:   {newPlaylistCount}");
+                Log.LogMsg($"  Removed: {removedPlaylistCount}");
+                Log.LogMsg("");
+                Log.LogMsg("Songs:");
+                Log.LogMsg($"  Added:   {addedSongs.Count()}");
+                Log.LogMsg($"  Removed: {removeSongs.Count()}");
+                Log.LogMsg("");
+                Log.LogMsg($"Original APK size:     {originalApkSize:n0}");
+                Log.LogMsg($"Guesstimated new size: {sizeGuess:n0}");
+                Log.LogMsg("");
+
+                if (sizeGuess > Int32.MaxValue)
+                {
+                    Log.LogErr("***************ERROR*****************");
+                    Log.LogErr($"Guesstimating a file size around {sizeGuess / (Int64)1000000}MB , this will crash immediately upon launch.");
+                    Log.LogErr($"The file size MUST be less than {Int32.MaxValue / (int)1000000}MB");
+                    Log.LogErr("***************ERROR*****************");
+                    throw new OverflowException("File might exceed 2.1GB, aborting.");
+                }
+
+                ////////START WRITING DATA
+
+
+                Log.LogMsg("Serializing all assets...");
+                manager.WriteAllOpenAssets();
+
+                //todo: save here?
+
+
+                foreach (var pl in config.Playlists)
+                {
+                    foreach (var sng in pl.SongList)
+                    {
+                        if (sng.SourceOgg != null)
+                        {
+                            var clip = sng.LevelData.AudioClip.Object;
+                            apkFileProvider.WriteFile(sng.SourceOgg, BSConst.KnownFiles.AssetsRootPath + clip.Resource.Source, true, false);
+                            //saftey check to make sure we aren't removing a file we just put here
+                            if (audioFilesToDelete.Contains(clip.Resource.Source))
+                            {
+                                Log.LogErr($"Level id '{sng.LevelData.LevelID}' wrote file '{clip.Resource.Source}' that was on the delete list...");
+                                audioFilesToDelete.Remove(clip.Resource.Source);
+                            }
+                        }
+
+                        //todo: save on some interval to save ram?
+                    }
+                }
+
+                if (audioFilesToDelete.Count > 0)
+                {
+                    Log.LogMsg($"Deleting {audioFilesToDelete.ToString()} audio files");
+                    foreach (var toDelete in audioFilesToDelete)
+                    {
+                        //Log.LogMsg($"Deleting audio file {toDelete}");
+                        apkFileProvider.Delete(BSConst.KnownFiles.AssetsRootPath + toDelete);
+                    }
+                }
+                apkFileProvider.Save();
+            }
         }
 
         public void UpdateColorConfig(SimpleColorSO[] colors)
@@ -497,16 +534,6 @@ namespace QuestomAssets
                 throw new Exception("Unable to find the color manager asset!");
             return colorManager;
         }
-
-        private MainLevelPackCollectionObject GetMainLevelPack()
-        {
-            var mainLevelPack = _manager.MassFirstOrDefaultAsset<MainLevelPackCollectionObject>(x => true)?.Object;
-            if (mainLevelPack == null)
-                throw new Exception("Unable to find the main level pack collection object!");
-            return mainLevelPack;
-        }
-
-
         public bool ApplyPatchSettingsFile()
         {
             string filename = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location), "patchsettings.json");
@@ -533,44 +560,25 @@ namespace QuestomAssets
 
         public bool ApplyPatch(FilePatch patch)
         {
-            
-            if (!Patcher.PatchBeatmapSigCheck(_apk, patch))
+            using (var apkFileProvider = new ApkAssetsFileProvider(_apkFilename, ApkAssetsFileProvider.FileCacheMode.Memory, false))
             {
-                Log.LogErr($"File {patch.Filename} failed to patch!");
-                return false;
+                if (!Patcher.Patch(apkFileProvider, patch))
+                {
+                    Log.LogErr($"File {patch.Filename} failed to patch!");
+                    return false;
+                }
             }
-
             return true;
         }
 
-        #region Helper Functions
-
-        #endregion
-
-        #region IDisposable Support
-        private bool disposedValue = false; // To detect redundant calls
-
-        protected virtual void Dispose(bool disposing)
+        public void SignAPK()
         {
-            if (!disposedValue)
+            using (var apkFileProvider = new ApkAssetsFileProvider(_apkFilename, ApkAssetsFileProvider.FileCacheMode.None, false))
             {
-                if (disposing)
-                {
-                    // TODO: dispose managed state (managed objects).
-                    if (_apk != null)
-                        _apk.Dispose();
-                }
-
-                disposedValue = true;
+                ApkSigner signer = new ApkSigner(_pemData);
+                signer.Sign(apkFileProvider);
             }
         }
-
-        public void Dispose()
-        {
-            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-            Dispose(true);
-        }
-        #endregion
 
     }
 }

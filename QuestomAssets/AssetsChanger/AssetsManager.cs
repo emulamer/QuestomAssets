@@ -1,22 +1,19 @@
-﻿using Emulamer.Utils;
-using QuestomAssets.BeatSaber;
+﻿using QuestomAssets.BeatSaber;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+
 
 namespace QuestomAssets.AssetsChanger
 {
     public class AssetsManager
     {
-
         public Dictionary<string, Type> ClassNameToTypes { get; private set; } = new Dictionary<string, Type>();
+        private IAssetsFileProvider _fileProvider;
 
-        private Apkifier _apk;
-        //TODO: to make it useful for anything else, shouldn't be an APK path, should be something that implements an interface
-        public AssetsManager(Apkifier apk, Dictionary<string, Type> classNameToTypes, bool lazyLoad = false)
+        public AssetsManager(IAssetsFileProvider fileProvider, Dictionary<string, Type> classNameToTypes, bool lazyLoad = false)
         {
-            _apk = apk;
+            _fileProvider = fileProvider;
             LazyLoad = lazyLoad;
             ClassNameToTypes = classNameToTypes;
         }
@@ -34,7 +31,7 @@ namespace QuestomAssets.AssetsChanger
         {
             if (_openAssetsFiles.ContainsKey(assetsFilename))
                 return _openAssetsFiles[assetsFilename];
-            AssetsFile assetsFile = new AssetsFile(this, assetsFilename, _apk.ReadCombinedAssets(BSConst.KnownFiles.AssetsRootPath + assetsFilename), BSConst.GetAssetTypeMap());
+            AssetsFile assetsFile = new AssetsFile(this, assetsFilename, _fileProvider.ReadCombinedAssets(BSConst.KnownFiles.AssetsRootPath + assetsFilename), BSConst.GetAssetTypeMap());
             _openAssetsFiles.Add(assetsFilename, assetsFile);
             return assetsFile;
         }
@@ -49,7 +46,7 @@ namespace QuestomAssets.AssetsChanger
                     Log.LogMsg($"File {assetsFileName} has changed, writing new contents.");
                     try
                     {
-                        _apk.WriteCombinedAssets(assetsFile, BSConst.KnownFiles.AssetsRootPath + assetsFileName);
+                        _fileProvider.WriteCombinedAssets(assetsFile, BSConst.KnownFiles.AssetsRootPath + assetsFileName);
                     }
                     catch (Exception ex)
                     {

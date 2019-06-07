@@ -1,9 +1,9 @@
-﻿using Emulamer.Utils;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Linq;
+using QuestomAssets.AssetsChanger;
 
 namespace QuestomAssets.Utils
 {
@@ -23,7 +23,7 @@ namespace QuestomAssets.Utils
     public class Patcher
     {
         
-        public static bool PatchBeatmapSigCheck(Apkifier apk, FilePatch patch)
+        public static bool Patch(IAssetsFileProvider apk, FilePatch patch)
         {
             string binaryFile = patch.Filename;
             if (!apk.FileExists(binaryFile))
@@ -72,8 +72,8 @@ namespace QuestomAssets.Utils
                     msBinary.Write(p.PatchData.ToArray(), 0, p.PatchData.Count);
                 }
                 msBinary.Seek(0, SeekOrigin.Begin);
-                byte[] binaryOutData = msBinary.ToArray();
-                apk.Write(msBinary, binaryFile, true, true);
+                
+                apk.Write(binaryFile, msBinary.ToArray(), true, true);
             }
             Console.WriteLine("Done patching binary!");
             return true;
