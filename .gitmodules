@@ -1,9 +1,6 @@
 [submodule "StbSharp"]
 	path = StbSharp
 	url = https://github.com/emulamer/StbSharp.git
-[submodule "Apkifier"]
-	path = Apkifier
-	url = https://github.com/emulamer/Apkifier.git
 [submodule "ETCPACK"]
 	path = ETCPACK
 	url = https://github.com/emulamer/ETCPACK

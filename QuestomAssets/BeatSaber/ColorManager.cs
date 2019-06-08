@@ -17,9 +17,6 @@ namespace QuestomAssets.BeatSaber
             Parse(reader);
         }
 
-        public ColorManager(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
-        { }
-
         public ColorManager(AssetsFile assetsFile) : base(assetsFile, assetsFile.Manager.GetScriptObject("ColorManager"))
         { }
 

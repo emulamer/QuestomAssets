@@ -22,11 +22,6 @@ namespace QuestomAssets.AssetsChanger
             ParseDetails(reader);
         }
 
-        protected TextAsset(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
-        {
-        }
-
-
         protected override void Parse(AssetsReader reader)
         {
             base.Parse(reader);            

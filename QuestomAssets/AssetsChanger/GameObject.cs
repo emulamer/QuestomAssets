@@ -41,7 +41,7 @@ namespace QuestomAssets.AssetsChanger
         {
             int count = reader.ReadInt32();
             for (int i = 0; i < count; i++)
-                Component.Add(SmartPtr<AssetsObject>.Read(ObjectInfo.ParentFile, this, reader));
+                Components.Add(SmartPtr<AssetsObject>.Read(ObjectInfo.ParentFile, this, reader));
             Layer = reader.ReadUInt32();
             Name = reader.ReadString();
             Tag = reader.ReadUInt16();
@@ -51,8 +51,8 @@ namespace QuestomAssets.AssetsChanger
         protected override void WriteBase(AssetsWriter writer)
         {
             base.WriteBase(writer);
-            writer.Write(Component.Count);
-            foreach (var c in Component)
+            writer.Write(Components.Count);
+            foreach (var c in Components)
                 c.Write(writer);
             writer.Write(Layer);
             writer.Write(Name);
@@ -65,7 +65,7 @@ namespace QuestomAssets.AssetsChanger
             WriteBase(writer);
         }
 
-        public List<ISmartPtr<AssetsObject>> Component { get; set; } = new List<ISmartPtr<AssetsObject>>();
+        public List<ISmartPtr<AssetsObject>> Components { get; set; } = new List<ISmartPtr<AssetsObject>>();
 
         public UInt32 Layer { get; set; }
 

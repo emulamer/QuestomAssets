@@ -100,6 +100,15 @@ namespace QuestomAssets.AssetsChanger
             Write(bytes);
         }
 
+        public void WriteArrayOf<T>(IList<T> list, Action<T> writerFunc)
+        {
+            int count = list.Count();
+            Write(count);
+            foreach (var x in list)
+            {
+                writerFunc(x);
+            }
+        }
         public void WriteChars(string chars)
         {
             base.Write(System.Text.Encoding.ASCII.GetBytes(chars));

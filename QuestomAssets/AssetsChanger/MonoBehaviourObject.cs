@@ -7,7 +7,7 @@ using System.Text;
 
 namespace QuestomAssets.AssetsChanger
 {
-    public class MonoBehaviourObject : AssetsObject, IHaveName
+    public class MonoBehaviourObject : Component, IHaveName
     {
         public MonoBehaviourObject(AssetsFile assetsFile, MonoScriptObject scriptObject) : base(assetsFile, scriptObject.PropertiesHash)
         {
@@ -38,9 +38,7 @@ namespace QuestomAssets.AssetsChanger
 
         private byte[] _scriptParametersData;
 
-        [JsonIgnore]
-        public ISmartPtr<GameObject> GameObjectPtr { get; set; } = null;
-
+        
         [JsonIgnore]
         public int Enabled { get; set; } = 1;
 
@@ -79,7 +77,6 @@ namespace QuestomAssets.AssetsChanger
         protected override void Parse(AssetsReader reader)
         {
             base.Parse(reader);
-            GameObjectPtr = SmartPtr<GameObject>.Read(ObjectInfo.ParentFile, this, reader);
             Enabled = reader.ReadInt32();
             MonoscriptTypePtr = SmartPtr<MonoScriptObject>.Read(ObjectInfo.ParentFile, this, reader);
             Name = reader.ReadString();
@@ -95,7 +92,6 @@ namespace QuestomAssets.AssetsChanger
         protected override void WriteBase(AssetsWriter writer)
         {
             base.WriteBase(writer);
-            GameObjectPtr.Write(writer);
             writer.Write(Enabled);
             MonoscriptTypePtr.Write(writer);
             writer.Write(Name);      

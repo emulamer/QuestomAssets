@@ -10,11 +10,5 @@ namespace QuestomAssets
         public string SaberID { get; set; }
 
         public string CustomSaberFolder { get; set; }
-
-        //public string SaberBladeDatFile { get; set; }
-
-        //public string SaberGlowingEdgesDatFile { get; set; }
-
-        //public string SaberHandleDatFile { get; set; }
     }
 }

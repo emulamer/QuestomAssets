@@ -69,29 +69,34 @@ namespace QuestomAssets.AssetsChanger
         }
 
         public Stream BaseStream { get; private set; }
-
-        public AssetsFile(AssetsManager manager, string assetsFileName, Stream assetsFileStream, Dictionary<string, Type> classNameToTypes)
+        
+        public AssetsFile(AssetsManager manager, string assetsFileName, Stream assetsFileStream, bool load = true)
         {
             Manager = manager;
             if (!assetsFileStream.CanSeek)
                 throw new NotSupportedException("Stream must support seeking!");
             BaseStream = assetsFileStream;
             AssetsFileName = assetsFileName;
+            if (load)
+                Load();
+        }
+        public void Load()
+        {
 
-            assetsFileStream.Seek(0, SeekOrigin.Begin);
+            BaseStream.Seek(0, SeekOrigin.Begin);
 
-            using (AssetsReader reader = new AssetsReader(assetsFileStream, false))
+            using (AssetsReader reader = new AssetsReader(BaseStream, false))
             {
                 Header = new AssetsFileHeader(reader);
             }
-            using (AssetsReader reader = new AssetsReader(assetsFileStream, false))
+            using (AssetsReader reader = new AssetsReader(BaseStream, false))
             {
                 Metadata = new AssetsMetadata(this);
                 Metadata.Parse(reader);
             }
-            assetsFileStream.Seek(Header.ObjectDataOffset, SeekOrigin.Begin);
+            BaseStream.Seek(Header.ObjectDataOffset, SeekOrigin.Begin);
 
-            if (!manager.LazyLoad)
+            if (!Manager.LazyLoad)
             {
                 //foreach (var ext in Metadata.ExternalFiles)
                 //{

@@ -31,8 +31,9 @@ namespace QuestomAssets.AssetsChanger
         {
             if (_openAssetsFiles.ContainsKey(assetsFilename))
                 return _openAssetsFiles[assetsFilename];
-            AssetsFile assetsFile = new AssetsFile(this, assetsFilename, _fileProvider.ReadCombinedAssets(BSConst.KnownFiles.AssetsRootPath + assetsFilename), BSConst.GetAssetTypeMap());
+            AssetsFile assetsFile = new AssetsFile(this, assetsFilename, _fileProvider.ReadCombinedAssets(BSConst.KnownFiles.AssetsRootPath + assetsFilename), false);
             _openAssetsFiles.Add(assetsFilename, assetsFile);
+            assetsFile.Load();
             return assetsFile;
         }
 
@@ -59,6 +60,7 @@ namespace QuestomAssets.AssetsChanger
         }
 
         private Dictionary<string, MonoScriptObject> _classCache = new Dictionary<string, MonoScriptObject>();
+        private Dictionary<Guid, MonoScriptObject> _hashClassCache = new Dictionary<Guid, MonoScriptObject>();
         public MonoScriptObject GetScriptObject(string className)
         {
             if (_classCache.ContainsKey(className))
@@ -68,6 +70,28 @@ namespace QuestomAssets.AssetsChanger
             if (classObj == null)
                 throw new Exception($"Unable to find a script with type name {className}!");
             _classCache.Add(className, classObj.Object);
+            return classObj.Object;
+        }
+        public MonoScriptObject GetScriptObject(Guid propertiesHash)
+        {
+            if (_hashClassCache.ContainsKey(propertiesHash))
+                return _hashClassCache[propertiesHash];
+            var ggm = GetAssetsFile("globalgamemanagers");
+            
+            var classObj = ggm.FindAsset<MonoScriptObject>(x => x.Object.PropertiesHash == propertiesHash);
+            if (classObj == null)
+            {
+                ggm = GetAssetsFile("globalgamemanagers.assets");
+                classObj = ggm.FindAsset<MonoScriptObject>(x => x.Object.PropertiesHash == propertiesHash);
+            }
+            if (classObj == null)
+            {
+                ggm = GetAssetsFile("unity default resources");
+                classObj = ggm.FindAsset<MonoScriptObject>(x => x.Object.PropertiesHash == propertiesHash);
+            }
+            if (classObj == null)
+                throw new Exception($"Unable to find a script with type hash {propertiesHash}!");
+            _hashClassCache.Add(propertiesHash, classObj.Object);
             return classObj.Object;
         }
 

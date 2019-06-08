@@ -124,11 +124,11 @@ namespace QuestomAssets.AssetsChanger
             switch (objectType.ClassID)
             {
                 case AssetsConstants.ClassID.MonoBehaviourScriptType:
-                    var found = assetsFile.Manager.MassFirstOrDefaultAsset<MonoScriptObject>(x => x.Object.PropertiesHash == objectType.TypeHash);
+                    var found = assetsFile.Manager.GetScriptObject(objectType.TypeHash);
                     
-                    if (found != null && assetsFile.Manager.ClassNameToTypes.ContainsKey(found.Object.ClassName))
+                    if (found != null && assetsFile.Manager.ClassNameToTypes.ContainsKey(found.ClassName))
                     {
-                        Type assetObjectType = assetsFile.Manager.ClassNameToTypes[found.Object.ClassName];
+                        Type assetObjectType = assetsFile.Manager.ClassNameToTypes[found.ClassName];
                         if (!assetObjectType.IsSubclassOf(typeof(MonoBehaviourObject)))
                         {
                             throw new ArgumentException("Types provided in scriptHashToTypes must be a subclass of AssetsMonoBehaviourObject.");
@@ -157,6 +157,15 @@ namespace QuestomAssets.AssetsChanger
                     break;
                 case AssetsConstants.ClassID.MonoScriptType:
                     type = typeof(MonoScriptObject);
+                    break;
+                case AssetsConstants.ClassID.MeshAssetClassID:
+                    type = typeof(MeshObject);
+                    break;
+                case AssetsConstants.ClassID.MeshFilterClassID:
+                    type = typeof(MeshFilterObject);
+                    break;
+                case AssetsConstants.ClassID.TransformClassID:
+                    type = typeof(Transform);
                     break;
                 default:
                     type = typeof(AssetsObject);

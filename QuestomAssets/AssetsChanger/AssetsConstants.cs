@@ -16,6 +16,9 @@ namespace QuestomAssets.AssetsChanger
             public const int SpriteClassID = 213;
             public const int GameObjectClassID = 1;
             public const int TextAssetClassID = 0x31;
+            public const int MeshAssetClassID = 43;
+            public const int MeshFilterClassID = 33;
+            public const int TransformClassID = 4;
         }
 
     }
