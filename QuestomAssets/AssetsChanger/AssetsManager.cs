@@ -79,18 +79,20 @@ namespace QuestomAssets.AssetsChanger
             var ggm = GetAssetsFile("globalgamemanagers");
             
             var classObj = ggm.FindAsset<MonoScriptObject>(x => x.Object.PropertiesHash == propertiesHash);
+           
             if (classObj == null)
             {
                 ggm = GetAssetsFile("globalgamemanagers.assets");
                 classObj = ggm.FindAsset<MonoScriptObject>(x => x.Object.PropertiesHash == propertiesHash);
             }
+
             if (classObj == null)
             {
-                ggm = GetAssetsFile("unity default resources");
-                classObj = ggm.FindAsset<MonoScriptObject>(x => x.Object.PropertiesHash == propertiesHash);
+                Log.LogErr($"WARNING! Did not find the monoscript object for {propertiesHash}!");
+                //throw new Exception($"Unable to find a script with type hash {propertiesHash}!");
+                return null;
             }
-            if (classObj == null)
-                throw new Exception($"Unable to find a script with type hash {propertiesHash}!");
+            
             _hashClassCache.Add(propertiesHash, classObj.Object);
             return classObj.Object;
         }

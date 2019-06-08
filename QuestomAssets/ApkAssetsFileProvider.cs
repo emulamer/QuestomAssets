@@ -67,7 +67,7 @@ namespace QuestomAssets
 
         public bool FileExists(string filename)
         {
-            return _zipFile.Entries.Any(x => x.FileName == filename);
+            return _zipFile.Entries.Any(x => x.FileName.ToLower() == filename.ToLower());
         }
 
         public List<string> FindFiles(string pattern)
