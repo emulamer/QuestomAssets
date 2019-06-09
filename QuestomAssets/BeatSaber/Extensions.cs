@@ -39,6 +39,9 @@ namespace QuestomAssets.BeatSaber
 
         public static string CorrectAssetFilename(this IAssetsFileProvider fp, string assetsFile)
         {
+            //should really get these path constants out of here to somewhere else
+            if (!fp.FileExists(assetsFile))
+                assetsFile = BSConst.KnownFiles.AssetsRootPath + assetsFile;
             var correctName = FindFirstOfSplit(fp, assetsFile);
             if (correctName != null)
                 return correctName;

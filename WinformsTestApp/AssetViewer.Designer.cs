@@ -34,20 +34,18 @@ namespace WinformsTestApp
             this.tbExplore = new System.Windows.Forms.TabPage();
             this.cbAssetsFile = new System.Windows.Forms.ComboBox();
             this.label2 = new System.Windows.Forms.Label();
+            this.etMain = new WinformsTestApp.ExploreTree();
             this.btnLoad = new System.Windows.Forms.Button();
-            this.label1 = new System.Windows.Forms.Label();
-            this.tbApk = new System.Windows.Forms.TextBox();
             this.tpCompare = new System.Windows.Forms.TabPage();
-            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
+            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.splitContainer2 = new System.Windows.Forms.SplitContainer();
+            this.etLeft = new WinformsTestApp.ExploreTree();
+            this.etRight = new WinformsTestApp.ExploreTree();
             this.tpLog = new System.Windows.Forms.TabPage();
             this.btnClearLog = new System.Windows.Forms.Button();
             this.tbLog = new System.Windows.Forms.TextBox();
-            this.etMain = new WinformsTestApp.ExploreTree();
-            this.etLeft = new WinformsTestApp.ExploreTree();
-            this.etRight = new WinformsTestApp.ExploreTree();
             this.tabControl1.SuspendLayout();
             this.tbExplore.SuspendLayout();
             this.tpCompare.SuspendLayout();
@@ -79,8 +77,6 @@ namespace WinformsTestApp
             this.tbExplore.Controls.Add(this.label2);
             this.tbExplore.Controls.Add(this.etMain);
             this.tbExplore.Controls.Add(this.btnLoad);
-            this.tbExplore.Controls.Add(this.label1);
-            this.tbExplore.Controls.Add(this.tbApk);
             this.tbExplore.Location = new System.Drawing.Point(4, 29);
             this.tbExplore.Name = "tbExplore";
             this.tbExplore.Padding = new System.Windows.Forms.Padding(3);
@@ -92,6 +88,7 @@ namespace WinformsTestApp
             // cbAssetsFile
             // 
             this.cbAssetsFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.cbAssetsFile.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cbAssetsFile.FormattingEnabled = true;
             this.cbAssetsFile.Location = new System.Drawing.Point(582, 6);
             this.cbAssetsFile.Name = "cbAssetsFile";
@@ -109,35 +106,32 @@ namespace WinformsTestApp
             this.label2.TabIndex = 4;
             this.label2.Text = "Assets File:";
             // 
+            // etMain
+            // 
+            this.etMain.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.etMain.AutoExpand = true;
+            this.etMain.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.etMain.DataSource = null;
+            this.etMain.HighlightColor = System.Drawing.Color.LightBlue;
+            this.etMain.Location = new System.Drawing.Point(6, 51);
+            this.etMain.Name = "etMain";
+            this.etMain.SelectedNode = null;
+            this.etMain.Size = new System.Drawing.Size(903, 449);
+            this.etMain.TabIndex = 3;
+            this.etMain.NodeRightClicked += new System.EventHandler<System.Windows.Forms.TreeNodeMouseClickEventArgs>(this.EtMain_NodeRightClicked);
+            // 
             // btnLoad
             // 
             this.btnLoad.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnLoad.Location = new System.Drawing.Point(391, 3);
+            this.btnLoad.Location = new System.Drawing.Point(8, 4);
             this.btnLoad.Name = "btnLoad";
-            this.btnLoad.Size = new System.Drawing.Size(75, 41);
+            this.btnLoad.Size = new System.Drawing.Size(165, 41);
             this.btnLoad.TabIndex = 2;
             this.btnLoad.Text = "Load";
             this.btnLoad.UseVisualStyleBackColor = true;
             this.btnLoad.Click += new System.EventHandler(this.BtnLoad_Click);
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(6, 14);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(44, 20);
-            this.label1.TabIndex = 1;
-            this.label1.Text = "APK:";
-            // 
-            // tbApk
-            // 
-            this.tbApk.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.tbApk.Location = new System.Drawing.Point(56, 7);
-            this.tbApk.Name = "tbApk";
-            this.tbApk.Size = new System.Drawing.Size(329, 26);
-            this.tbApk.TabIndex = 0;
-            this.tbApk.Text = "c:\\users\\vr\\desktop\\platform-tools_r28.0.3-windows\\base.apk";
             // 
             // tpCompare
             // 
@@ -151,6 +145,26 @@ namespace WinformsTestApp
             this.tpCompare.TabIndex = 1;
             this.tpCompare.Text = "Clone Test";
             this.tpCompare.UseVisualStyleBackColor = true;
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(6, 6);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(112, 20);
+            this.label3.TabIndex = 7;
+            this.label3.Text = "Original Object";
+            // 
+            // label4
+            // 
+            this.label4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(797, 7);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(109, 20);
+            this.label4.TabIndex = 8;
+            this.label4.Text = "Cloned Object";
+            this.label4.TextAlign = System.Drawing.ContentAlignment.TopRight;
             // 
             // splitContainer1
             // 
@@ -186,25 +200,31 @@ namespace WinformsTestApp
             this.splitContainer2.SplitterDistance = 198;
             this.splitContainer2.TabIndex = 6;
             // 
-            // label3
+            // etLeft
             // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(6, 6);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(112, 20);
-            this.label3.TabIndex = 7;
-            this.label3.Text = "Original Object";
+            this.etLeft.AutoExpand = true;
+            this.etLeft.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.etLeft.DataSource = null;
+            this.etLeft.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.etLeft.HighlightColor = System.Drawing.Color.Thistle;
+            this.etLeft.Location = new System.Drawing.Point(0, 0);
+            this.etLeft.Name = "etLeft";
+            this.etLeft.SelectedNode = null;
+            this.etLeft.Size = new System.Drawing.Size(198, 468);
+            this.etLeft.TabIndex = 0;
             // 
-            // label4
+            // etRight
             // 
-            this.label4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(797, 7);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(109, 20);
-            this.label4.TabIndex = 8;
-            this.label4.Text = "Cloned Object";
-            this.label4.TextAlign = System.Drawing.ContentAlignment.TopRight;
+            this.etRight.AutoExpand = true;
+            this.etRight.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.etRight.DataSource = null;
+            this.etRight.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.etRight.HighlightColor = System.Drawing.Color.PaleGoldenrod;
+            this.etRight.Location = new System.Drawing.Point(0, 0);
+            this.etRight.Name = "etRight";
+            this.etRight.SelectedNode = null;
+            this.etRight.Size = new System.Drawing.Size(707, 468);
+            this.etRight.TabIndex = 0;
             // 
             // tpLog
             // 
@@ -236,50 +256,9 @@ namespace WinformsTestApp
             this.tbLog.Multiline = true;
             this.tbLog.Name = "tbLog";
             this.tbLog.ReadOnly = true;
-            this.tbLog.Size = new System.Drawing.Size(890, 445);
+            this.tbLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.tbLog.Size = new System.Drawing.Size(912, 454);
             this.tbLog.TabIndex = 0;
-            // 
-            // etMain
-            // 
-            this.etMain.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.etMain.AutoExpand = true;
-            this.etMain.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.etMain.DataSource = null;
-            this.etMain.HighlightColor = System.Drawing.Color.LightBlue;
-            this.etMain.Location = new System.Drawing.Point(6, 51);
-            this.etMain.Name = "etMain";
-            this.etMain.SelectedNode = null;
-            this.etMain.Size = new System.Drawing.Size(903, 449);
-            this.etMain.TabIndex = 3;
-            this.etMain.NodeRightClicked += new System.EventHandler<System.Windows.Forms.TreeNodeMouseClickEventArgs>(this.EtMain_NodeRightClicked);
-            // 
-            // etLeft
-            // 
-            this.etLeft.AutoExpand = true;
-            this.etLeft.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.etLeft.DataSource = null;
-            this.etLeft.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.etLeft.HighlightColor = System.Drawing.Color.Thistle;
-            this.etLeft.Location = new System.Drawing.Point(0, 0);
-            this.etLeft.Name = "etLeft";
-            this.etLeft.SelectedNode = null;
-            this.etLeft.Size = new System.Drawing.Size(198, 468);
-            this.etLeft.TabIndex = 0;
-            // 
-            // etRight
-            // 
-            this.etRight.AutoExpand = true;
-            this.etRight.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.etRight.DataSource = null;
-            this.etRight.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.etRight.HighlightColor = System.Drawing.Color.PaleGoldenrod;
-            this.etRight.Location = new System.Drawing.Point(0, 0);
-            this.etRight.Name = "etRight";
-            this.etRight.SelectedNode = null;
-            this.etRight.Size = new System.Drawing.Size(707, 468);
-            this.etRight.TabIndex = 0;
             // 
             // AssetViewer
             // 
@@ -312,8 +291,6 @@ namespace WinformsTestApp
         private System.Windows.Forms.TabControl tabControl1;
         private System.Windows.Forms.TabPage tbExplore;
         private System.Windows.Forms.Button btnLoad;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.TextBox tbApk;
         private System.Windows.Forms.TabPage tpCompare;
         private System.Windows.Forms.SplitContainer splitContainer2;
         private ExploreTree etLeft;

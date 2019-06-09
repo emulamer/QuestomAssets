@@ -13,6 +13,8 @@ using QuestomAssets;
 using QuestomAssets.AssetsChanger;
 using QuestomAssets.BeatSaber;
 using QuestomAssets.Utils;
+using System.IO;
+using System.Text.RegularExpressions;
 
 namespace WinformsTestApp
 {
@@ -25,48 +27,113 @@ namespace WinformsTestApp
         }
 
         AssetsManager _manager;
-        IAssetsFileProvider _apkProvider;
+        IAssetsFileProvider _fileProvider;
 
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (_apkProvider != null)
-                _apkProvider.Dispose();
+            if (_fileProvider != null)
+                _fileProvider.Dispose();
         }
+        private void CloseStuff()
+        {
+            etMain.DataSource = null;
+            etLeft.DataSource = null;
+            etRight.DataSource = null;
+            cbAssetsFile.Items.Clear();
+
+            if (_fileProvider != null)
+            {
+                _fileProvider.Dispose();
+                _fileProvider = null;
+            }
+        }
+
 
         private void BtnLoad_Click(object sender, EventArgs e)
         {
-            if (_apkProvider != null)
+            ContextMenu cm = new ContextMenu(new MenuItem[]
             {
-                etMain.DataSource = null;
-                etLeft.DataSource = null;
-                etRight.DataSource = null;
-                cbAssetsFile.Items.Clear();
-            }
-
-            if (!System.IO.File.Exists(tbApk.Text))
-            {
-                MessageBox.Show("File doesn't exist!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-            try
-            {
-                _apkProvider = new ApkAssetsFileProvider(tbApk.Text, ApkAssetsFileProvider.FileCacheMode.Memory, false);
-                _manager = new AssetsManager(_apkProvider, BSConst.GetAssetTypeMap(), false, true);
-                _manager.GetAssetsFile("globalgamemanagers.assets");
-                FillAssetsFiles();
-            }
-            catch (Exception ex)
-            {
-                Log.LogErr("Couldn't load APK!", ex);
-                MessageBox.Show("Failed to load!");
-                if (_apkProvider != null)
+                new MenuItem("APK", (s, e2) =>
                 {
-                    _apkProvider.Dispose();
-                    _apkProvider = null;
-                }
-                return;
-            }
+                    CloseStuff();
+                                        OpenFileDialog ofd = new OpenFileDialog()
+                    {
+                         CheckFileExists = true,
+                         Title = "Open Bundle File",
+                         Multiselect = false
+                    };
+                    if (ofd.ShowDialog() == DialogResult.Cancel)
+                        return;
+                    try
+                    {
+                        _fileProvider = new ApkAssetsFileProvider(ofd.FileName, ApkAssetsFileProvider.FileCacheMode.Memory, false);
+                        _manager = new AssetsManager(_fileProvider, BSConst.GetAssetTypeMap(), false, true);
+                        if (_fileProvider.FindFiles("globalgamemanagers.assets*").Count > 0)
+                            _manager.GetAssetsFile("globalgamemanagers.assets");
+                        FillAssetsFiles();
+
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.LogErr("Couldn't load APK!", ex);
+                        MessageBox.Show("Failed to load!");
+                        if (_fileProvider != null)
+                        {
+                            _fileProvider.Dispose();
+                            _fileProvider = null;
+                        }
+                        return;
+                    }
+                }),
+                new MenuItem("Bundle", (s, e2) =>
+                {
+                    CloseStuff();
+                    OpenFileDialog ofd = new OpenFileDialog()
+                    {
+                         CheckFileExists = true,
+                         Title = "Open Bundle File",
+                         Multiselect = false
+                    };
+                    if (ofd.ShowDialog() == DialogResult.Cancel)
+                        return;
+                    try
+                    {
+                        _fileProvider = new BundleFileProvider(ofd.FileName,true);
+                        _manager = new AssetsManager(_fileProvider, BSConst.GetAssetTypeMap(), false, true);
+                        _fileProvider.FindFiles("*").ForEach(x =>
+                        {
+                            if (!x.Contains("."))
+                            {
+                                try
+                                {
+                                    _manager.GetAssetsFile(x);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Log.LogErr($"Failed to load file '{x}' from bundle", ex);
+                                }
+                            }
+                        });
+                        FillAssetsFiles();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.LogErr("Couldn't load bundle!", ex);
+                        MessageBox.Show("Failed to load!");
+                        if (_fileProvider != null)
+                        {
+                            _fileProvider.Dispose();
+                            _fileProvider = null;
+                        }
+                        return;
+                    }
+                })
+            });
+            cm.Show(btnLoad, new Point(0, btnLoad.Width / 2));
+            return;
+
+            
 
         }
 
@@ -98,10 +165,12 @@ namespace WinformsTestApp
             etMain.DataSource = null;
             cbAssetsFile.Items.Clear();
             cbAssetsFile.Items.Add("* All *");
-            foreach (var openFile in _manager.OpenFiles.OrderBy(x=> x.AssetsFileName))
+            
+            foreach (var openFile in _manager.OpenFiles.OrderBy(x => x.AssetsFileName))
             {
                 cbAssetsFile.Items.Add(openFile.AssetsFileName);
             }
+            
             cbAssetsFile.SelectedIndex = 0;
         }
 

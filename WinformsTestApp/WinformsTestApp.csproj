@@ -8,10 +8,11 @@
     <OutputType>WinExe</OutputType>
     <RootNamespace>WinformsTestApp</RootNamespace>
     <AssemblyName>WinformsTestApp</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -36,8 +37,17 @@
     <Reference Include="DotNetZip, Version=1.13.3.0, Culture=neutral, PublicKeyToken=6583c7c814667745, processorArchitecture=MSIL">
       <HintPath>..\packages\DotNetZip.1.13.3\lib\net40\DotNetZip.dll</HintPath>
     </Reference>
+    <Reference Include="LZ4, Version=1.0.15.93, Culture=neutral, PublicKeyToken=8df3f1eee85cc956, processorArchitecture=MSIL">
+      <HintPath>..\packages\lz4net.netcore.signed.1.0.15.93\lib\netstandard2.0\LZ4.dll</HintPath>
+    </Reference>
+    <Reference Include="LZ4pn, Version=1.0.15.93, Culture=neutral, PublicKeyToken=8df3f1eee85cc956, processorArchitecture=MSIL">
+      <HintPath>..\packages\lz4net.unsafe.netcore.signed.1.0.15.93\lib\netstandard2.0\LZ4pn.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.12.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="SevenZip, Version=18.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\LZMA-SDK.18.1.0\lib\net20\SevenZip.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -80,6 +90,7 @@
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
     </Compile>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">

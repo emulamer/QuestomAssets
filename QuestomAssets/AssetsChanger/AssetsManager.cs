@@ -34,7 +34,7 @@ namespace QuestomAssets.AssetsChanger
         {
             if (_openAssetsFiles.ContainsKey(assetsFilename))
                 return _openAssetsFiles[assetsFilename];
-            AssetsFile assetsFile = new AssetsFile(this, assetsFilename, _fileProvider.ReadCombinedAssets(BSConst.KnownFiles.AssetsRootPath + assetsFilename), false);
+            AssetsFile assetsFile = new AssetsFile(this, assetsFilename, _fileProvider.ReadCombinedAssets(assetsFilename), false);
             _openAssetsFiles.Add(assetsFilename, assetsFile);
             assetsFile.Load();
             return assetsFile;
@@ -79,14 +79,27 @@ namespace QuestomAssets.AssetsChanger
         {
             if (_hashClassCache.ContainsKey(propertiesHash))
                 return _hashClassCache[propertiesHash];
-            var ggm = GetAssetsFile("globalgamemanagers");
+            AssetsFile ggm = null;
             
-            var classObj = ggm.FindAsset<MonoScriptObject>(x => x.Object.PropertiesHash == propertiesHash);
+            //todo: no BSConst in here
+            if (_fileProvider.FileExists(BSConst.KnownFiles.AssetsRootPath + "globalgamemanagers"))
+            {
+                ggm = GetAssetsFile("globalgamemanagers");
+            }
+           
+            IObjectInfo<MonoScriptObject> classObj = null;
+
+            if (ggm != null)
+                classObj = ggm.FindAsset<MonoScriptObject>(x => x.Object.PropertiesHash == propertiesHash);
            
             if (classObj == null)
             {
-                ggm = GetAssetsFile("globalgamemanagers.assets");
-                classObj = ggm.FindAsset<MonoScriptObject>(x => x.Object.PropertiesHash == propertiesHash);
+                //todo: no BSConst in here
+                if (_fileProvider.FileExists(BSConst.KnownFiles.AssetsRootPath + "globalgamemanagers.assets"))
+                {
+                    ggm = GetAssetsFile("globalgamemanagers.assets");
+                    classObj = ggm.FindAsset<MonoScriptObject>(x => x.Object.PropertiesHash == propertiesHash);
+                }
             }
 
             if (classObj == null)

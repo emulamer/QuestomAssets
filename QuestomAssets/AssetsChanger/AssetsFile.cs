@@ -252,7 +252,11 @@ namespace QuestomAssets.AssetsChanger
             {
                 var objInfo = Metadata.ObjectInfos.FirstOrDefault(x => x.ObjectID == pathID);
                 if (objInfo == null)
-                    throw new Exception($"Object info could not be found for path id {pathID} in file {AssetsFileName}");
+                {
+                    Log.LogErr($"Object info could not be found for path id {pathID} in file {AssetsFileName}!!!!");
+                    return null;
+                    //throw new Exception($"Object info could not be found for path id {pathID} in file {AssetsFileName}");
+                }
                 var objTypedInfo = objInfo as IObjectInfo<T>;
                 if (objTypedInfo == null)
                     throw new Exception($"Object was the wrong type!  Pointer expected {typeof(T).Name}, target was actually {(objInfo.GetType().GenericTypeArguments[0]?.Name)}");
