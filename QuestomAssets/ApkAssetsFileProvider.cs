@@ -111,7 +111,7 @@ namespace QuestomAssets
 
         public Stream GetReadStream(string filename)
         {
-            var entry = _zipFile.Entries.FirstOrDefault(x => x.FileName == filename);
+            var entry = _zipFile.Entries.FirstOrDefault(x => x.FileName.ToLower() == filename.ToLower());
             if (entry == null)
                 throw new FileNotFoundException($"An entry named {filename} was not found in the APK.");
             return GetCacheStream(filename, entry.OpenReader());

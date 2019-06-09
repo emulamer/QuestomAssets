@@ -19,6 +19,7 @@ namespace QuestomAssets.AssetsChanger
             public const int MeshAssetClassID = 43;
             public const int MeshFilterClassID = 33;
             public const int TransformClassID = 4;
+            public const int RectTransformClassID = 224;
         }
 
     }

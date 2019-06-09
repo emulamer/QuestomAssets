@@ -14,6 +14,8 @@ namespace QuestomAssets.AssetsChanger
         void WritePtr(AssetsWriter writer);
         bool IsNew { get; set; }
         T Object { get; }
+        int FileID { get; }
+        long PathID { get; }
     }
 
     public class SmartPtr<T> : ISmartPtr<T>, IDisposable where T : AssetsObject
@@ -89,7 +91,17 @@ namespace QuestomAssets.AssetsChanger
 
         //private int _fileID = 0;
 
-        private int FileID
+            public long PathID
+        {
+            get
+            {
+                if (Target == null)
+                    throw new Exception("Target is null!");
+                return Target.ObjectID;
+            }
+        }
+
+        public int FileID
         {
             get
             {

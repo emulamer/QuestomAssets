@@ -4,7 +4,7 @@ using System.Text;
 
 namespace QuestomAssets.AssetsChanger
 {
-    public class MonoScriptObject : AssetsObject
+    public class MonoScriptObject : AssetsObject, IHaveName
     {
         public MonoScriptObject(AssetsFile assetsFile) : base(assetsFile, AssetsConstants.ClassID.MonoScriptType)
         {

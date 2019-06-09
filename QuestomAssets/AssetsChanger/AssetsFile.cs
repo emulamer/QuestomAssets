@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using System.Reflection;
+using System.Collections;
 
 namespace QuestomAssets.AssetsChanger
 {
@@ -49,11 +50,13 @@ namespace QuestomAssets.AssetsChanger
             BaseStream.Seek(Header.ObjectDataOffset, SeekOrigin.Begin);
             return new AssetsReader(BaseStream);
         }
-
+        private bool _hasChanges = false;
         public bool HasChanges
         {
             get
             {
+                if (_hasChanges)
+                    return true;
                 var newPtrs = _knownPointers.Where(x => x.Owner.ObjectInfo.ParentFile == this && x.IsNew).ToList();
                 if (newPtrs.Any())
                 {
@@ -65,6 +68,10 @@ namespace QuestomAssets.AssetsChanger
                     return true;
                 }
                 return false;
+            }
+            set
+            {
+                _hasChanges = true;
             }
         }
 
@@ -96,12 +103,15 @@ namespace QuestomAssets.AssetsChanger
             }
             BaseStream.Seek(Header.ObjectDataOffset, SeekOrigin.Begin);
 
+            if (Manager.ForceLoadAllFiles)
+            {
+                foreach (var ext in Metadata.ExternalFiles)
+                {
+                    Manager.GetAssetsFile(ext.FileName);
+                }
+            }
             if (!Manager.LazyLoad)
             {
-                //foreach (var ext in Metadata.ExternalFiles)
-                //{
-                //    manager.GetAssetsFile(ext.FileName);
-                //}
                 foreach (var oi in Metadata.ObjectInfos)
                 {
                     var o = oi.Object;
@@ -178,6 +188,7 @@ namespace QuestomAssets.AssetsChanger
             }
 
             objectsMS.CopyTo(outputStream);
+            _hasChanges = false;
         }
 
         public long GetNextObjectID()
@@ -302,6 +313,9 @@ namespace QuestomAssets.AssetsChanger
             CleanupPtrs(assetsObject.ObjectInfo);
         }
 
+       
+
         
+
     }
 }

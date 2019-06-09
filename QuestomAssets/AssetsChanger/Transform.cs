@@ -6,8 +6,16 @@ namespace QuestomAssets.AssetsChanger
 {
 
    
-    public sealed class Transform : Component
+    public class Transform : Component
     {
+        protected Transform(AssetsFile assetsFile, int classID) : base(assetsFile, classID)
+        {
+        }
+
+        protected Transform(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
+        {
+        }
+
         public Transform(AssetsFile assetsFile) : base(assetsFile, AssetsConstants.ClassID.TransformClassID)
         {
         }
@@ -33,8 +41,8 @@ namespace QuestomAssets.AssetsChanger
             LocalRotation.Write(writer);
             LocalPosition.Write(writer);
             LocalScale.Write(writer);
-            writer.WriteArrayOf(Children, x => x.WritePtr(writer));
-            Father.WritePtr(writer);            
+            writer.WriteArrayOf(Children, x => x.Write(writer));
+            Father.Write(writer);            
         }
 
         public QuaternionF LocalRotation { get; set; }

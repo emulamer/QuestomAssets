@@ -244,8 +244,73 @@ namespace QuestomAssets
 
         //TODO: this whole section is a lot of copy/paste that needs to be cleaned up after I make sure it works at all
 
+        private void LoadSaberMesh(AssetsManager manager, SaberInfo saberInfo)
+        {
+            if (string.IsNullOrEmpty(saberInfo?.ID))
+                throw new ArgumentNullException("saberInfo.ID must not be null or empty!");
+
+            var file11 = manager.GetAssetsFile(BSConst.KnownFiles.File11);
+            file11.HasChanges = true;
+            //lots of double checking things in this function, first time I've done object manipulation this detailed
+
+            var newSaber = file11.FindAsset<GameObject>(x => x.Object.Name == $"{saberInfo.ID}Saber")?.Object;
+            if (newSaber != null)
+                throw new Exception($"Saber with ID {saberInfo.ID} already exists!");
+
+            //find the "basic saber" game object, we're going to copy it
+            var basicSaber = file11.FindAsset<GameObject>(x => x.Object.Name == "BasicSaber").Object;
+
+            //do some detailed checking to make sure the objects are in the places we expect and get the object we're going to clone
+            var transform = basicSaber.Components.FirstOrDefault(x => x.Object is Transform)?.Object as Transform;
+            if (transform == null)
+                throw new Exception("Unable to find Transform on Saber!");
+
+            var saberBladeGOTransform = transform.Children.FirstOrDefault(x => x.Object.GameObject?.Object.Name == "SaberBlade")?.Object;
+            var saberGlowingEdgesGOTransform = transform.Children.FirstOrDefault(x => x.Object.GameObject?.Object.Name == "SaberGlowingEdges")?.Object;
+            var saberHandleGOTransform = transform.Children.FirstOrDefault(x => x.Object.GameObject?.Object.Name == "SaberHandle")?.Object;
+            if (saberBladeGOTransform == null)
+                throw new Exception("Unable to find parent transform of SaberBlade on Transform!");
+            if (saberGlowingEdgesGOTransform == null)
+                throw new Exception("Unable to find parent transform of SaberGlowingEdges on Transform!");
+            if (saberHandleGOTransform == null)
+                throw new Exception("Unable to find parent transform of SaberHandle on Transform!");
+
+            var saberBladeGO = saberBladeGOTransform.GameObject.Object;
+            var saberGlowingEdgesGO = saberGlowingEdgesGOTransform.GameObject.Object;
+            var saberHandleGO = saberHandleGOTransform.GameObject.Object;
+            if (saberBladeGO == null)
+                throw new Exception("Unable to find SaberBlade on Transform!");
+            if (saberGlowingEdgesGO == null)
+                throw new Exception("Unable to find SaberGlowingEdges on Transform!");
+            if (saberHandleGO == null)
+                throw new Exception("Unable to find SaberHandle on Transform!");
+            var saberBladeMeshFilter = saberBladeGO.Components.FirstOrDefault(x => x.Object is MeshFilterObject)?.Object as MeshFilterObject;
+            var saberGlowingEdgesMeshFilter = saberGlowingEdgesGO.Components.FirstOrDefault(x => x.Object is MeshFilterObject)?.Object as MeshFilterObject;
+            var saberHandleMeshFilter = saberHandleGO.Components.FirstOrDefault(x => x.Object is MeshFilterObject)?.Object as MeshFilterObject;
+            if (saberBladeMeshFilter == null)
+                throw new Exception("Unable to find SaberBlade MeshFilter on Transform!");
+            if (saberGlowingEdgesMeshFilter == null)
+                throw new Exception("Unable to find SaberGlowingEdges MeshFilter on Transform!");
+            if (saberHandleMeshFilter == null)
+                throw new Exception("Unable to find SaberHandle MeshFilter on Transform!");
+            if (saberBladeMeshFilter?.Mesh?.Object?.Name != "SaberBlade")
+                throw new Exception($"Should be named SaberBlade but is named {saberBladeMeshFilter?.Mesh?.Object?.Name}!");
+            if (saberGlowingEdgesMeshFilter?.Mesh?.Object?.Name != "SaberGlowingEdges")
+                throw new Exception($"Should be named SaberGlowingEdges but is named {saberGlowingEdgesMeshFilter?.Mesh?.Object?.Name}!");
+            if (saberHandleMeshFilter?.Mesh?.Object?.Name != "SaberHandle")
+                throw new Exception($"Should be named SaberHandle but is named {saberHandleMeshFilter?.Mesh?.Object?.Name}!");
+            saberBladeMeshFilter.Mesh.Object.MeshData = saberInfo.DatFiles.SaberBladeBytes;
+            saberGlowingEdgesMeshFilter.Mesh.Object.MeshData = saberInfo.DatFiles.SaberGlowingEdgesBytes;
+            saberHandleMeshFilter.Mesh.Object.MeshData = saberInfo.DatFiles.SaberHandleBytes;
+           
+
+        }
+
+
+        //this doesn't work yet.
         private Transform MakeSaber(AssetsManager manager, SaberInfo saberInfo)
         {
+            /*
             if (string.IsNullOrEmpty(saberInfo?.ID))
                 throw new ArgumentNullException("saberInfo.ID must not be null or empty!");
 
@@ -261,7 +326,7 @@ namespace QuestomAssets
             var basicSaber = file11.FindAsset<GameObject>(x => x.Object.Name == "BasicSaber").Object;
 
             //do some detailed checking to make sure the objects are in the places we expect and get the object we're going to clone
-            var transform = basicSaber.Components.FirstOrDefault(x => x is SmartPtr<Transform>)?.Object as Transform;
+            var transform = basicSaber.Components.FirstOrDefault(x => x.Object is Transform)?.Object as Transform;
             if (transform == null)
                 throw new Exception("Unable to find Transform on Saber!");
             
@@ -284,9 +349,9 @@ namespace QuestomAssets
                 throw new Exception("Unable to find SaberGlowingEdges on Transform!");
             if (saberHandleGO == null)
                 throw new Exception("Unable to find SaberHandle on Transform!");
-            var saberBladeMeshFilter = (saberBladeGO.Components.FirstOrDefault(x => x is ISmartPtr<MeshFilterObject>) as ISmartPtr<MeshFilterObject>)?.Object;
-            var saberGlowingEdgesMeshFilter = (saberBladeGO.Components.FirstOrDefault(x => x is ISmartPtr<MeshFilterObject>) as ISmartPtr<MeshFilterObject>)?.Object;
-            var saberHandleMeshFilter = (saberBladeGO.Components.FirstOrDefault(x => x is ISmartPtr<MeshFilterObject>) as ISmartPtr<MeshFilterObject>)?.Object;
+            var saberBladeMeshFilter = saberBladeGO.Components.FirstOrDefault(x => x.Object is MeshFilterObject)?.Object as MeshFilterObject;
+            var saberGlowingEdgesMeshFilter = saberGlowingEdgesGO.Components.FirstOrDefault(x => x.Object is MeshFilterObject)?.Object as MeshFilterObject;
+            var saberHandleMeshFilter = saberHandleGO.Components.FirstOrDefault(x => x.Object is MeshFilterObject)?.Object as MeshFilterObject;
             if (saberBladeMeshFilter == null)
                 throw new Exception("Unable to find SaberBlade MeshFilter on Transform!");
             if (saberGlowingEdgesMeshFilter == null)
@@ -366,7 +431,9 @@ namespace QuestomAssets
             var newSaberHandleGO = saberHandleGO.ObjectInfo.Clone().Object as GameObject;
             newSaberHandleGO.Name = $"{saberInfo.ID}SaberHandle";
             var handleIndexGO = newSaberHandleGO.Components.IndexOf(newSaberHandleGO.Components.First(x => x.Object is MeshFilterObject));
+            var handleIndexTrans = newSaberHandleGO.Components.IndexOf(newSaberHandleGO.Components.First(x => x.Object is Transform));
             newSaberHandleGO.Components[handleIndexGO] = newSaberHandleMeshFilter.PtrFrom(newSaberHandleGO);
+            newSaberHandleGO.Components[handleIndexTrans] = newSaberHandleGOTransform.PtrFrom(newSaberHandleGO);
             file11.AddObject(newSaberHandleGO);
 
             //clone the Transform
@@ -386,7 +453,8 @@ namespace QuestomAssets
 
             file11.AddObject(newTransform);
 
-
+            ////////////////////////////////////TODO////////////////////////////
+            ///I have to copy all of the monobehaviours too because they have game object links
             //clone the BasicSaber and give it a new name
             newSaber = basicSaber.ObjectInfo.Clone().Object as GameObject;
             newSaber.Name = $"{saberInfo.ID}Saber";
@@ -397,7 +465,8 @@ namespace QuestomAssets
             file11.AddObject(newSaber);
 
             //holy shit, is there any chance all of this verbosity and double checking things will work?
-            return newTransform;
+            return newTransform;*/
+            return null;
 
         }
 
@@ -611,32 +680,18 @@ namespace QuestomAssets
         {
             try
             {
-                if (saberCfg != null && (!string.IsNullOrWhiteSpace(saberCfg.CustomSaberFolder) || !string.IsNullOrWhiteSpace(saberCfg.SaberID)))
+                if (saberCfg != null && !string.IsNullOrWhiteSpace(saberCfg.CustomSaberFolder))
                 {
-                    var currentSaber = GetCurrentSaberID(manager);
-                    if (!string.IsNullOrWhiteSpace(saberCfg.SaberID) && SaberExists(manager, saberCfg.SaberID))
+
+                    SaberInfo newSaber = SaberInfo.FromFolderOrZip(saberCfg.CustomSaberFolder);
+                    if (SaberExists(manager, newSaber.ID))
                     {
-                        if (currentSaber == saberCfg.SaberID)
-                        {
-                            Log.LogMsg($"Current saber is already set to {currentSaber}, no changes needed.");
-                            return true;
-                        }
-                        Log.LogMsg($"SaberID {saberCfg.SaberID} was found already in the assets, using it.");
-                        SwapToSaberID(manager, saberCfg.SaberID);
-                        return true;
+                        Log.LogErr($"Saber ID {newSaber.ID} that was loaded already exists.  Cannot load another saber with the same name.");
+                        return false;
                     }
-                    else
-                    {
-                        SaberInfo newSaber = SaberInfo.FromFolderOrZip(saberCfg.CustomSaberFolder);
-                        if (SaberExists(manager, newSaber.ID))
-                        {
-                            Log.LogErr($"Saber ID {newSaber.ID} that was loaded already exists.  Cannot load another saber with the same name.");
-                            return false;
-                        }
-                        MakeSaber(manager, newSaber);
-                        SwapToSaberID(manager, saberCfg.SaberID);
-                        return true;
-                    }
+                    LoadSaberMesh(manager, newSaber);
+                    return true;
+
                 }
                 else
                 {
@@ -650,18 +705,49 @@ namespace QuestomAssets
                 return false;
             }
         }
-        //private void UpdateSaberConfig(AssetsManager manager)
+
+        //not currently working
+        //private bool UpdateSaberConfig(AssetsManager manager, SaberModel saberCfg)
         //{
-        //    var currentSaber = GetCurrentSaberID(manager);
-        //    if (saberInfo == null || saberInfo.ID == null)
+        //    try
         //    {
-        //        Log.LogMsg("No SaberID provided, saber will not be changed.");
-        //        return;
+        //        if (saberCfg != null && (!string.IsNullOrWhiteSpace(saberCfg.CustomSaberFolder) || !string.IsNullOrWhiteSpace(saberCfg.SaberID)))
+        //        {
+        //            var currentSaber = GetCurrentSaberID(manager);
+        //            if (!string.IsNullOrWhiteSpace(saberCfg.SaberID) && SaberExists(manager, saberCfg.SaberID))
+        //            {
+        //                if (currentSaber == saberCfg.SaberID)
+        //                {
+        //                    Log.LogMsg($"Current saber is already set to {currentSaber}, no changes needed.");
+        //                    return true;
+        //                }
+        //                Log.LogMsg($"SaberID {saberCfg.SaberID} was found already in the assets, using it.");
+        //                SwapToSaberID(manager, saberCfg.SaberID);
+        //                return true;
+        //            }
+        //            else
+        //            {
+        //                SaberInfo newSaber = SaberInfo.FromFolderOrZip(saberCfg.CustomSaberFolder);
+        //                if (SaberExists(manager, newSaber.ID))
+        //                {
+        //                    Log.LogErr($"Saber ID {newSaber.ID} that was loaded already exists.  Cannot load another saber with the same name.");
+        //                    return false;
+        //                }
+        //                MakeSaber(manager, newSaber);
+        //                SwapToSaberID(manager, newSaber.ID);
+        //                return true;
+        //            }
+        //        }
+        //        else
+        //        {
+        //            Log.LogMsg("Saber config is null, saber configuration will not be changed.");
+        //            return true;
+        //        }
         //    }
-        //    if (saberInfo.ID.ToLower() == currentSaber.ToLower())
+        //    catch (Exception ex)
         //    {
-        //        Log.LogMsg("Current saber ID is already set, no change needed.");
-        //        return;
+        //        Log.LogErr("Failed to update saber configuration.", ex);
+        //        return false;
         //    }
         //}
 

@@ -10,15 +10,18 @@ namespace QuestomAssets.AssetsChanger
     {
         public Dictionary<string, Type> ClassNameToTypes { get; private set; } = new Dictionary<string, Type>();
         private IAssetsFileProvider _fileProvider;
+        
 
-        public AssetsManager(IAssetsFileProvider fileProvider, Dictionary<string, Type> classNameToTypes, bool lazyLoad = false)
+        public AssetsManager(IAssetsFileProvider fileProvider, Dictionary<string, Type> classNameToTypes, bool lazyLoad = false, bool forceLoadAllFiles = false)
         {
             _fileProvider = fileProvider;
             LazyLoad = lazyLoad;
             ClassNameToTypes = classNameToTypes;
+            ForceLoadAllFiles = forceLoadAllFiles;
         }
         private Dictionary<string, AssetsFile> _openAssetsFiles = new Dictionary<string, AssetsFile>();
         public bool LazyLoad { get; private set; }
+        public bool ForceLoadAllFiles { get; private set; }
         public List<AssetsFile> OpenFiles
         {
             get

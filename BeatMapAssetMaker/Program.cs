@@ -296,6 +296,11 @@ namespace BeatmapAssetMaker
                         CustomSongFolder = cs
                     });
                 }
+
+                cfg.Saber = new SaberModel()
+                {
+                    CustomSaberFolder = @"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\dist\sabers"
+                };
                 Log.LogMsg("Applying new configuration...");
                 q.UpdateConfig(cfg);
                 Log.LogMsg("Configuration updated");

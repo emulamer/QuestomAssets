@@ -259,7 +259,7 @@ namespace QuestomAssets.BeatSaber
 
             //slightly less hacky than before, but only a little
             var extrasCover = _assetsFile.Manager.MassFirstAsset<SpriteObject>(x => x.Object.Name == "ExtrasCover");
-            SpriteObject coverAsset = extrasCover.Clone().Object;
+            SpriteObject coverAsset = extrasCover.Clone();
             coverAsset.Name = assetName;
             coverAsset.Texture = packCover.PtrFrom(coverAsset);
             _assetsFile.AddObject(coverAsset, true);
