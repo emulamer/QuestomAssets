@@ -258,6 +258,15 @@ namespace QuestomAssets.AssetsChanger
 
                     var childNode = MakeNode(propValue, depth, trackedObjects);
                     childNode.ParentPropertyName = prop.Name;
+                    //stupid place for this
+                    if (typeof(IEnumerable).IsAssignableFrom(propValue?.GetType()))
+                    {
+                        foreach ( Node n in childNode.Nodes)
+                        {
+                            if (string.IsNullOrWhiteSpace(n.ParentPropertyName))
+                                n.ParentPropertyName = prop.Name;
+                        }
+                    }
                     if (string.IsNullOrEmpty(childNode.Text))
                     {
                         childNode.Text = $"{prop.Name}: {propValue?.GetType()?.Name ?? "((null)"}";

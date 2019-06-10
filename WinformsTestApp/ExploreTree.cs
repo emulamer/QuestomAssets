@@ -92,11 +92,11 @@ namespace WinformsTestApp
             else if (isClone)
             {
                 node.ForeColor = Color.DarkBlue;
-                
+
             }
             else
             {
-               node.ImageIndex = -1;
+                node.ImageIndex = -1;
                 node.SelectedImageIndex = -1;
             }
 
@@ -117,9 +117,9 @@ namespace WinformsTestApp
         private void TvExplorer_BeforeExpand(object sender, TreeViewCancelEventArgs e)
         {
             var thisNode = e.Node.Tag as Node;
-            
+
             if (thisNode != null && thisNode.StubToNode != null && thisNode.StubToNode.ExtRef != null)
-            {                
+            {
                 e.Node.Nodes.Clear();
                 foreach (var n in MakeTreeNode(thisNode.StubToNode, DUPE_DEPTH_LIMIT, true).Nodes.OfType<TreeNode>().ToList())
                 {
@@ -132,7 +132,7 @@ namespace WinformsTestApp
                 if (n != null)
                 {
                     e.Node.Nodes.Clear();
-                    foreach (var cn in MakeTreeNode(n.StubToNode??n, DUPE_DEPTH_LIMIT, true).Nodes.OfType<TreeNode>())
+                    foreach (var cn in MakeTreeNode(n.StubToNode ?? n, DUPE_DEPTH_LIMIT, true).Nodes.OfType<TreeNode>())
                     {
                         e.Node.Nodes.Add(cn);
                     }
@@ -161,7 +161,7 @@ namespace WinformsTestApp
             {
                 node.BackColor = Color.White;
             }
-            foreach(var n in node.Nodes)
+            foreach (var n in node.Nodes)
             {
                 HighlightNodesByTag(n as TreeNode, tag);
             }
@@ -234,7 +234,7 @@ namespace WinformsTestApp
                             {
                                 SelectedNode = null;
                                 SelectedNode = tn;
-                                tn.EnsureVisible();                                
+                                tn.EnsureVisible();
                             }
                         }));
                     }
@@ -262,6 +262,13 @@ namespace WinformsTestApp
                         cm.MenuItems.Add(new MenuItem("Paste Pointer", (o, ea) =>
                         {
                             DoPastePointer(n);
+                        }));
+                    }
+                    if (CanDelete(n))
+                    {
+                        cm.MenuItems.Add(new MenuItem("Delete", (o, ea) =>
+                        {
+                            DoDelete(n);
                         }));
                     }
                 }
@@ -363,6 +370,19 @@ namespace WinformsTestApp
             }
         }
 
+        private bool CanDelete(Node targetNode)
+        {
+            var target = targetNode?.Obj;
+            if (target == null)
+                return false;
+            var targetParent = targetNode?.Parent?.Obj as IEnumerable<ISmartPtr<AssetsObject>>;
+            var targetSingle = targetNode?.Parent?.Obj as AssetsObject;
+            if (targetParent == null && (targetSingle == null || targetNode.ParentPropertyName == null))
+                return false;
+
+            return true;
+        }
+
         private Node FindFirstParent(Node node)
         {
             if (node?.Obj == null)
@@ -411,6 +431,8 @@ namespace WinformsTestApp
             return exclusions;
         }
 
+        // yeesh, so much copy/paste code.  I WILL DO BETTER THAN THIS
+
         //todo: refactor
         private void DoPaste(Node targetNode)
         {
@@ -441,7 +463,7 @@ namespace WinformsTestApp
                     targetDirectParentObj = targetNode?.Parent?.Obj;
                     if (targetOwnerObj == null)
                     {
-                        Log.LogErr($"Tried to pase, but couldn't find the assetsobject owner on node '{targetNode.Text}'");
+                        Log.LogErr($"Tried to paste, but couldn't find the assetsobject owner on node '{targetNode.Text}'");
                         return;
                     }
                     if (targetDirectParentObj == null)
@@ -483,7 +505,7 @@ namespace WinformsTestApp
                 bool updated = false;
                 if (isFile)
                 {
-                    updated= true;
+                    updated = true;
                 }
                 else
                 {
@@ -525,8 +547,8 @@ namespace WinformsTestApp
                 {
                     var res = (tvExplorer.Nodes[0].Tag as Node).GetNodePath(targetNode);
                     //update node, hopefully we won't have to repopulate the entire thing?
-                    
-                    
+
+
 
                     if (!isFile)
                     {
@@ -568,8 +590,83 @@ namespace WinformsTestApp
             }
             catch (Exception ex)
             {
-                Log.LogErr($"Exception trying to pase object!", ex);
-                MessageBox.Show("Failed to pase object!");
+                Log.LogErr($"Exception trying to paste object!", ex);
+                MessageBox.Show("Failed to paste object!");
+            }
+        }
+
+        private void DoDelete(Node targetNode)
+        {
+            try
+            {
+                var targetObj = targetNode?.Obj;
+                var targetParentArray = targetNode?.Parent?.Obj  as IEnumerable<ISmartPtr<AssetsObject>>;
+                var targetParentObj = targetNode?.Parent?.Obj as AssetsObject;
+                if (targetObj == null || (targetParentArray == null && (targetParentObj == null || targetNode?.ParentPropertyName == null)))
+                    return;
+                if (string.IsNullOrWhiteSpace(targetNode.ParentPropertyName))
+                {
+                    Log.LogErr($"Tried to delete, but parent property name was null on node '{targetNode.Text}'");
+                    return;
+                }
+
+                bool updated = false;
+               
+
+                var ptr = targetObj as ISmartPtr<AssetsObject>;
+                if (ptr != null)
+                {
+                    try
+                    {
+                        if (targetParentArray != null)
+                        {
+                            ReflectionHelper.InvokeRemove(targetParentArray, ptr);
+                        }
+                        else if (targetParentObj != null)
+                        {
+                            ReflectionHelper.AssignPtrToPropName(targetParentObj, targetNode.ParentPropertyName, null);
+                        }
+                        ptr.Dispose();
+                        updated = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.LogErr($"Removing pointer from collection failed on collection {targetNode.ParentPropertyName}!");
+                        return;
+                    }
+                }
+
+                if (updated)
+                {
+                    var res = (tvExplorer.Nodes[0].Tag as Node).GetNodePath(targetNode.Parent);
+                    //update node, hopefully we won't have to repopulate the entire thing?
+
+                    targetNode.Parent.Nodes.Remove(targetNode);
+                    
+                    //TODO: find a better way to refresh only the altered tree node and not the whole thing
+
+
+                    var ds = DataSource;
+                    DataSource = null;
+                    DataSource = ds;
+
+                    TreeNode tn = tvExplorer.Nodes[0];
+                    while (res.Count > 0)
+                    {
+                        tn = tn.Nodes[res.Pop()] as TreeNode;
+                    }
+                    tn.EnsureVisible();
+                    SelectedNode = tn;
+                    tn.Expand();
+
+                    return;
+
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.LogErr($"Exception trying to delete object!", ex);
+                MessageBox.Show("Failed to paste object!");
             }
         }
 
@@ -589,7 +686,7 @@ namespace WinformsTestApp
                     return;
                 if (targetOwnerObj == null)
                 {
-                    Log.LogErr($"Tried to pase, but couldn't find the assetsobject owner on node '{targetNode.Text}'");
+                    Log.LogErr($"Tried to paste, but couldn't find the assetsobject owner on node '{targetNode.Text}'");
                     return;
                 }
                 if (targetDirectParentObj == null)
@@ -677,8 +774,8 @@ namespace WinformsTestApp
             }
             catch (Exception ex)
             {
-                Log.LogErr($"Exception trying to pase object!", ex);
-                MessageBox.Show("Failed to pase object!");
+                Log.LogErr($"Exception trying to paste object!", ex);
+                MessageBox.Show("Failed to paste object!");
             }
         }
 

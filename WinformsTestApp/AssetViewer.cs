@@ -267,6 +267,13 @@ namespace WinformsTestApp
         {
             _manager.WriteAllOpenAssets();
             _fileProvider.Save();
+            if (_fileProvider is ApkAssetsFileProvider)
+            {
+                ApkSigner s = new ApkSigner(BSConst.DebugCertificatePEM);
+                s.Sign(_fileProvider);
+            }
+ 
+            
             CloseStuff();
         }
     }

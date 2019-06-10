@@ -26,6 +26,15 @@ namespace QuestomAssets.Utils
             removeAtMethod.Invoke(targetObject, new object[] { index });
         }
 
+        public static void InvokeRemove(object targetObject, object toRemove)
+        {
+            var removeMethod = targetObject.GetType().GetMethod("Remove");
+            if (removeMethod == null)
+                throw new Exception($"Remove method could not be found on type {targetObject.GetType().Name}!  The passed target object should be a List<>!");
+
+            removeMethod.Invoke(targetObject, new object[] { toRemove });
+        }
+
         public static void AssignPtrToPropName(object targetObject, string targetPropName, ISmartPtr<AssetsObject> ptr)
         {
             var prop = targetObject.GetType().GetProperty(targetPropName);
@@ -47,6 +56,15 @@ namespace QuestomAssets.Utils
             return true;
         }
 
+        public static T GetPropValueOfName<T>(object obj, string propertyName)
+        {
+            var prop = obj.GetType().GetProperty(propertyName);
+            if (prop == null)
+                throw new Exception("Couldn't find the property.");
+            if (prop.PropertyType != typeof(T))
+                throw new Exception("Property is not the type expected.");
+            return (T)prop.GetValue(obj, null);
+        }
 
         public static bool IsPropNameAssignableToType(object obj, string propName, Type type)
         {
