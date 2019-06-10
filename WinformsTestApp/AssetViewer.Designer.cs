@@ -32,6 +32,7 @@ namespace WinformsTestApp
         {
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tbExplore = new System.Windows.Forms.TabPage();
+            this.btnNewWindow = new System.Windows.Forms.Button();
             this.cbAssetsFile = new System.Windows.Forms.ComboBox();
             this.label2 = new System.Windows.Forms.Label();
             this.etMain = new WinformsTestApp.ExploreTree();
@@ -46,6 +47,7 @@ namespace WinformsTestApp
             this.tpLog = new System.Windows.Forms.TabPage();
             this.btnClearLog = new System.Windows.Forms.Button();
             this.tbLog = new System.Windows.Forms.TextBox();
+            this.btnSave = new System.Windows.Forms.Button();
             this.tabControl1.SuspendLayout();
             this.tbExplore.SuspendLayout();
             this.tpCompare.SuspendLayout();
@@ -73,6 +75,8 @@ namespace WinformsTestApp
             // 
             // tbExplore
             // 
+            this.tbExplore.Controls.Add(this.btnSave);
+            this.tbExplore.Controls.Add(this.btnNewWindow);
             this.tbExplore.Controls.Add(this.cbAssetsFile);
             this.tbExplore.Controls.Add(this.label2);
             this.tbExplore.Controls.Add(this.etMain);
@@ -84,6 +88,16 @@ namespace WinformsTestApp
             this.tbExplore.TabIndex = 0;
             this.tbExplore.Text = "Explore";
             this.tbExplore.UseVisualStyleBackColor = true;
+            // 
+            // btnNewWindow
+            // 
+            this.btnNewWindow.Location = new System.Drawing.Point(334, 4);
+            this.btnNewWindow.Name = "btnNewWindow";
+            this.btnNewWindow.Size = new System.Drawing.Size(145, 41);
+            this.btnNewWindow.TabIndex = 6;
+            this.btnNewWindow.Text = "New Window";
+            this.btnNewWindow.UseVisualStyleBackColor = true;
+            this.btnNewWindow.Click += new System.EventHandler(this.BtnNewWindow_Click);
             // 
             // cbAssetsFile
             // 
@@ -120,7 +134,6 @@ namespace WinformsTestApp
             this.etMain.SelectedNode = null;
             this.etMain.Size = new System.Drawing.Size(903, 449);
             this.etMain.TabIndex = 3;
-            this.etMain.NodeRightClicked += new System.EventHandler<System.Windows.Forms.TreeNodeMouseClickEventArgs>(this.EtMain_NodeRightClicked);
             // 
             // btnLoad
             // 
@@ -260,6 +273,16 @@ namespace WinformsTestApp
             this.tbLog.Size = new System.Drawing.Size(912, 454);
             this.tbLog.TabIndex = 0;
             // 
+            // btnSave
+            // 
+            this.btnSave.Location = new System.Drawing.Point(219, 4);
+            this.btnSave.Name = "btnSave";
+            this.btnSave.Size = new System.Drawing.Size(61, 41);
+            this.btnSave.TabIndex = 6;
+            this.btnSave.Text = "Save";
+            this.btnSave.UseVisualStyleBackColor = true;
+            this.btnSave.Click += new System.EventHandler(this.BtnSave_Click);
+            // 
             // AssetViewer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
@@ -304,6 +327,8 @@ namespace WinformsTestApp
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label3;
         private SplitContainer splitContainer1;
+        private Button btnNewWindow;
+        private Button btnSave;
     }
 }
 

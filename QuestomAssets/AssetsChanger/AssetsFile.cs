@@ -75,6 +75,21 @@ namespace QuestomAssets.AssetsChanger
             }
         }
 
+        public int GetOrCreateMatchingTypeIndex(AssetsType type)
+        {
+            var toFileType = Metadata.Types.Where(x => x.ClassID == type.ClassID 
+            //only require hashes to match if it's a monobehaviour
+            && (x.ClassID != AssetsConstants.ClassID.MonoBehaviourScriptType || (x.TypeHash == type.TypeHash && x.ScriptHash == type.ScriptHash)))
+                //order by class ID and typehash matching first (prefer type hash)
+                .OrderBy(x => ((x.ScriptHash == type.ScriptHash)?0:1) + ((x.TypeHash == type.TypeHash)?0:2))
+                .FirstOrDefault();
+            if (toFileType == null)
+            {
+                throw new NotSupportedException($"Target file does not seem to have a type that matches the source file's type.  Adding in other type references isn't supported yet.");
+            }
+            return Metadata.Types.IndexOf(toFileType);
+        }
+
         public Stream BaseStream { get; private set; }
         
         public AssetsFile(AssetsManager manager, string assetsFileName, Stream assetsFileStream, bool load = true)
@@ -193,7 +208,12 @@ namespace QuestomAssets.AssetsChanger
 
         public long GetNextObjectID()
         {
-            return Metadata.ObjectInfos.Max(x => x.ObjectID) + 1;
+            long nextID = Metadata.ObjectInfos.Max(x => x.ObjectID);
+            //if they're all negative, make a MORE negative one
+            if (nextID < 0)
+                return Metadata.ObjectInfos.Min(x => x.ObjectID) - 1;
+
+            return nextID + 1;
         }
 
         public void AddObject(AssetsObject assetsObject, bool assignNextObjectID = true)

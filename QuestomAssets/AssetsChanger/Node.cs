@@ -55,6 +55,30 @@ namespace QuestomAssets.AssetsChanger
             else
                 return null;
         }
+
+        private bool FindNodePath(Node targetNode, Stack<int> path)
+        {
+            if (targetNode == this)
+                return true;
+            
+            for (int i = 0; i < Nodes.Count; i++)
+            {
+                var node = Nodes[i];
+
+                if (node.FindNodePath(targetNode, path))
+                {
+                    path.Push(i);
+                    return true;
+                }
+            }
+            return false;
+        }
+        public Stack<int> GetNodePath(Node node)
+        {
+            Stack<int> path = new Stack<int>();
+            FindNodePath(node, path);
+            return path;
+        }
         public static Node MakeNode(AssetsManager manager)
         {
             var trackedObjects = new Dictionary<object, Node>();
@@ -110,15 +134,18 @@ namespace QuestomAssets.AssetsChanger
                 node.Text = "";
                 node.StubToNode = otherNode;
                 
+                
                 if (otherNode.Depth > depth)
                 {
                     node.Depth = otherNode.Depth;
                     node.Parent = otherNode.Parent;
+                    node.ParentPropertyName = otherNode.ParentPropertyName;
                     int otherIndex = otherNode.Parent.Nodes.IndexOf(otherNode);
                     otherNode.Parent.Nodes.RemoveAt(otherIndex);
                     otherNode.Parent.Nodes.Insert(otherIndex, node);
                     otherNode.Depth = depth;
                     otherNode.Parent = null;
+                    
                     node = otherNode;
                 }
 
@@ -225,11 +252,12 @@ namespace QuestomAssets.AssetsChanger
                     catch (Exception ex)
                     {
                         QuestomAssets.Log.LogErr($"Failed loading property {prop.Name} on object type {o.GetType().Name}", ex);
-                        node.AddNode(new Node() { Text = $"{prop.Name}: (Inaccessible)", TypeName = "", Depth = depth });
+                        node.AddNode(new Node() { Text = $"{prop.Name}: (Inaccessible)", TypeName = "", Depth = depth, ParentPropertyName = prop.Name});
                         continue;
                     }
 
                     var childNode = MakeNode(propValue, depth, trackedObjects);
+                    childNode.ParentPropertyName = prop.Name;
                     if (string.IsNullOrEmpty(childNode.Text))
                     {
                         childNode.Text = $"{prop.Name}: {propValue?.GetType()?.Name ?? "((null)"}";
@@ -268,6 +296,10 @@ namespace QuestomAssets.AssetsChanger
         public int Depth { get; set; }
         public object ExtRef { get; set; }
         public List<Node> Nodes { get; set; } = new List<Node>();
+
+
+        public string ParentPropertyName { get; set; }
+        
 
         public Node Parent { get; set; }
         public void AddNode(Node n)

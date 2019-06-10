@@ -67,12 +67,12 @@ namespace WinformsTestApp
                         return;
                     try
                     {
-                        _fileProvider = new ApkAssetsFileProvider(ofd.FileName, ApkAssetsFileProvider.FileCacheMode.Memory, false);
-                        _manager = new AssetsManager(_fileProvider, BSConst.GetAssetTypeMap(), false, true);
+                        _fileProvider = new ApkAssetsFileProvider(ofd.FileName, ApkAssetsFileProvider.FileCacheMode.Memory,false);
+                        _manager = new AssetsManager(_fileProvider, BSConst.GetAssetTypeMap(), false,true);
                         if (_fileProvider.FindFiles("globalgamemanagers.assets*").Count > 0)
                             _manager.GetAssetsFile("globalgamemanagers.assets");
                         FillAssetsFiles();
-
+                        this.Text = "Asset Viewer - " + Path.GetFileName(ofd.FileName);
                     }
                     catch (Exception ex)
                     {
@@ -116,6 +116,7 @@ namespace WinformsTestApp
                             }
                         });
                         FillAssetsFiles();
+                        this.Text = "Asset Viewer - " + Path.GetFileName(ofd.FileName);
                     }
                     catch (Exception ex)
                     {
@@ -130,7 +131,7 @@ namespace WinformsTestApp
                     }
                 })
             });
-            cm.Show(btnLoad, new Point(0, btnLoad.Width / 2));
+            cm.Show(btnLoad, new Point(0, btnLoad.Height));
             return;
 
             
@@ -254,6 +255,19 @@ namespace WinformsTestApp
             
             if (cm.MenuItems.Count > 0)
                 cm.Show(sender as Control, etMain.PointToClient(Cursor.Position));
+        }
+
+        private void BtnNewWindow_Click(object sender, EventArgs e)
+        {
+            AssetViewer vwr = new AssetViewer();
+            vwr.Show();
+        }
+
+        private void BtnSave_Click(object sender, EventArgs e)
+        {
+            _manager.WriteAllOpenAssets();
+            _fileProvider.Save();
+            CloseStuff();
         }
     }
 }

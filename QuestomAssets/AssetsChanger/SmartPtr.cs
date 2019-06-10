@@ -48,12 +48,24 @@ namespace QuestomAssets.AssetsChanger
 
         public static SmartPtr<T> Read(AssetsFile assetsFile, AssetsObject owner, AssetsReader reader)
         {
+            if (owner == null)
+            {
+                Log.LogErr("WARNING: SmartPtr created without an owner!");
+            }
             int fileID = reader.ReadInt32();
             reader.AlignTo(4);
             Int64 pathID = reader.ReadInt64();
             if (fileID == 0 && pathID == 0)
                 return null;
-            
+
+            var objInfo = assetsFile.GetObjectInfo<T>(fileID, pathID);
+
+            if (objInfo == null)
+            {
+                Log.LogErr($"WARNING: Could not find objectinfo for creating SmartPtr of type {typeof(T).Name} on owner type {owner?.GetType()?.Name ?? "(null owner)"}!  Returned a null pointer instead.");
+                return null;
+            }
+
             SmartPtr<T> ptr = new SmartPtr<T>(owner, assetsFile.GetObjectInfo<T>(fileID, pathID));
             //TODO: not sure this is only ever called by existing objects
             ptr.IsNew = false;
