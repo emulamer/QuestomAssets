@@ -143,6 +143,7 @@ namespace QuestomAssets.AssetsChanger
                     if (Owner != null)
                     {
                         Owner.ObjectInfo.ParentFile.RemovePtrRef(this);
+                        Owner.ObjectInfo.ParentFile.HasChanges = true;
                     }
                     if (Target != null)
                     {

@@ -641,7 +641,10 @@ namespace WinformsTestApp
                     var res = (tvExplorer.Nodes[0].Tag as Node).GetNodePath(targetNode.Parent);
                     //update node, hopefully we won't have to repopulate the entire thing?
 
-                    targetNode.Parent.Nodes.Remove(targetNode);
+                    if (targetParentArray != null)
+                    {
+                        targetNode.Parent.Nodes.Remove(targetNode);
+                    }
                     
                     //TODO: find a better way to refresh only the altered tree node and not the whole thing
 
