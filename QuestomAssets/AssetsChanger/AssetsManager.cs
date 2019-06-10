@@ -1,6 +1,7 @@
 ﻿using QuestomAssets.BeatSaber;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 
@@ -10,15 +11,17 @@ namespace QuestomAssets.AssetsChanger
     {
         public Dictionary<string, Type> ClassNameToTypes { get; private set; } = new Dictionary<string, Type>();
         private IAssetsFileProvider _fileProvider;
-        
+        private string _assetsRootPath;
 
-        public AssetsManager(IAssetsFileProvider fileProvider, Dictionary<string, Type> classNameToTypes, bool lazyLoad = false, bool forceLoadAllFiles = false)
+        public AssetsManager(IAssetsFileProvider fileProvider, string assetsRootPath, Dictionary<string, Type> classNameToTypes)
         {
             _fileProvider = fileProvider;
-            LazyLoad = lazyLoad;
+            _assetsRootPath = assetsRootPath;
+            LazyLoad = false;
             ClassNameToTypes = classNameToTypes;
-            ForceLoadAllFiles = forceLoadAllFiles;
+            ForceLoadAllFiles = false;
         }
+
         private Dictionary<string, AssetsFile> _openAssetsFiles = new Dictionary<string, AssetsFile>();
         public bool LazyLoad { get; private set; }
         public bool ForceLoadAllFiles { get; private set; }
@@ -30,14 +33,100 @@ namespace QuestomAssets.AssetsChanger
             }
         }
 
+        //if file ends in .split0 yes
+        //if file ends in .assets yes
+        //if file has no extension yes
+
+        public List<string> FindAndLoadAllAssets()
+        {
+            List<string> loadedFiles = new List<string>();
+            var foundFiles = _fileProvider.FindFiles(_assetsRootPath + "*");
+            List<string> tryFiles = new List<string>();
+            foreach (var foundFile in foundFiles)
+            {
+                var filename = foundFile.Substring(_assetsRootPath.Length);
+
+                if (filename.Any(x => x == '/'))
+                {
+                    if (!filename.Substring(filename.LastIndexOf("/")).Contains("."))
+                    {
+                        tryFiles.Add(filename);
+                        continue;
+                    }
+                }
+                else if (!filename.Contains("."))
+                {
+                    tryFiles.Add(filename);
+                    continue;
+                }
+
+                if (filename.ToLower().EndsWith(".split0"))
+                {
+                    filename = filename.Substring(0, filename.Length - ".split0".Length);
+                    tryFiles.Add(filename);
+                    continue;
+                }
+
+                if (filename.ToLower().EndsWith(".assets"))
+                {
+                    tryFiles.Add(filename);
+                    continue;
+                }
+            }
+
+            
+
+            foreach (var tryFile in tryFiles)
+            {
+                if (_openAssetsFiles.ContainsKey(tryFile.ToLower()))
+                {
+                    loadedFiles.Add(tryFile);
+                    continue;
+                }
+                AssetsFile file;
+                if (TryGetAssetsFile(tryFile, out file))
+                    loadedFiles.Add(tryFile);
+            }
+            return loadedFiles;
+        }
+
+
         public AssetsFile GetAssetsFile(string assetsFilename)
         {
-            if (_openAssetsFiles.ContainsKey(assetsFilename))
-                return _openAssetsFiles[assetsFilename];
-            AssetsFile assetsFile = new AssetsFile(this, assetsFilename, _fileProvider.ReadCombinedAssets(assetsFilename), false);
-            _openAssetsFiles.Add(assetsFilename, assetsFile);
-            assetsFile.Load();
+            if (_openAssetsFiles.ContainsKey(assetsFilename.ToLower()))
+                return _openAssetsFiles[assetsFilename.ToLower()];
+            AssetsFile assetsFile = new AssetsFile(this, assetsFilename, _fileProvider.ReadCombinedAssets(_assetsRootPath + assetsFilename), false);
+            _openAssetsFiles.Add(assetsFilename.ToLower(), assetsFile);
+            assetsFile.LoadData();
             return assetsFile;
+        }
+
+        public bool TryGetAssetsFile(string assetsFilename, out AssetsFile loadedFile)
+        {
+            if (_openAssetsFiles.ContainsKey(assetsFilename))
+            {
+                loadedFile = _openAssetsFiles[assetsFilename];
+                return true;
+            }
+            AssetsFile assetsFile = null;
+            Stream stream = null;
+            try
+            {
+                stream = _fileProvider.ReadCombinedAssets(_assetsRootPath + assetsFilename);
+                assetsFile = new AssetsFile(this, assetsFilename, stream, false);
+            }
+            catch
+            {
+                if (stream != null)
+                    stream.Dispose();
+
+                loadedFile = null;
+                return false;
+            }
+            _openAssetsFiles.Add(assetsFilename, assetsFile);
+            assetsFile.LoadData();
+            loadedFile = assetsFile;
+            return true;
         }
 
         public void WriteAllOpenAssets()
@@ -50,7 +139,7 @@ namespace QuestomAssets.AssetsChanger
                     Log.LogMsg($"File {assetsFileName} has changed, writing new contents.");
                     try
                     {
-                        _fileProvider.WriteCombinedAssets(assetsFile, BSConst.KnownFiles.AssetsRootPath + assetsFileName);
+                        _fileProvider.WriteCombinedAssets(assetsFile, _assetsRootPath + assetsFileName);
                     }
                     catch (Exception ex)
                     {
@@ -69,7 +158,8 @@ namespace QuestomAssets.AssetsChanger
             if (_classCache.ContainsKey(className))
                 return _classCache[className];
             var ggm = GetAssetsFile("globalgamemanagers.assets");
-            var classObj = ggm.FindAsset<MonoScriptObject>(x => x.Object.Name == className);
+            var list = ggm.FindAssets<MonoScriptObject>(x => x.Object.Name == className);
+            var classObj = list.FirstOrDefault();
             if (classObj == null)
                 throw new Exception($"Unable to find a script with type name {className}!");
             _classCache.Add(className, classObj.Object);
@@ -79,28 +169,18 @@ namespace QuestomAssets.AssetsChanger
         {
             if (_hashClassCache.ContainsKey(propertiesHash))
                 return _hashClassCache[propertiesHash];
-            AssetsFile ggm = null;
-            
-            //todo: no BSConst in here
-            if (_fileProvider.FileExists(BSConst.KnownFiles.AssetsRootPath + "globalgamemanagers"))
-            {
-                ggm = GetAssetsFile("globalgamemanagers");
-            }
-           
+
             IObjectInfo<MonoScriptObject> classObj = null;
 
-            if (ggm != null)
-                classObj = ggm.FindAsset<MonoScriptObject>(x => x.Object.PropertiesHash == propertiesHash);
-           
-            if (classObj == null)
+            //check any open files
+            foreach (var file in OpenFiles)
             {
-                //todo: no BSConst in here
-                if (_fileProvider.FileExists(BSConst.KnownFiles.AssetsRootPath + "globalgamemanagers.assets"))
-                {
-                    ggm = GetAssetsFile("globalgamemanagers.assets");
-                    classObj = ggm.FindAsset<MonoScriptObject>(x => x.Object.PropertiesHash == propertiesHash);
-                }
+                classObj = file.FindAsset<MonoScriptObject>(x => x.Object.PropertiesHash == propertiesHash);
+                if (classObj != null)
+                    break;
             }
+            
+            //TODO: decide if a mass search is in order (i.e. follow the tree of all external files)
 
             if (classObj == null)
             {

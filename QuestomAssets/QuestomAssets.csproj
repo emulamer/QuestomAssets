@@ -16,10 +16,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="assetsLoadOrder.json" />
     <None Remove="patchsettings.json" />
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="assetsLoadOrder.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="patchsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -47,7 +51,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Assembly-CSharp\Assembly-CSharp.csproj" />
     <ProjectReference Include="..\StbSharp\StbSharp\StbSharp.NETStandard.csproj" />
   </ItemGroup>
 

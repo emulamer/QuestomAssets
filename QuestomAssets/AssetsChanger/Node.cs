@@ -256,6 +256,11 @@ namespace QuestomAssets.AssetsChanger
                         continue;
                     }
 
+                    if (propValue != null && typeof(IObjectInfo<AssetsObject>).IsAssignableFrom(propValue.GetType()) && prop.Name == nameof(AssetsObject.ObjectInfo))
+                    {
+                        continue;
+                    }
+
                     var childNode = MakeNode(propValue, depth, trackedObjects);
                     childNode.ParentPropertyName = prop.Name;
                     //stupid place for this

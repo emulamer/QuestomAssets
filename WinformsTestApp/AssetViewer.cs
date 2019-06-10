@@ -56,8 +56,7 @@ namespace WinformsTestApp
             {
                 new MenuItem("APK", (s, e2) =>
                 {
-                    CloseStuff();
-                                        OpenFileDialog ofd = new OpenFileDialog()
+                    OpenFileDialog ofd = new OpenFileDialog()
                     {
                          CheckFileExists = true,
                          Title = "Open Bundle File",
@@ -65,12 +64,16 @@ namespace WinformsTestApp
                     };
                     if (ofd.ShowDialog() == DialogResult.Cancel)
                         return;
+                    CloseStuff();
                     try
                     {
-                        _fileProvider = new ApkAssetsFileProvider(ofd.FileName, ApkAssetsFileProvider.FileCacheMode.Memory,false);
-                        _manager = new AssetsManager(_fileProvider, BSConst.GetAssetTypeMap(), false,true);
+                        _fileProvider = new ApkAssetsFileProvider(ofd.FileName, FileCacheMode.Memory,false);
+                        _manager = new AssetsManager(_fileProvider, BSConst.KnownFiles.AssetsRootPath, BSConst.GetAssetTypeMap());
+                        if (_fileProvider.FindFiles("globalgamemanagers").Count > 0)
+                            _manager.GetAssetsFile("globalgamemanagers.assets");
                         if (_fileProvider.FindFiles("globalgamemanagers.assets*").Count > 0)
                             _manager.GetAssetsFile("globalgamemanagers.assets");
+                        _manager.FindAndLoadAllAssets();
                         FillAssetsFiles();
                         this.Text = "Asset Viewer - " + Path.GetFileName(ofd.FileName);
                     }
@@ -86,9 +89,42 @@ namespace WinformsTestApp
                         return;
                     }
                 }),
+                new MenuItem("Folder", (s, e2) =>
+                {
+                    FolderBrowserDialog fbd = new FolderBrowserDialog()
+                    {
+                         ShowNewFolderButton = false,
+                         Description = "Select Assets Root Folder"
+                    };
+                    if (fbd.ShowDialog() == DialogResult.Cancel)
+                        return;
+                    CloseStuff();
+                    try
+                    {
+                        _fileProvider = new FolderFileProvider(fbd.SelectedPath, false);
+                        _manager = new AssetsManager(_fileProvider, BSConst.KnownFiles.AssetsRootPath, BSConst.GetAssetTypeMap());
+                        if (_fileProvider.FindFiles("globalgamemanagers").Count > 0)
+                            _manager.GetAssetsFile("globalgamemanagers.assets");
+                        if (_fileProvider.FindFiles("globalgamemanagers.assets*").Count > 0)
+                            _manager.GetAssetsFile("globalgamemanagers.assets");
+                        _manager.FindAndLoadAllAssets();
+                        FillAssetsFiles();
+                        this.Text = "Asset Viewer - " + Path.GetFileName(fbd.SelectedPath);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.LogErr("Couldn't load APK!", ex);
+                        MessageBox.Show("Failed to load!");
+                        if (_fileProvider != null)
+                        {
+                            _fileProvider.Dispose();
+                            _fileProvider = null;
+                        }
+                        return;
+                    }
+                }),
                 new MenuItem("Bundle", (s, e2) =>
                 {
-                    CloseStuff();
                     OpenFileDialog ofd = new OpenFileDialog()
                     {
                          CheckFileExists = true,
@@ -97,24 +133,12 @@ namespace WinformsTestApp
                     };
                     if (ofd.ShowDialog() == DialogResult.Cancel)
                         return;
+                    CloseStuff();
                     try
                     {
                         _fileProvider = new BundleFileProvider(ofd.FileName,true);
-                        _manager = new AssetsManager(_fileProvider, BSConst.GetAssetTypeMap(), false, true);
-                        _fileProvider.FindFiles("*").ForEach(x =>
-                        {
-                            if (!x.Contains("."))
-                            {
-                                try
-                                {
-                                    _manager.GetAssetsFile(x);
-                                }
-                                catch (Exception ex)
-                                {
-                                    Log.LogErr($"Failed to load file '{x}' from bundle", ex);
-                                }
-                            }
-                        });
+                        _manager = new AssetsManager(_fileProvider, BSConst.KnownFiles.AssetsRootPath, BSConst.GetAssetTypeMap());
+                        _manager.FindAndLoadAllAssets();
                         FillAssetsFiles();
                         this.Text = "Asset Viewer - " + Path.GetFileName(ofd.FileName);
                     }

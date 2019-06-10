@@ -53,7 +53,7 @@ namespace QuestomAssets
             return GetEntry(filename).Size;
         }
 
-        public Stream GetReadStream(string filename)
+        public Stream GetReadStream(string filename, bool bypassCache = false)
         {
             return new MemoryStream(GetEntry(filename).Data);
         }

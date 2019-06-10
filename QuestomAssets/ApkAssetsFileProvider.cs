@@ -10,13 +10,7 @@ namespace QuestomAssets
 {
     public class ApkAssetsFileProvider : IAssetsFileProvider
     {
-        public enum FileCacheMode
-        {
-            //None won't work for some stuff since it can't seek.
-            None,
-            Memory,
-            TempFiles
-        };
+
         private Dictionary<string, string> _tempFiles = new Dictionary<string, string>();
         public bool ReadOnly { get; private set; }
         public string ApkFilename { get; private set; }
@@ -109,11 +103,15 @@ namespace QuestomAssets
             return outStream;
         }
 
-        public Stream GetReadStream(string filename)
+        public Stream GetReadStream(string filename, bool bypassCache = false)
         {
             var entry = _zipFile.Entries.FirstOrDefault(x => x.FileName.ToLower() == filename.ToLower());
             if (entry == null)
                 throw new FileNotFoundException($"An entry named {filename} was not found in the APK.");
+
+            if (bypassCache)
+                return entry.OpenReader();
+
             return GetCacheStream(filename, entry.OpenReader());
         }
 

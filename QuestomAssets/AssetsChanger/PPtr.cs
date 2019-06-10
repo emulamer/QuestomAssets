@@ -21,11 +21,6 @@ namespace QuestomAssets.AssetsChanger
             return FileID.GetHashCode() ^ PathID.GetHashCode();
         }
 
-        public RawPtr(UPtr uptr)
-        {
-            FileID = uptr.FileID;
-            PathID = uptr.PathID;
-        }
         public int FileID { get; private set; }
         public Int64 PathID { get; private set; }
 

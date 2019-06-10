@@ -91,26 +91,30 @@ namespace QuestomAssets.AssetsChanger
         }
 
         public Stream BaseStream { get; private set; }
+
         
-        public AssetsFile(AssetsManager manager, string assetsFileName, Stream assetsFileStream, bool load = true)
+        public AssetsFile(AssetsManager manager, string assetsFileName, Stream assetsFileStream, bool loadData = true)
         {
             Manager = manager;
             if (!assetsFileStream.CanSeek)
                 throw new NotSupportedException("Stream must support seeking!");
             BaseStream = assetsFileStream;
             AssetsFileName = assetsFileName;
-            if (load)
-                Load();
-        }
-        public void Load()
-        {
-
             BaseStream.Seek(0, SeekOrigin.Begin);
-
             using (AssetsReader reader = new AssetsReader(BaseStream, false))
             {
                 Header = new AssetsFileHeader(reader);
             }
+
+            if (Header.MetadataSize > Header.FileSize || Header.ObjectDataOffset < Header.MetadataSize || Header.Version != 17)
+                throw new NotSupportedException($"{AssetsFileName} doesn't appear to be a valid assets file, or {Header.Version} is unsupported!");
+
+            if (loadData)
+                LoadData();
+        }
+        public void LoadData()
+        {
+            BaseStream.Seek(Header.HeaderSize, SeekOrigin.Begin);
             using (AssetsReader reader = new AssetsReader(BaseStream, false))
             {
                 Metadata = new AssetsMetadata(this);

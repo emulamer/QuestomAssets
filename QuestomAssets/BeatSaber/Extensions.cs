@@ -26,22 +26,27 @@ namespace QuestomAssets.BeatSaber
                 {
                     noSplit = assetsFile;
                 }
+                if (fp.FileExists(noSplit))
+                    return noSplit;
+
                 var split0 = noSplit + ".split0";
                 if (fp.FileExists(split0))
                     return split0;
             }
-            if (fp.FileExists(assetsFile))
+            else if (fp.FileExists(assetsFile))
             {
                 return assetsFile;
             }
+            else if (fp.FileExists(assetsFile + ".split0"))
+            {
+                return assetsFile + ".split0";
+            }
+
             return null;            
         }
 
         public static string CorrectAssetFilename(this IAssetsFileProvider fp, string assetsFile)
         {
-            //should really get these path constants out of here to somewhere else
-            if (!fp.FileExists(assetsFile))
-                assetsFile = BSConst.KnownFiles.AssetsRootPath + assetsFile;
             var correctName = FindFirstOfSplit(fp, assetsFile);
             if (correctName != null)
                 return correctName;

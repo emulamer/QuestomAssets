@@ -385,7 +385,7 @@ namespace QuestomAssets.Utils
 
         private static void CompressETC(string srcFile, string dstFile, bool fast, bool perceptual, bool etc2, string format)
         {
-            ProcessStartInfo psi = new ProcessStartInfo(Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location), "etcpack.exe"), $"\"{srcFile}\" \"{dstFile}\" -s {(fast?"fast":"slow")} -e {(perceptual?"perceptual":"nonperceptual")} -c {(etc2?"etc2":"etc1")} -f {(etc2?format:"RGB")}");
+            ProcessStartInfo psi = new ProcessStartInfo(Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "etcpack.exe"), $"\"{srcFile}\" \"{dstFile}\" -s {(fast?"fast":"slow")} -e {(perceptual?"perceptual":"nonperceptual")} -c {(etc2?"etc2":"etc1")} -f {(etc2?format:"RGB")}");
             psi.UseShellExecute = false;
             psi.CreateNoWindow = true;
             psi.RedirectStandardOutput = true;
@@ -404,7 +404,7 @@ namespace QuestomAssets.Utils
         private static void DecompressETC(string srcFile, string dstFile)
         {
             
-            ProcessStartInfo psi = new ProcessStartInfo(Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location), "etcpack.exe"), $"\"{srcFile}\" \"{dstFile}\"");
+            ProcessStartInfo psi = new ProcessStartInfo(Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "etcpack.exe"), $"\"{srcFile}\" \"{dstFile}\"");
             psi.UseShellExecute = false;
             psi.CreateNoWindow = true;
             psi.RedirectStandardOutput = true;
