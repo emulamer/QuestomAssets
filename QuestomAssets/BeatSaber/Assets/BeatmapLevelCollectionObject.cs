@@ -6,10 +6,11 @@ using System.Text;
 using System.Threading.Tasks;
 using QuestomAssets.AssetsChanger;
 using Newtonsoft.Json;
+using QuestomAssets.Utils;
 
 namespace QuestomAssets.BeatSaber
 {
-    public sealed class BeatmapLevelCollectionObject : MonoBehaviourObject, INeedAssetsMetadata
+    public sealed class BeatmapLevelCollectionObject : MonoBehaviourObject, INeedAssetsFileInjectionForJsonDeserialization
     {
         //public BeatmapLevelCollectionObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
         //{
@@ -18,16 +19,16 @@ namespace QuestomAssets.BeatSaber
 
         public BeatmapLevelCollectionObject(AssetsFile assetsFile) : base(assetsFile, assetsFile.Manager.GetScriptObject("BeatmapLevelCollectionSO"))
         {
-            BeatmapLevels = new List<ISmartPtr<BeatmapLevelDataObject>>();
+            BeatmapLevels = new System.Collections.ObjectModel.ObservableCollection<ISmartPtr<BeatmapLevelDataObject>>();
         }
 
         public BeatmapLevelCollectionObject(IObjectInfo<AssetsObject> objectInfo, AssetsReader reader) : base(objectInfo)
         {
-            BeatmapLevels = new List<ISmartPtr<BeatmapLevelDataObject>>();
+            BeatmapLevels = new System.Collections.ObjectModel.ObservableCollection<ISmartPtr<BeatmapLevelDataObject>>();
             Parse(reader);
         }
 
-        public List<ISmartPtr<BeatmapLevelDataObject>> BeatmapLevels { get; } 
+        public System.Collections.ObjectModel.ObservableCollection<ISmartPtr<BeatmapLevelDataObject>> BeatmapLevels { get; } 
 
         protected override void Parse(AssetsReader reader)
         {

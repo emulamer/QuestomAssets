@@ -1,13 +1,14 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
 
 namespace QuestomAssets.AssetsChanger
 {
-    public class AssetsObject
+    public class AssetsObject : INotifyPropertyChanged
     {
         [JsonIgnore]
         public virtual byte[] Data { get; set; }
@@ -17,7 +18,7 @@ namespace QuestomAssets.AssetsChanger
 
         public AssetsObject()
         { }
-
+        public string TEST { get; set; }
         public AssetsObject(AssetsFile assetsFile, int classID)
         {
 
@@ -40,6 +41,13 @@ namespace QuestomAssets.AssetsChanger
             ObjectInfo = objectInfo;
             Parse(reader);
             ParseDetails(reader);
+        }
+
+        public virtual event PropertyChangedEventHandler PropertyChanged;
+
+        protected virtual void OnPropertyChanged(PropertyChangedEventArgs eventArgs)
+        {
+            PropertyChanged?.Invoke(this, eventArgs);
         }
 
         protected virtual void Parse(AssetsReader reader)

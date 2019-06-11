@@ -6,7 +6,7 @@ using System.Text;
 
 namespace QuestomAssets.BeatSaber
 {
-    public sealed class ColorManager : MonoBehaviourObject, INeedAssetsMetadata
+    public sealed class ColorManager : MonoBehaviourObject
     {
         public ISmartPtr<MonoBehaviourObject> PlayerModel { get; set; }
         public ISmartPtr<MonoBehaviourObject> ColorA { get; set; }

@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 
 namespace QuestomAssets.AssetsChanger
 {
-    public interface ISmartPtr<out T> where T : AssetsObject
+    public interface ISmartPtr<out T>  where T : AssetsObject
     {
         AssetsObject Owner { get; }
         IObjectInfo<T> Target { get; }
@@ -18,7 +19,7 @@ namespace QuestomAssets.AssetsChanger
         long PathID { get; }
     }
 
-    public class SmartPtr<T> : ISmartPtr<T>, IDisposable where T : AssetsObject
+    public class SmartPtr<T> : ISmartPtr<T>, INotifyPropertyChanged, IDisposable where T : AssetsObject
     {
         public SmartPtr(AssetsObject owner, T target)
         {
@@ -133,6 +134,8 @@ namespace QuestomAssets.AssetsChanger
 
         #region IDisposable Support
         private bool disposedValue = false; // To detect redundant calls
+
+        public event PropertyChangedEventHandler PropertyChanged;
 
         protected virtual void Dispose(bool disposing)
         {

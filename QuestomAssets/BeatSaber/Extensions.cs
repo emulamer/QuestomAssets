@@ -98,6 +98,8 @@ namespace QuestomAssets.BeatSaber
             }
         }
 
+
+
         public static Stream ReadCombinedAssets(this IAssetsFileProvider fp, string assetsFilePath)
         {
             string actualName = fp.CorrectAssetFilename(assetsFilePath);

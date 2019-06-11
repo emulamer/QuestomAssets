@@ -2,11 +2,12 @@
 using QuestomAssets.AssetsChanger;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Text;
 
 namespace QuestomAssets.BeatSaber
 {
-    public class Color
+    public class Color : INotifyPropertyChanged
     {
         [JsonProperty("R")]
         public float R { get; set; }
@@ -24,6 +25,8 @@ namespace QuestomAssets.BeatSaber
         {
             Parse(reader);
         }
+
+        public event PropertyChangedEventHandler PropertyChanged;
 
         private void Parse(AssetsReader reader)
         {

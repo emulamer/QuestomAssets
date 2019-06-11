@@ -5,8 +5,11 @@ using System.Text;
 
 namespace QuestomAssets.Utils
 {
+    public interface INeedAssetsFileInjectionForJsonDeserialization
+    { }
+
     public class MetadataResolver : DefaultContractResolver
-    {
+    {        
         private AssetsChanger.AssetsFile _assetsFile;
         public MetadataResolver(AssetsChanger.AssetsFile assetsFile)
         {
@@ -14,7 +17,7 @@ namespace QuestomAssets.Utils
         }
         protected override JsonObjectContract CreateObjectContract(Type objectType)
         {
-            if (typeof(AssetsChanger.INeedAssetsMetadata).IsAssignableFrom(objectType))
+            if (typeof(INeedAssetsFileInjectionForJsonDeserialization).IsAssignableFrom(objectType))
             {
                 var contract = base.CreateObjectContract(objectType);
                 contract.DefaultCreator = () => Activator.CreateInstance(objectType, _assetsFile);

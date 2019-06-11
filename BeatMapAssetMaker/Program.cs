@@ -117,8 +117,7 @@ namespace BeatmapAssetMaker
             try
             {
                 Log.LogMsg($"Opening APK at '{args.ApkFile}'");
-                QuestomAssetsEngine q = new QuestomAssetsEngine(args.ApkFile);
-
+                QuestomAssetsEngine q = new QuestomAssetsEngine(args.ApkFile, false, false);
 
                 if (!args.NoPatch)
                 {

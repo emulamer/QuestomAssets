@@ -104,7 +104,7 @@ namespace WinformsTestApp
             if (n.Obj is AssetsObject)
             {
                 var aoi = (n.Obj as AssetsObject).ObjectInfo;
-                node.ToolTipText = $"PathID: {aoi.ObjectID}\r\nFile: {aoi.ParentFile.AssetsFileName}\r\nType:\tIndex: {aoi.TypeIndex}\r\n\t\tClass ID: {aoi.Type.ClassID}\r\n\t\tTypeHash: {aoi.Type.TypeHash}";
+                node.ToolTipText = $"PathID: {aoi.ObjectID}\r\nFile: {aoi.ParentFile.AssetsFileName}\r\nType:\tIndex: {aoi.TypeIndex}\r\n\tClass ID: {aoi.Type.ClassID}\r\n\tTypeHash: {aoi.Type.TypeHash}";
             }
             node.Tag = n;
             foreach (var cn in n.Nodes)
@@ -121,6 +121,7 @@ namespace WinformsTestApp
         private void TvExplorer_BeforeExpand(object sender, TreeViewCancelEventArgs e)
         {
             var thisNode = e.Node.Tag as Node;
+            
 
             if (thisNode != null && thisNode.StubToNode != null && thisNode.StubToNode.ExtRef != null)
             {

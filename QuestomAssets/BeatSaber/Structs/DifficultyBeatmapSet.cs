@@ -5,10 +5,11 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using QuestomAssets.AssetsChanger;
+using System.ComponentModel;
 
 namespace QuestomAssets.BeatSaber
 {
-    public class DifficultyBeatmapSet
+    public class DifficultyBeatmapSet : INotifyPropertyChanged
     {
 
         //unity asset format only
@@ -20,7 +21,7 @@ namespace QuestomAssets.BeatSaber
         public Characteristic BeatmapCharacteristicName { get; set; }
 
         [JsonProperty("_difficultyBeatmaps")]
-        public List<DifficultyBeatmap> DifficultyBeatmaps { get; private set; } = new List<DifficultyBeatmap>();
+        public System.Collections.ObjectModel.ObservableCollection<DifficultyBeatmap> DifficultyBeatmaps { get; private set; } = new System.Collections.ObjectModel.ObservableCollection<DifficultyBeatmap>();
 
         public DifficultyBeatmapSet()
         { }
@@ -29,6 +30,8 @@ namespace QuestomAssets.BeatSaber
         {
             Parse(assetsFile, owner, reader);
         }
+
+        public event PropertyChangedEventHandler PropertyChanged;
 
         private void Parse(AssetsFile assetsFile, AssetsObject owner, AssetsReader reader)
         {

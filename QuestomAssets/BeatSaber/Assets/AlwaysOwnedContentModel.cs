@@ -5,7 +5,7 @@ using System.Text;
 
 namespace QuestomAssets.BeatSaber
 {
-    public class AlwaysOwnedContentModel : MonoBehaviourObject, INeedAssetsMetadata
+    public class AlwaysOwnedContentModel : MonoBehaviourObject
     {
 
         public AlwaysOwnedContentModel(AssetsFile assetsFile) : base(assetsFile, assetsFile.Manager.GetScriptObject("AlwaysOwnedContentModelSO"))
@@ -30,8 +30,8 @@ namespace QuestomAssets.BeatSaber
             writer.WriteArrayOf(AlwaysOwnedBeatmapLevels, (x, y) => x.Write(y));
         }
 
-        public List<ISmartPtr<BeatmapLevelPackObject>> AlwaysOwnedPacks { get; set; } = new List<ISmartPtr<BeatmapLevelPackObject>>();
+        public System.Collections.ObjectModel.ObservableCollection<ISmartPtr<BeatmapLevelPackObject>> AlwaysOwnedPacks { get; set; } = new System.Collections.ObjectModel.ObservableCollection<ISmartPtr<BeatmapLevelPackObject>>();
 
-        public List<ISmartPtr<BeatmapLevelDataObject>> AlwaysOwnedBeatmapLevels { get; set; } = new List<ISmartPtr<BeatmapLevelDataObject>>();
+        public System.Collections.ObjectModel.ObservableCollection<ISmartPtr<BeatmapLevelDataObject>> AlwaysOwnedBeatmapLevels { get; set; } = new System.Collections.ObjectModel.ObservableCollection<ISmartPtr<BeatmapLevelDataObject>>();
     }
 }

@@ -49,7 +49,7 @@ namespace QuestomAssets.AssetsChanger
         public QuaternionF LocalRotation { get; set; }
         public Vector3F LocalPosition { get; set; }
         public Vector3F LocalScale { get; set; }
-        public List<ISmartPtr<Transform>> Children { get; set; } = new List<ISmartPtr<Transform>>();
+        public System.Collections.ObjectModel.ObservableCollection<ISmartPtr<Transform>> Children { get; set; } = new System.Collections.ObjectModel.ObservableCollection<ISmartPtr<Transform>>();
         public ISmartPtr<Transform> Father { get; set; }
 
     }

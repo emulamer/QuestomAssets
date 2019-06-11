@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Collections;
 using QuestomAssets.Utils;
+using System.ComponentModel;
 
 namespace QuestomAssets.AssetsChanger
 {
@@ -23,7 +24,7 @@ namespace QuestomAssets.AssetsChanger
         bool IsNew { get; }
         T Clone(AssetsFile toFile = null);
     }
-    public class ObjectInfo<T> : IObjectInfo<T> where T: AssetsObject
+    public class ObjectInfo<T> : INotifyPropertyChanged, IObjectInfo<T> where T: AssetsObject
     {
         public Int64 ObjectID { get; set; } = -1;
         public Int32 DataOffset { get; set; } = -1;
@@ -232,6 +233,9 @@ namespace QuestomAssets.AssetsChanger
         }
 
         private T _object;
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
         public T Object
         {
             get

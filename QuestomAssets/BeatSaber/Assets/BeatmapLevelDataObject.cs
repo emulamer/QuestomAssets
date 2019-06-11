@@ -6,10 +6,11 @@ using System.Threading.Tasks;
 using System.Linq;
 using System.IO;
 using QuestomAssets.AssetsChanger;
+using QuestomAssets.Utils;
 
 namespace QuestomAssets.BeatSaber
 {
-    public sealed class BeatmapLevelDataObject : MonoBehaviourObject, INeedAssetsMetadata
+    public sealed class BeatmapLevelDataObject : MonoBehaviourObject, INeedAssetsFileInjectionForJsonDeserialization
     {
 
 
@@ -83,7 +84,7 @@ namespace QuestomAssets.BeatSaber
         public Single PreviewDuration { get; set; }
 
         [JsonProperty("_difficultyBeatmapSets")]
-        public List<DifficultyBeatmapSet> DifficultyBeatmapSets { get; private set; } = new List<DifficultyBeatmapSet>();
+        public System.Collections.ObjectModel.ObservableCollection<DifficultyBeatmapSet> DifficultyBeatmapSets { get; private set; } = new System.Collections.ObjectModel.ObservableCollection<DifficultyBeatmapSet>();
 
         //json CustomSong format properties
         [JsonProperty("_songFilename")]

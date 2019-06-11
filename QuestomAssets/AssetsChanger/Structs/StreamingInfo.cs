@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 
 namespace QuestomAssets.AssetsChanger
 {
-    public class StreamingInfo
+    public class StreamingInfo : INotifyPropertyChanged
     {
         public StreamingInfo()
         { }
@@ -14,6 +15,8 @@ namespace QuestomAssets.AssetsChanger
         {
             Parse(reader);
         }
+
+        public event PropertyChangedEventHandler PropertyChanged;
 
         private void Parse(AssetsReader reader)
         {

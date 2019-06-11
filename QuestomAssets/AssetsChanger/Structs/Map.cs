@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Text;
 
 namespace QuestomAssets.AssetsChanger
 {
-    public class Map
+    public class Map : INotifyPropertyChanged
     {
         public Map()
         { }
@@ -13,6 +14,8 @@ namespace QuestomAssets.AssetsChanger
         {
             Parse(assetsFile, owner, reader);
         }
+
+        public event PropertyChangedEventHandler PropertyChanged;
 
         private void Parse(AssetsFile assetsFile, AssetsObject owner, AssetsReader reader)
         {

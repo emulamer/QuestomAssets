@@ -5,10 +5,11 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using QuestomAssets.AssetsChanger;
+using System.ComponentModel;
 
 namespace QuestomAssets.BeatSaber
 {
-    public class DifficultyBeatmap
+    public class DifficultyBeatmap : INotifyPropertyChanged
     {
         [JsonProperty("_difficulty")]
         public Difficulty Difficulty { get; set; }
@@ -39,6 +40,8 @@ namespace QuestomAssets.BeatSaber
         {
             Parse(assetsFile, owner, reader);
         }
+
+        public event PropertyChangedEventHandler PropertyChanged;
 
         private void Parse(AssetsFile assetsFile, AssetsObject owner, AssetsReader reader)
         {

@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 
 namespace QuestomAssets.AssetsChanger
 {
-    public class ExternalFile
+    public class ExternalFile : INotifyPropertyChanged
     {
         public string AssetName { get; set; }
         public Guid ID { get; set; }
@@ -19,6 +20,8 @@ namespace QuestomAssets.AssetsChanger
         {
             Parse(reader);
         }
+
+        public event PropertyChangedEventHandler PropertyChanged;
 
         public void Write(AssetsWriter writer)
         {

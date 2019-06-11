@@ -5,10 +5,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using QuestomAssets.AssetsChanger;
+using QuestomAssets.Utils;
 
 namespace QuestomAssets.BeatSaber
 {
-    public sealed class BeatmapLevelPackObject : MonoBehaviourObject, INeedAssetsMetadata
+    public sealed class BeatmapLevelPackObject : MonoBehaviourObject, INeedAssetsFileInjectionForJsonDeserialization
     {
 
         public BeatmapLevelPackObject(AssetsFile assetsFile) : base(assetsFile, assetsFile.Manager.GetScriptObject("BeatmapLevelPackSO"))

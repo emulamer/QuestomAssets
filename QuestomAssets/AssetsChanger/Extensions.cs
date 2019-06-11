@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -65,6 +66,18 @@ namespace QuestomAssets.AssetsChanger
                 }
             }
             return mode;
+        }
+
+        public static void ForEach<T>(this IEnumerable<T> enumerable, Action<T> func)
+        {
+            foreach (var item in enumerable)
+                func(item);
+        }
+
+        public static void AddRange<T>(this ObservableCollection<T> col, IEnumerable<T> toAdd)
+        {
+            foreach (var x in toAdd)
+                col.Add(x);
         }
 
         public static Array RemoveAt(this Array source, int index)

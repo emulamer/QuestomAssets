@@ -83,7 +83,7 @@ namespace QuestomAssets.AssetsChanger
     /// </summary>
     public class TypeTree
     {
-        public List<TypeTreeEntry> Entries { get; } = new List<TypeTreeEntry>();
+        public System.Collections.ObjectModel.ObservableCollection<TypeTreeEntry> Entries { get; } = new System.Collections.ObjectModel.ObservableCollection<TypeTreeEntry>();
 
         public TypeTree(AssetsReader reader)
         {

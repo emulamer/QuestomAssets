@@ -4,8 +4,6 @@ using System.Text;
 
 namespace QuestomAssets.AssetsChanger
 {
-
-
     public class RectTransform : Transform
     {
         public RectTransform(AssetsFile assetsFile) : base(assetsFile, AssetsConstants.ClassID.RectTransformClassID)

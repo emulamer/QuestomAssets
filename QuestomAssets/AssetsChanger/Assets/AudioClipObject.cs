@@ -36,9 +36,6 @@ namespace QuestomAssets.AssetsChanger
 
         public int CompressionFormat { get; set; }
         
-        //public AudioClipObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
-        //{ }
-
         public AudioClipObject(IObjectInfo<AssetsObject> objectInfo, AssetsReader reader) : base(objectInfo)
         {
             Parse(reader);

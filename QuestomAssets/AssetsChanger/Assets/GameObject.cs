@@ -20,13 +20,12 @@ namespace QuestomAssets.AssetsChanger
             ParseDetails(reader);
         }
 
-        //protected void UpdateType(AssetsMetadata metadata, Guid scriptHash, PPtr monoscriptTypePtr)
-        //{
-        //    base.UpdateType(metadata, scriptHash);
-        //}
+        public override event System.ComponentModel.PropertyChangedEventHandler PropertyChanged;
 
-        //public GameObject()
-        //{ IsActive = true; }
+        protected override void OnPropertyChanged(System.ComponentModel.PropertyChangedEventArgs eventArgs)
+        {
+            PropertyChanged?.Invoke(this, eventArgs);
+        }
 
         protected GameObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
         { IsActive = true; }
@@ -65,7 +64,7 @@ namespace QuestomAssets.AssetsChanger
             WriteBase(writer);
         }
 
-        public List<ISmartPtr<AssetsObject>> Components { get; set; } = new List<ISmartPtr<AssetsObject>>();
+        public System.Collections.ObjectModel.ObservableCollection<ISmartPtr<AssetsObject>> Components { get; set; } = new System.Collections.ObjectModel.ObservableCollection<ISmartPtr<AssetsObject>>();
 
         public UInt32 Layer { get; set; }
 

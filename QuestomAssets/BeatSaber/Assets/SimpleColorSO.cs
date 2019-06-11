@@ -6,7 +6,7 @@ using System.Text;
 
 namespace QuestomAssets.BeatSaber
 {
-    public sealed class SimpleColorSO : MonoBehaviourObject, INeedAssetsMetadata
+    public sealed class SimpleColorSO : MonoBehaviourObject
     {
         [JsonProperty("_color")]
         public Color color;

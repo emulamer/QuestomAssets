@@ -10,10 +10,10 @@ namespace QuestomAssets.AssetsChanger
     {
         public AssetsMetadata(AssetsFile owner)
         {
-            Types = new List<AssetsType>();
-            ObjectInfos = new List<IObjectInfo<AssetsObject>>();
-            Adds = new List<RawPtr>();
-            ExternalFiles = new List<ExternalFile>();
+            Types = new System.Collections.ObjectModel.ObservableCollection<AssetsType>();
+            ObjectInfos = new System.Collections.ObjectModel.ObservableCollection<IObjectInfo<AssetsObject>>();
+            Adds = new System.Collections.ObjectModel.ObservableCollection<RawPtr>();
+            ExternalFiles = new System.Collections.ObjectModel.ObservableCollection<ExternalFile>();
             ParentFile = owner;
         }
 
@@ -21,11 +21,11 @@ namespace QuestomAssets.AssetsChanger
         public string Version { get; set; }
         public Int32 Platform { get; set; }
         public bool HasTypeTrees { get; set; }
-        public List<AssetsType> Types { get; set; }
-        public List<IObjectInfo<AssetsObject>> ObjectInfos { get; set; }
+        public System.Collections.ObjectModel.ObservableCollection<AssetsType> Types { get; set; }
+        public System.Collections.ObjectModel.ObservableCollection<IObjectInfo<AssetsObject>> ObjectInfos { get; set; }
         //TODO: figure out what adds are
-        public List<RawPtr> Adds { get; set; }
-        public List<ExternalFile> ExternalFiles { get; set; }
+        public System.Collections.ObjectModel.ObservableCollection<RawPtr> Adds { get; set; }
+        public System.Collections.ObjectModel.ObservableCollection<ExternalFile> ExternalFiles { get; set; }
         public AssetsFile ParentFile { get; set; }
 
         private int PreloadObjectOrder(ObjectRecord record)

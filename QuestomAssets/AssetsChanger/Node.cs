@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Collections;
+using System.ComponentModel;
 
 namespace QuestomAssets.AssetsChanger
 {
-    public class Node
+    public class Node : INotifyPropertyChanged
     {
         public enum FindType
         {
@@ -15,6 +16,9 @@ namespace QuestomAssets.AssetsChanger
             ObjectValues = 4,
             All = 255
         }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
         private bool FindNode(string text, ref Node afterNode, FindType findType, Stack<int> path)
         {
             if (afterNode == null)
@@ -309,7 +313,7 @@ namespace QuestomAssets.AssetsChanger
         public Node StubToNode { get; set; }
         public int Depth { get; set; }
         public object ExtRef { get; set; }
-        public List<Node> Nodes { get; set; } = new List<Node>();
+        public System.Collections.ObjectModel.ObservableCollection<Node> Nodes { get; set; } = new System.Collections.ObjectModel.ObservableCollection<Node>();
 
 
         public string ParentPropertyName { get; set; }

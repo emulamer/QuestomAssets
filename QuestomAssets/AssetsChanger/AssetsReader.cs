@@ -147,9 +147,20 @@ namespace QuestomAssets.AssetsChanger
             return ReadBytes(count);
         }
 
-        public List<T> ReadArrayOf<T>(Func<AssetsReader,T> objectCreator)
+        public List<T> ReadListOf<T>(Func<AssetsReader,T> objectCreator)
         {
             List<T> list = new List<T>();
+            int count = ReadInt32();
+            for (int i = 0; i < count; i++)
+            {
+                list.Add(objectCreator(this));
+            }
+            return list;
+        }
+
+        public System.Collections.ObjectModel.ObservableCollection<T> ReadArrayOf<T>(Func<AssetsReader, T> objectCreator)
+        {
+            System.Collections.ObjectModel.ObservableCollection<T> list = new System.Collections.ObjectModel.ObservableCollection<T>();
             int count = ReadInt32();
             for (int i = 0; i < count; i++)
             {

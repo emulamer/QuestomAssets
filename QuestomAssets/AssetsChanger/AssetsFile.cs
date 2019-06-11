@@ -231,7 +231,7 @@ namespace QuestomAssets.AssetsChanger
             }
             if (assetsObject.ObjectInfo.ObjectID < 1)
                 throw new ArgumentException("ObjectInfo.ObjectID must be > 0.");
-            if (Metadata.ObjectInfos.Exists(x => x.ObjectID == assetsObject.ObjectInfo.ObjectID))
+            if (Metadata.ObjectInfos.Any(x => x.ObjectID == assetsObject.ObjectInfo.ObjectID))
                 throw new ArgumentException("ObjectInfo.ObjectID already exists in this file.");
 
             Metadata.ObjectInfos.Add(assetsObject.ObjectInfo);

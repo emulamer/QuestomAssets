@@ -19,17 +19,17 @@ namespace QuestomAssets.AssetsChanger
         {
             base.Parse(reader);
             Name = reader.ReadString();
-            PreloadTable = reader.ReadArrayOf<ISmartPtr<AssetsObject>>(x => SmartPtr<AssetsObject>.Read(ObjectInfo.ParentFile, this, x));
-            Container = reader.ReadArrayOf(x => new Map(ObjectInfo.ParentFile, this, x));
+            PreloadTable = reader.ReadListOf<ISmartPtr<AssetsObject>>(x => SmartPtr<AssetsObject>.Read(ObjectInfo.ParentFile, this, x));
+            Container = reader.ReadListOf(x => new Map(ObjectInfo.ParentFile, this, x));
             MainAsset = new AssetInfo(ObjectInfo.ParentFile, this, reader);
             RuntimeCompatibility = reader.ReadUInt32();
             AssetBundleName = reader.ReadString();
-            Dependencies = reader.ReadArrayOf<ISmartPtr<AssetsObject>>(x => SmartPtr<AssetsObject>.Read(ObjectInfo.ParentFile, this, x));
+            Dependencies = reader.ReadListOf<ISmartPtr<AssetsObject>>(x => SmartPtr<AssetsObject>.Read(ObjectInfo.ParentFile, this, x));
             IsStreamedSceneAssetBundle = reader.ReadBoolean();
             reader.AlignTo(4);
             ExplicitDataLayout = reader.ReadInt32();
             PathFlags = reader.ReadInt32();
-            SceneHashes = reader.ReadArrayOf(x => new Map(ObjectInfo.ParentFile, this, x));
+            SceneHashes = reader.ReadListOf(x => new Map(ObjectInfo.ParentFile, this, x));
         }
 
         protected override void WriteBase(AssetsWriter writer)
