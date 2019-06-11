@@ -2,7 +2,7 @@
   "profiles": {
     "BeatmapAssetMaker": {
       "commandName": "Project",
-      "commandLineArgs": "loadfolder -a c:\\users\\vr\\desktop\\platform-tools_r28.0.3-windows\\base.apk -i C:\\Users\\VR\\Desktop\\platform-tools_r28.0.3-windows\\dist\\ToConvert",
+      "commandLineArgs": "loadfolder -a c:\\users\\vr\\desktop\\platform-tools_r28.0.3-windows\\base.apk -i C:\\Users\\VR\\Desktop\\platform-tools_r28.0.3-windows\\dist\\ToConvert ",
       "nativeDebugging": true
     }
   }

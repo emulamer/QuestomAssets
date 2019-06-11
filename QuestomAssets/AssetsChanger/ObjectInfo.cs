@@ -197,6 +197,9 @@ namespace QuestomAssets.AssetsChanger
                 case AssetsConstants.ClassID.RectTransformClassID:
                     type = typeof(RectTransform);
                     break;
+                case AssetsConstants.ClassID.MeshRendererClassID:
+                    type = typeof(MeshRenderer);
+                    break;
                 default:
                     type = typeof(AssetsObject);
                     break;

@@ -67,9 +67,9 @@ namespace QuestomAssets.Utils
             {
                 if (typeof(ISmartPtr<AssetsObject>).IsAssignableFrom(propInfo.PropertyType))
                 {
-                    var ptr = ReflectionHelper.GetPtrFromPropName(obj, propInfo.Name);
+                    var ptr = obj as ISmartPtr<AssetsObject>;
 
-                    if (ptr.Target != PointerTarget)
+                    if (ptr.Target.Object != PointerTarget)
                         match = false;
                 }
                 else

@@ -44,7 +44,7 @@ namespace QuestomAssets.Utils
                         break;
                 }
                                                              
-                prop.SetValue(curObj, ReflectionHelper.MakeTypedPointer(parentObj, assignObject), null);
+                prop.SetValue(curObj, assignObject==null?null:ReflectionHelper.MakeTypedPointer(parentObj, assignObject), null);
             }
             propsToClone.ForEach(x => updateProps.Remove(x));
 

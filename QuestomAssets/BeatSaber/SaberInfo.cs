@@ -5,6 +5,7 @@ using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using System.Linq;
+using QuestomAssets.AssetsChanger;
 
 namespace QuestomAssets.BeatSaber
 {
@@ -75,12 +76,31 @@ namespace QuestomAssets.BeatSaber
                             Log.LogErr($"Unable to load saber handle {saberInfo.DatFiles.SaberHandle} from {folderOrZip}");
                             return null;
                         }
-                        using (var br = new BinaryReader(saberBladeEntry.OpenReader()))
-                            saberInfo.DatFiles.SaberBladeBytes = br.ReadBytes((int)br.BaseStream.Length);
-                        using (var br = new BinaryReader(saberGlowingEdgesEntry.OpenReader()))
-                            saberInfo.DatFiles.SaberGlowingEdgesBytes = br.ReadBytes((int)br.BaseStream.Length);
-                        using (var br = new BinaryReader(saberHandleEntry.OpenReader()))
-                            saberInfo.DatFiles.SaberHandleBytes = br.ReadBytes((int)br.BaseStream.Length);
+                        //pop off the first string, because these are the entire exported asset data, and my meshobject gets the name already
+                        using (var fs = saberBladeEntry.OpenReader())
+                        {
+                            using (var br = new AssetsReader(fs))
+                            {
+                                br.ReadString();
+                                saberInfo.DatFiles.SaberBladeBytes = br.ReadBytes((int)(br.BaseStream.Length - br.Position));
+                            }
+                        }
+                        using (var fs = saberGlowingEdgesEntry.OpenReader())
+                        {
+                            using (var br = new AssetsReader(fs))
+                            {
+                                br.ReadString();
+                                saberInfo.DatFiles.SaberGlowingEdgesBytes = br.ReadBytes((int)(br.BaseStream.Length - br.Position));
+                            }
+                        }
+                        using (var fs = saberHandleEntry.OpenReader())
+                        {
+                            using (var br = new AssetsReader(fs))
+                            {
+                                br.ReadString();
+                                saberInfo.DatFiles.SaberHandleBytes = br.ReadBytes((int)(br.BaseStream.Length - br.Position));
+                            }
+                        }
                         return saberInfo;
                     }
                 }
@@ -119,9 +139,31 @@ namespace QuestomAssets.BeatSaber
                         Log.LogMsg($"Unable to locate {saberHandleFile}");
                         return null;
                     }
-                    info.DatFiles.SaberBladeBytes = File.ReadAllBytes(saberBladeFile);
-                    info.DatFiles.SaberGlowingEdgesBytes = File.ReadAllBytes(saberGlowingBladeFile);
-                    info.DatFiles.SaberHandleBytes = File.ReadAllBytes(saberHandleFile);
+
+                    using (var fs = File.OpenRead(saberBladeFile))
+                    {
+                        using (var br = new AssetsReader(fs))
+                        {
+                            br.ReadString();
+                            info.DatFiles.SaberBladeBytes = br.ReadBytes((int)(br.BaseStream.Length - br.Position));
+                        }
+                    }
+                    using (var fs = File.OpenRead(saberGlowingBladeFile))
+                    {
+                        using (var br = new AssetsReader(fs))
+                        {
+                            br.ReadString();
+                            info.DatFiles.SaberGlowingEdgesBytes = br.ReadBytes((int)(br.BaseStream.Length - br.Position));
+                        }
+                    }
+                    using (var fs = File.OpenRead(saberHandleFile))
+                    {
+                        using (var br = new AssetsReader(fs))
+                        {
+                            br.ReadString();
+                            info.DatFiles.SaberHandleBytes = br.ReadBytes((int)(br.BaseStream.Length - br.Position));
+                        }
+                    }
                     return info;
                 }
                 else
