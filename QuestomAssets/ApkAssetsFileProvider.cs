@@ -61,7 +61,7 @@ namespace QuestomAssets
 
         public bool FileExists(string filename)
         {
-            return _zipFile.Entries.Any(x => x.FileName.ToLower() == filename.ToLower());
+            return _zipFile.Entries.Any(x => x.FileName == filename);
         }
 
         public List<string> FindFiles(string pattern)
@@ -105,7 +105,7 @@ namespace QuestomAssets
 
         public Stream GetReadStream(string filename, bool bypassCache = false)
         {
-            var entry = _zipFile.Entries.FirstOrDefault(x => x.FileName.ToLower() == filename.ToLower());
+            var entry = _zipFile.Entries.FirstOrDefault(x => x.FileName == filename);
             if (entry == null)
                 throw new FileNotFoundException($"An entry named {filename} was not found in the APK.");
 

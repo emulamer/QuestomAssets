@@ -139,12 +139,6 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\QuestomAssets\QuestomAssets.csproj">
-      <Project>{dda3f1e8-ad66-4ecd-920d-38a2d619e1c9}</Project>
-      <Name>QuestomAssets</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.6.2">
       <Visible>False</Visible>
       <ProductName>Microsoft .NET Framework 4.6.2 %28x86 and x64%29</ProductName>
@@ -155,6 +149,12 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\QuestomAssets\QuestomAssets.csproj">
+      <Project>{dda3f1e8-ad66-4ecd-920d-38a2d619e1c9}</Project>
+      <Name>QuestomAssets</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

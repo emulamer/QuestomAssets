@@ -45,22 +45,44 @@ namespace QuestomAssets.BeatSaber
             return null;            
         }
 
+
+        //for some reason, some of the files are referenced as resources/<file> when it's actually Resources/<file> or library/<file> when it's actually /<file> or Resources/<file>
+        private static string LocateFile(IAssetsFileProvider fp, string assetsFile)
+        {
+            string fileNameOnly = assetsFile.Split('/').Last();
+            var found= FindFirstOfSplit(fp, fileNameOnly);
+            if (found != null)
+                return found;
+
+            found = FindFirstOfSplit(fp, fp.FindFiles("*"+fileNameOnly).OrderBy(x=> x.Length).FirstOrDefault());
+            if (found != null)
+                return found;
+
+            found = FindFirstOfSplit(fp, fp.FindFiles("*" + fileNameOnly+".split*").OrderBy(x => x.Length).FirstOrDefault());
+
+            return found;
+        }
+
         public static string CorrectAssetFilename(this IAssetsFileProvider fp, string assetsFile)
         {
             var correctName = FindFirstOfSplit(fp, assetsFile);
             if (correctName != null)
                 return correctName;
-            //some of the files in ExternalFiles have library/ on them, but they're actually in the root path
-            var splitPath = assetsFile.Split('/').ToList();
-            if (splitPath.Count() > 1)
-            {
-                splitPath.RemoveAt(splitPath.Count - 2);
-                correctName = String.Join("/", splitPath);
-                correctName = FindFirstOfSplit(fp, correctName);
-                if (correctName != null)
-                    return correctName;
-            }
+            ////some of the files in ExternalFiles have library/ on them, but they're actually in the root path
+            //var splitPath = assetsFile.Split('/').ToList();
+            //if (splitPath.Count() > 1)
+            //{
+            //    splitPath.RemoveAt(splitPath.Count - 2);
+            //    correctName = String.Join("/", splitPath);
+            //    correctName = FindFirstOfSplit(fp, correctName);
+            //    if (correctName != null)
+            //        return correctName;
 
+
+            //}
+            correctName = LocateFile(fp, assetsFile);
+            if (correctName != null)
+                return correctName;
             throw new ArgumentException("The file doesn't exist in the APK with any name!");
         }
         public static void WriteCombinedAssets(this IAssetsFileProvider fp, AssetsFile assetsFile, string assetsFilePath)

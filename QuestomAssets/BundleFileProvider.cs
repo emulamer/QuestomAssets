@@ -26,7 +26,7 @@ namespace QuestomAssets
 
         public bool FileExists(string filename)
         {
-            return _bundleFile.Entries.Any(x => x.Filename.ToLower() == filename.ToLower());
+            return _bundleFile.Entries.Any(x => x.Filename == filename);
         }
 
         public List<string> FindFiles(string pattern)
@@ -34,7 +34,7 @@ namespace QuestomAssets
             List<DirectoryEntry> found = new List<DirectoryEntry>();
             foreach (var entry in _bundleFile.Entries)
             {
-                if (FilePatternMatch(entry.Filename.ToLower(), pattern.ToLower()))
+                if (FilePatternMatch(entry.Filename, pattern))
                     found.Add(entry);
             }
             return found.Select(x => x.Filename).ToList();
@@ -42,7 +42,7 @@ namespace QuestomAssets
 
         private DirectoryEntry GetEntry(string filename)
         {
-            var entry = _bundleFile.Entries.FirstOrDefault(x => x.Filename.ToLower() == filename.ToLower());
+            var entry = _bundleFile.Entries.FirstOrDefault(x => x.Filename == filename);
             if (entry == null)
                 throw new FileNotFoundException($"{filename} was not found in the bundle.");
             return entry;

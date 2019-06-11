@@ -91,25 +91,28 @@ namespace WinformsTestApp
                 }),
                 new MenuItem("Folder", (s, e2) =>
                 {
-                    FolderBrowserDialog fbd = new FolderBrowserDialog()
+                    OpenFileDialog ofd = new OpenFileDialog()
                     {
-                         ShowNewFolderButton = false,
-                         Description = "Select Assets Root Folder"
+                         CheckFileExists = false,
+                         CheckPathExists = true,
+                         FileName = "(Select any file in the assets folder)",
+                         Title = "Open Assets Folder",
+                         Multiselect = false
                     };
-                    if (fbd.ShowDialog() == DialogResult.Cancel)
+                    if (ofd.ShowDialog() == DialogResult.Cancel)
                         return;
                     CloseStuff();
                     try
                     {
-                        _fileProvider = new FolderFileProvider(fbd.SelectedPath, false);
-                        _manager = new AssetsManager(_fileProvider, BSConst.KnownFiles.AssetsRootPath, BSConst.GetAssetTypeMap());
+                        _fileProvider = new FolderFileProvider(Path.GetDirectoryName(ofd.FileName), false);
+                        _manager = new AssetsManager(_fileProvider, "", BSConst.GetAssetTypeMap());
                         if (_fileProvider.FindFiles("globalgamemanagers").Count > 0)
                             _manager.GetAssetsFile("globalgamemanagers.assets");
                         if (_fileProvider.FindFiles("globalgamemanagers.assets*").Count > 0)
                             _manager.GetAssetsFile("globalgamemanagers.assets");
                         _manager.FindAndLoadAllAssets();
                         FillAssetsFiles();
-                        this.Text = "Asset Viewer - " + Path.GetFileName(fbd.SelectedPath);
+                        this.Text = "Asset Viewer - " + Path.GetFileName(Path.GetDirectoryName(ofd.FileName));
                     }
                     catch (Exception ex)
                     {
@@ -137,7 +140,7 @@ namespace WinformsTestApp
                     try
                     {
                         _fileProvider = new BundleFileProvider(ofd.FileName,true);
-                        _manager = new AssetsManager(_fileProvider, BSConst.KnownFiles.AssetsRootPath, BSConst.GetAssetTypeMap());
+                        _manager = new AssetsManager(_fileProvider, "", BSConst.GetAssetTypeMap());
                         _manager.FindAndLoadAllAssets();
                         FillAssetsFiles();
                         this.Text = "Asset Viewer - " + Path.GetFileName(ofd.FileName);

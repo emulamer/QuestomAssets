@@ -26,6 +26,10 @@ namespace BeatmapAssetMaker
 
         [Option("no-images", Required = false, HelpText ="Do not include image data in outupt.")]
         public bool NoImages { get; set; }
+
+        [Option("include-built-in", Required = false, Default = false, HelpText = "Includes the built in level packs in the returned playlists.  Without this option, only custom playlists and songs will be returned.")]
+        public bool IncludeBuiltIn { get; set; }
+
         //[Option("nocovers", Required = false, Default = false, HelpText = "Do not export image base64 data for cover art.")]
         //public bool NoCovers { get; set; }  
     }
@@ -41,6 +45,9 @@ namespace BeatmapAssetMaker
 
         [Option("nopatch", Required = false, Default = false, HelpText = "Skip patching the executable.")]
         public bool NoPatch { get; set; }
+
+        [Option("include-built-in", Required = false, Default = false, HelpText = "Allow modification of built in level packs.  Note that built in songs will never be deleted (they can be added back by using their level ID), but if you you use this option and don't include playlists for the original sound tracks and extras, they will be removed from the UI.")]
+        public bool IncludeBuiltIn { get; set; }
 
         //[Option("nocovers", Required = false, Default = false, HelpText = "Skip importing cover art")]
         //public bool NoCovers { get; set; }        
@@ -63,6 +70,13 @@ namespace BeatmapAssetMaker
 
         [Option('c', "cover-art", Required = false, HelpText = "The path to the image file of the cover art you want the playlist to use")]
         public string CoverArt { get; set; }
+
+        [Option('n', "playlist-display-name", Required = false, Default = "Custom Songs", HelpText = "The display name for the playlist that is created from the folder.")]
+        public string PlaylistDisplayName { get; set; }
+
+        [Option('p', "playlist-id", Required = false, Default = "CustomSongs", HelpText = "The ID of the playlist to create from the folder.")]
+        public string PlaylistID { get; set; }
+
         //[Option("nocovers", Required = false, Default = false, HelpText = "Skip importing cover art")]
         //public bool NoCovers { get; set; }
     }

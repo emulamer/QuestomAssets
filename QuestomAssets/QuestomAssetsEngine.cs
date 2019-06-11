@@ -17,8 +17,7 @@ namespace QuestomAssets
         private string _pemData;
         private List<string> _assetsLoadOrder = new List<string>();
 
-        //TODO: fix cross-asset file loading of stuff before turning this to false, some of the OST Vol 1 songs are in another file
-        public bool HideOriginalPlaylists { get; private set; } = false;
+        public bool AllowModifyOriginalPacks { get; private set; } = false;
 
         /// <summary>
         /// Create a new instance of the class and open the apk file
@@ -26,12 +25,13 @@ namespace QuestomAssets
         /// <param name="apkFilename">The path to the Beat Saber APK file</param>
         /// <param name="readOnly">True to open the APK read only</param>
         /// <param name="pemCertificateData">The contents of the PEM certificate that will be used to sign the APK.  If omitted, a new self signed cert will be generated.</param>
-        public QuestomAssetsEngine(string apkFilename, bool readOnly = false, string pemCertificateData = BSConst.DebugCertificatePEM)
+        public QuestomAssetsEngine(string apkFilename, bool readOnly = false, bool allowModifyOriginalPacks = false, string pemCertificateData = BSConst.DebugCertificatePEM)
         {
             _readOnly = readOnly;
             _apkFilename = apkFilename;
             _pemData = pemCertificateData;
             _assetsLoadOrder = GetAssetsLoadOrderFile();
+            AllowModifyOriginalPacks = allowModifyOriginalPacks;
             if (_assetsLoadOrder == null)
             {
                 _assetsLoadOrder = new List<string>()
@@ -71,7 +71,7 @@ namespace QuestomAssets
             return aoModel.Object;
         }
 
-        private void UpdatePlaylistConfig(AssetsFile songsAssetFile, BeatSaberPlaylist playlist)
+        private void UpdatePlaylistConfig(AssetsManager manager, AssetsFile songsAssetFile, BeatSaberPlaylist playlist)
         {
             Log.LogMsg($"Processing playlist ID {playlist.PlaylistID}...");
             CustomLevelLoader loader = new CustomLevelLoader(songsAssetFile);
@@ -136,7 +136,7 @@ namespace QuestomAssets
                 if (songCount % songMod == 0)
                     Console.WriteLine($"{songCount.ToString().PadLeft(5)} of {totalSongs}...");
 
-                if (UpdateSongConfig(songsAssetFile, song, loader))
+                if (UpdateSongConfig(manager, songsAssetFile, song, loader))
                 {
                     if (levelCollection.BeatmapLevels.Any(x => x.Object.LevelID == song.LevelData.LevelID))
                     {
@@ -154,12 +154,12 @@ namespace QuestomAssets
             Console.WriteLine($"Proccessed {totalSongs} for playlist ID {playlist.PlaylistID}");
         }
 
-        private bool UpdateSongConfig(AssetsFile songsAssetFile, BeatSaberSong song, CustomLevelLoader loader)
+        private bool UpdateSongConfig(AssetsManager manager, AssetsFile songsAssetFile, BeatSaberSong song, CustomLevelLoader loader)
         {
             BeatmapLevelDataObject level = null;
             if (!string.IsNullOrWhiteSpace(song.SongID))
             {
-                var levels = songsAssetFile.FindAssets<BeatmapLevelDataObject>(x => x.Object.LevelID == song.SongID).Select(x=>x.Object).ToList();
+                var levels = manager.MassFindAssets<BeatmapLevelDataObject>(x => x.Object.LevelID == song.SongID, false).Select(x=>x.Object).ToList();
                 if (levels.Count() > 0)
                 {
                     if (levels.Count() > 1)
@@ -310,7 +310,7 @@ namespace QuestomAssets
                         {
                              PointerTarget = saberFatherTarget
                         },
-                        new CloneExclusion(ExclusionMode.LeaveRef)
+                        new CloneExclusion(ExclusionMode.Remove)
                         {
                             Filter = (x,y) =>
                             {
@@ -481,7 +481,7 @@ namespace QuestomAssets
             foreach (var packPtr in mainPack.BeatmapLevelPacks)
             {
                 var pack = packPtr.Target.Object;
-                if (HideOriginalPlaylists && BSConst.KnownLevelPackIDs.Contains(pack.PackID))
+                if (!AllowModifyOriginalPacks && BSConst.KnownLevelPackIDs.Contains(pack.PackID))
                     continue;
 
                 var packModel = new BeatSaberPlaylist() { PlaylistName = pack.PackName, PlaylistID = pack.PackID, LevelPackObject = pack };
@@ -562,15 +562,15 @@ namespace QuestomAssets
                 //generate a diff
                 //etc.
 
-                UpdateColorConfig(manager, config.Colors);
+                //UpdateColorConfig(manager, config.Colors);
 
                 //TODO: something broke
                 //UpdateTextConfig(manager, config.TextChanges);
 
-                if (!UpdateSaberConfig(manager, config.Saber))
-                {
-                    Log.LogErr("Saber failed to update.  Aborting all changes.");
-                }
+                //if (!UpdateSaberConfig(manager, config.Saber))
+                //{
+                //    Log.LogErr("Saber failed to update.  Aborting all changes.");
+                //}
 
                 if (config.Playlists != null)
                 {
@@ -596,7 +596,7 @@ namespace QuestomAssets
             var aoModel = GetAlwaysOwnedModel(manager);
             foreach (var playlist in config.Playlists)
             {
-                UpdatePlaylistConfig(songsAssetFile, playlist);
+                UpdatePlaylistConfig(manager, songsAssetFile, playlist);
             }
 
             //open the assets with the main levels collection, find the file index of sharedassets17.assets, and add the playlists to it
@@ -604,7 +604,7 @@ namespace QuestomAssets
             var mainLevelPack = GetMainLevelPack(manager);
 
 
-            var packsToUnlink = mainLevelPack.BeatmapLevelPacks.Where(x => !HideOriginalPlaylists || !BSConst.KnownLevelPackIDs.Contains(x.Object.PackID)).ToList();
+            var packsToUnlink = mainLevelPack.BeatmapLevelPacks.Where(x => AllowModifyOriginalPacks || !BSConst.KnownLevelPackIDs.Contains(x.Object.PackID)).ToList();
             var packsToRemove = mainLevelPack.BeatmapLevelPacks.Where(x => !BSConst.KnownLevelPackIDs.Contains(x.Object.PackID) && !config.Playlists.Any(y => y.PlaylistID == x.Object.PackID)).Select(x => x.Object).ToList();
             foreach (var unlink in packsToUnlink)
             {

@@ -101,7 +101,11 @@ namespace WinformsTestApp
             }
 
             n.ExtRef = node;
-            node.ToolTipText = n.TypeName;
+            if (n.Obj is AssetsObject)
+            {
+                var aoi = (n.Obj as AssetsObject).ObjectInfo;
+                node.ToolTipText = $"PathID: {aoi.ObjectID}\r\nFile: {aoi.ParentFile.AssetsFileName}\r\nType:\tIndex: {aoi.TypeIndex}\r\n\t\tClass ID: {aoi.Type.ClassID}\r\n\t\tTypeHash: {aoi.Type.TypeHash}";
+            }
             node.Tag = n;
             foreach (var cn in n.Nodes)
             {

@@ -50,6 +50,7 @@
             this.tvExplorer.Location = new System.Drawing.Point(0, 0);
             this.tvExplorer.Name = "tvExplorer";
             this.tvExplorer.SelectedImageIndex = 0;
+            this.tvExplorer.ShowNodeToolTips = true;
             this.tvExplorer.Size = new System.Drawing.Size(450, 339);
             this.tvExplorer.TabIndex = 1;
             this.tvExplorer.BeforeExpand += new System.Windows.Forms.TreeViewCancelEventHandler(this.TvExplorer_BeforeExpand);
