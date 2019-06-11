@@ -9,11 +9,11 @@ namespace QuestomAssets.BeatSaber
     {
         public static class KnownFiles
         {
-            public const string File19 = "sharedassets19.assets";
-            public const string File17 = "sharedassets17.assets";
-            public const string File11 = "sharedassets11.assets";
-            public const string File14 = "sharedassets14.assets";
-            public const string File1 = "sharedassets1.assets";
+            //public const string File19 = "sharedassets19.assets";
+            //public const string File17 = "sharedassets17.assets";
+            //public const string File11 = "sharedassets11.assets";
+            //public const string File14 = "sharedassets14.assets";
+            //public const string File1 = "sharedassets1.assets";
 
             //public const string FullFile19Path = AssetsRootPath + File19;
             //public const string FullFile17Path = AssetsRootPath + File17;
@@ -21,11 +21,12 @@ namespace QuestomAssets.BeatSaber
             //public const string FullFile14Path = AssetsRootPath + File14;
 
             public const string AssetsRootPath = "assets/bin/Data/";
-            public const string SaberAssetsFilename = File11;
-            public const string SongsAssetsFilename = File17;
-            public const string MainCollectionAssetsFilename = File19;
-            public const string ColorAssetsFilename = File1;
-            public const string TextAssetFilename = "231368cb9c1d5dd43988f2a85226e7d7";
+            //public const string SaberAssetsFilename = File11;
+            //public const string SongsAssetsFilename = File17;
+            //public const string MainCollectionAssetsFilename = File19;
+            //public const string ColorAssetsFilename = File1;
+            //public const string TextAssetFilename = "231368cb9c1d5dd43988f2a85226e7d7";
+            
 
             //public const string FullSaberAssetsPath = AssetsRootPath + SaberAssetsFilename;
             //public const string FullSongsAssetsPath = AssetsRootPath + SongsAssetsFilename;
@@ -82,6 +83,7 @@ namespace QuestomAssets.BeatSaber
             scriptHashToTypes.Add("BeatmapLevelSO", typeof(BeatmapLevelDataObject));
             scriptHashToTypes.Add("SimpleColorSO", typeof(SimpleColorSO));
             scriptHashToTypes.Add("ColorManager", typeof(ColorManager));
+            scriptHashToTypes.Add("AlwaysOwnedContentModelSO", typeof(AlwaysOwnedContentModel));
             return scriptHashToTypes;
         }
 
@@ -89,7 +91,8 @@ namespace QuestomAssets.BeatSaber
             "OstVol1",
             "OstVol2",
             "Extras",
-            "Monstercat"
+            "Monstercat",
+            "ImagineDragons"
         };
 
         public static List<string> KnownLevelIDs { get; } = new List<string>()
@@ -124,7 +127,17 @@ namespace QuestomAssets.BeatSaber
             "TillItsOver",
             "TurnMeOn",
             "UnlimitedPower",
-            "WeWontBeAlone"
+            "WeWontBeAlone",
+            "BadLiar",
+            "Believer",
+            "Digital",
+            "ItsTime",
+            "Machine",
+            "Natural",
+            "Radioactive",
+            "Thunder",
+            "Warriors",
+            "WhateverItTakes"
         };
 
         public const string DebugCertificatePEM = @"-----BEGIN CERTIFICATE-----

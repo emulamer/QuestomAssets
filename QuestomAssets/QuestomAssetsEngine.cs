@@ -15,6 +15,7 @@ namespace QuestomAssets
         private string _apkFilename;
         private bool _readOnly;
         private string _pemData;
+        private List<string> _assetsLoadOrder = new List<string>();
 
         //TODO: fix cross-asset file loading of stuff before turning this to false, some of the OST Vol 1 songs are in another file
         public bool HideOriginalPlaylists { get; private set; } = true;
@@ -30,6 +31,20 @@ namespace QuestomAssets
             _readOnly = readOnly;
             _apkFilename = apkFilename;
             _pemData = pemCertificateData;
+            _assetsLoadOrder = GetAssetsLoadOrderFile();
+            if (_assetsLoadOrder == null)
+            {
+                _assetsLoadOrder = new List<string>()
+                {
+                    "globalgamemanagers",
+                    "globalgamemanagers.assets",
+                    "sharedassets1.assets",
+                    "231368cb9c1d5dd43988f2a85226e7d7",
+                    "sharedassets11.assets",
+                    "sharedassets18.assets",
+                    "sharedassets20.assets"                    
+                };
+            }
         }
 
         private MainLevelPackCollectionObject GetMainLevelPack(AssetsManager manager)
@@ -40,10 +55,25 @@ namespace QuestomAssets
             return mainLevelPack;
         }
 
-        private void UpdatePlaylistConfig(AssetsManager manager, BeatSaberPlaylist playlist)
+        private AssetsFile GetSongsAssetsFile(AssetsManager manager)
+        {
+            var extrasPack = manager.MassFirstOrDefaultAsset<BeatmapLevelPackObject>(x => x.Object.Name == "ExtrasLevelPack", true);
+            if (extrasPack == null)
+                throw new Exception("Unable to find the file that ExtrasLevelPack is in!");
+            return extrasPack.ParentFile;
+        }
+
+        private AlwaysOwnedContentModel GetAlwaysOwnedModel(AssetsManager manager)
+        {
+            var aoModel = manager.MassFirstOrDefaultAsset<AlwaysOwnedContentModel>(x => x.Object.Name == "DefaultAlwaysOwnedContentModel", true);
+            if (aoModel == null)
+                throw new Exception("Unable to find AlwaysOwnedContentModel!");
+            return aoModel.Object;
+        }
+
+        private void UpdatePlaylistConfig(AssetsFile songsAssetFile, BeatSaberPlaylist playlist)
         {
             Log.LogMsg($"Processing playlist ID {playlist.PlaylistID}...");
-            var songsAssetFile = manager.GetAssetsFile(BSConst.KnownFiles.SongsAssetsFilename);
             CustomLevelLoader loader = new CustomLevelLoader(songsAssetFile);
             BeatmapLevelPackObject levelPack = songsAssetFile.FindAsset<BeatmapLevelPackObject>(x => x.Object.PackID == playlist.PlaylistID)?.Object;
             //create a new level pack if one waasn't found
@@ -106,7 +136,7 @@ namespace QuestomAssets
                 if (songCount % songMod == 0)
                     Console.WriteLine($"{songCount.ToString().PadLeft(5)} of {totalSongs}...");
 
-                if (UpdateSongConfig(manager, song, loader))
+                if (UpdateSongConfig(songsAssetFile, song, loader))
                 {
                     if (levelCollection.BeatmapLevels.Any(x => x.Object.LevelID == song.LevelData.LevelID))
                     {
@@ -124,10 +154,8 @@ namespace QuestomAssets
             Console.WriteLine($"Proccessed {totalSongs} for playlist ID {playlist.PlaylistID}");
         }
 
-        private bool UpdateSongConfig(AssetsManager manager, BeatSaberSong song, CustomLevelLoader loader)
+        private bool UpdateSongConfig(AssetsFile songsAssetFile, BeatSaberSong song, CustomLevelLoader loader)
         {
-
-            var songsAssetFile = manager.GetAssetsFile(BSConst.KnownFiles.SongsAssetsFilename);
             BeatmapLevelDataObject level = null;
             if (!string.IsNullOrWhiteSpace(song.SongID))
             {
@@ -195,8 +223,8 @@ namespace QuestomAssets
         private void RemoveLevelAssets(AssetsManager manager, BeatmapLevelDataObject level, List<string> audioFilesToDelete)
         {
             Log.LogMsg($"Removing assets for song id '{level.LevelID}'");
-            var file17 = manager.GetAssetsFile(BSConst.KnownFiles.SongsAssetsFilename);
-            file17.DeleteObject(level);
+            var songsAssetFIle = GetSongsAssetsFile(manager);
+            songsAssetFIle.DeleteObject(level);
             var cover = level.CoverImageTexture2D.Object;
             if (cover == null)
             {
@@ -204,13 +232,13 @@ namespace QuestomAssets
             }
             else
             {
-                file17.DeleteObject(cover);
+                songsAssetFIle.DeleteObject(cover);
             }
             foreach (var diff in level.DifficultyBeatmapSets)
             {
                 foreach (var diffbm in diff.DifficultyBeatmaps)
                 {
-                    file17.DeleteObject(diffbm.BeatmapDataPtr.Object);
+                    songsAssetFIle.DeleteObject(diffbm.BeatmapDataPtr.Object);
                 }
             }
             var audioClip = level.AudioClip.Object;
@@ -221,14 +249,14 @@ namespace QuestomAssets
             else
             {
                 audioFilesToDelete.Add(audioClip.Resource.Source);
-                file17.DeleteObject(audioClip);
+                songsAssetFIle.DeleteObject(audioClip);
             }
             
         }
 
         private void RemoveLevelPackAssets(AssetsManager manager, BeatmapLevelPackObject levelPack)
         {
-            var songsAssetFile = manager.GetAssetsFile(BSConst.KnownFiles.SongsAssetsFilename);
+            var songsAssetFile = GetSongsAssetsFile(manager);
 
             Log.LogMsg($"Removing assets for playlist ID '{ levelPack.PackID}'");
             var collection = levelPack.BeatmapLevelCollection.Object;
@@ -240,12 +268,81 @@ namespace QuestomAssets
             songsAssetFile.DeleteObject(sprite);
         }
 
+  
+
+         
+
         #region Custom Saber
 
         //TODO: this whole section is a lot of copy/paste that needs to be cleaned up after I make sure it works at all
 
+        //private void LoadSaberMesh(AssetsManager manager, SaberInfo saberInfo)
+        //{
+        //    if (string.IsNullOrEmpty(saberInfo?.ID))
+        //        throw new ArgumentNullException("saberInfo.ID must not be null or empty!");
+
+        //    var file11 = manager.GetAssetsFile(BSConst.KnownFiles.File11);
+        //    file11.HasChanges = true;
+        //    //lots of double checking things in this function, first time I've done object manipulation this detailed
+
+        //    var newSaber = file11.FindAsset<GameObject>(x => x.Object.Name == $"{saberInfo.ID}Saber")?.Object;
+        //    if (newSaber != null)
+        //        throw new Exception($"Saber with ID {saberInfo.ID} already exists!");
+
+        //    //find the "basic saber" game object, we're going to copy it
+        //    var basicSaber = file11.FindAsset<GameObject>(x => x.Object.Name == "BasicSaber").Object;
+
+        //    //do some detailed checking to make sure the objects are in the places we expect and get the object we're going to clone
+        //    var transform = basicSaber.Components.FirstOrDefault(x => x.Object is Transform)?.Object as Transform;
+        //    if (transform == null)
+        //        throw new Exception("Unable to find Transform on Saber!");
+
+        //    var saberBladeGOTransform = transform.Children.FirstOrDefault(x => x.Object.GameObject?.Object.Name == "SaberBlade")?.Object;
+        //    var saberGlowingEdgesGOTransform = transform.Children.FirstOrDefault(x => x.Object.GameObject?.Object.Name == "SaberGlowingEdges")?.Object;
+        //    var saberHandleGOTransform = transform.Children.FirstOrDefault(x => x.Object.GameObject?.Object.Name == "SaberHandle")?.Object;
+        //    if (saberBladeGOTransform == null)
+        //        throw new Exception("Unable to find parent transform of SaberBlade on Transform!");
+        //    if (saberGlowingEdgesGOTransform == null)
+        //        throw new Exception("Unable to find parent transform of SaberGlowingEdges on Transform!");
+        //    if (saberHandleGOTransform == null)
+        //        throw new Exception("Unable to find parent transform of SaberHandle on Transform!");
+
+        //    var saberBladeGO = saberBladeGOTransform.GameObject.Object;
+        //    var saberGlowingEdgesGO = saberGlowingEdgesGOTransform.GameObject.Object;
+        //    var saberHandleGO = saberHandleGOTransform.GameObject.Object;
+        //    if (saberBladeGO == null)
+        //        throw new Exception("Unable to find SaberBlade on Transform!");
+        //    if (saberGlowingEdgesGO == null)
+        //        throw new Exception("Unable to find SaberGlowingEdges on Transform!");
+        //    if (saberHandleGO == null)
+        //        throw new Exception("Unable to find SaberHandle on Transform!");
+        //    var saberBladeMeshFilter = saberBladeGO.Components.FirstOrDefault(x => x.Object is MeshFilterObject)?.Object as MeshFilterObject;
+        //    var saberGlowingEdgesMeshFilter = saberGlowingEdgesGO.Components.FirstOrDefault(x => x.Object is MeshFilterObject)?.Object as MeshFilterObject;
+        //    var saberHandleMeshFilter = saberHandleGO.Components.FirstOrDefault(x => x.Object is MeshFilterObject)?.Object as MeshFilterObject;
+        //    if (saberBladeMeshFilter == null)
+        //        throw new Exception("Unable to find SaberBlade MeshFilter on Transform!");
+        //    if (saberGlowingEdgesMeshFilter == null)
+        //        throw new Exception("Unable to find SaberGlowingEdges MeshFilter on Transform!");
+        //    if (saberHandleMeshFilter == null)
+        //        throw new Exception("Unable to find SaberHandle MeshFilter on Transform!");
+        //    if (saberBladeMeshFilter?.Mesh?.Object?.Name != "SaberBlade")
+        //        throw new Exception($"Should be named SaberBlade but is named {saberBladeMeshFilter?.Mesh?.Object?.Name}!");
+        //    if (saberGlowingEdgesMeshFilter?.Mesh?.Object?.Name != "SaberGlowingEdges")
+        //        throw new Exception($"Should be named SaberGlowingEdges but is named {saberGlowingEdgesMeshFilter?.Mesh?.Object?.Name}!");
+        //    if (saberHandleMeshFilter?.Mesh?.Object?.Name != "SaberHandle")
+        //        throw new Exception($"Should be named SaberHandle but is named {saberHandleMeshFilter?.Mesh?.Object?.Name}!");
+        //    saberBladeMeshFilter.Mesh.Object.MeshData = saberInfo.DatFiles.SaberBladeBytes;
+        //    saberGlowingEdgesMeshFilter.Mesh.Object.MeshData = saberInfo.DatFiles.SaberGlowingEdgesBytes;
+        //    saberHandleMeshFilter.Mesh.Object.MeshData = saberInfo.DatFiles.SaberHandleBytes;
+           
+
+        //}
+
+
+        //this doesn't work yet.
         private Transform MakeSaber(AssetsManager manager, SaberInfo saberInfo)
         {
+            /*
             if (string.IsNullOrEmpty(saberInfo?.ID))
                 throw new ArgumentNullException("saberInfo.ID must not be null or empty!");
 
@@ -261,7 +358,7 @@ namespace QuestomAssets
             var basicSaber = file11.FindAsset<GameObject>(x => x.Object.Name == "BasicSaber").Object;
 
             //do some detailed checking to make sure the objects are in the places we expect and get the object we're going to clone
-            var transform = basicSaber.Components.FirstOrDefault(x => x is SmartPtr<Transform>)?.Object as Transform;
+            var transform = basicSaber.Components.FirstOrDefault(x => x.Object is Transform)?.Object as Transform;
             if (transform == null)
                 throw new Exception("Unable to find Transform on Saber!");
             
@@ -284,9 +381,9 @@ namespace QuestomAssets
                 throw new Exception("Unable to find SaberGlowingEdges on Transform!");
             if (saberHandleGO == null)
                 throw new Exception("Unable to find SaberHandle on Transform!");
-            var saberBladeMeshFilter = (saberBladeGO.Components.FirstOrDefault(x => x is ISmartPtr<MeshFilterObject>) as ISmartPtr<MeshFilterObject>)?.Object;
-            var saberGlowingEdgesMeshFilter = (saberBladeGO.Components.FirstOrDefault(x => x is ISmartPtr<MeshFilterObject>) as ISmartPtr<MeshFilterObject>)?.Object;
-            var saberHandleMeshFilter = (saberBladeGO.Components.FirstOrDefault(x => x is ISmartPtr<MeshFilterObject>) as ISmartPtr<MeshFilterObject>)?.Object;
+            var saberBladeMeshFilter = saberBladeGO.Components.FirstOrDefault(x => x.Object is MeshFilterObject)?.Object as MeshFilterObject;
+            var saberGlowingEdgesMeshFilter = saberGlowingEdgesGO.Components.FirstOrDefault(x => x.Object is MeshFilterObject)?.Object as MeshFilterObject;
+            var saberHandleMeshFilter = saberHandleGO.Components.FirstOrDefault(x => x.Object is MeshFilterObject)?.Object as MeshFilterObject;
             if (saberBladeMeshFilter == null)
                 throw new Exception("Unable to find SaberBlade MeshFilter on Transform!");
             if (saberGlowingEdgesMeshFilter == null)
@@ -366,7 +463,9 @@ namespace QuestomAssets
             var newSaberHandleGO = saberHandleGO.ObjectInfo.Clone().Object as GameObject;
             newSaberHandleGO.Name = $"{saberInfo.ID}SaberHandle";
             var handleIndexGO = newSaberHandleGO.Components.IndexOf(newSaberHandleGO.Components.First(x => x.Object is MeshFilterObject));
+            var handleIndexTrans = newSaberHandleGO.Components.IndexOf(newSaberHandleGO.Components.First(x => x.Object is Transform));
             newSaberHandleGO.Components[handleIndexGO] = newSaberHandleMeshFilter.PtrFrom(newSaberHandleGO);
+            newSaberHandleGO.Components[handleIndexTrans] = newSaberHandleGOTransform.PtrFrom(newSaberHandleGO);
             file11.AddObject(newSaberHandleGO);
 
             //clone the Transform
@@ -386,7 +485,8 @@ namespace QuestomAssets
 
             file11.AddObject(newTransform);
 
-
+            ////////////////////////////////////TODO////////////////////////////
+            ///I have to copy all of the monobehaviours too because they have game object links
             //clone the BasicSaber and give it a new name
             newSaber = basicSaber.ObjectInfo.Clone().Object as GameObject;
             newSaber.Name = $"{saberInfo.ID}Saber";
@@ -397,83 +497,81 @@ namespace QuestomAssets
             file11.AddObject(newSaber);
 
             //holy shit, is there any chance all of this verbosity and double checking things will work?
-            return newTransform;
+            return newTransform;*/
+            return null;
 
         }
 
-        private bool SaberExists(AssetsManager manager, string saberID)
-        {
-            var file11 = manager.GetAssetsFile(BSConst.KnownFiles.File11);
-            return file11.FindAsset<GameObject>(x => x.Object.Name == $"{saberID}Saber") != null;
-        }
+        //private bool SaberExists(AssetsManager manager, string saberID)
+        //{
+        //    var file11 = manager.GetAssetsFile(BSConst.KnownFiles.File11);
+        //    return file11.FindAsset<GameObject>(x => x.Object.Name == $"{saberID}Saber") != null;
+        //}
 
-        private string GetCurrentSaberID(AssetsManager manager)
-        {
-            var saberChild = GetSaberObjectParentTransform(manager)?.GameObject?.Object;
-            if (saberChild == null)
-                throw new Exception("Couldn't find child saber game object of transform.");
-            return saberChild.Name.Substring(0, saberChild.Name.Length - 5);
-        }
+        //private string GetCurrentSaberID(AssetsManager manager)
+        //{
+        //    var saberChild = GetSaberObjectParentTransform(manager)?.GameObject?.Object;
+        //    if (saberChild == null)
+        //        throw new Exception("Couldn't find child saber game object of transform.");
+        //    return saberChild.Name.Substring(0, saberChild.Name.Length - 5);
+        //}
 
-        private Transform GetSaberObjectParentTransform(AssetsManager manager)
-        {
-            var file11 = manager.GetAssetsFile(BSConst.KnownFiles.File11);
-            var basicSaberModel = file11.FindAsset<GameObject>(x => x.Object.Name == "BasicSaberModel");
+        //private Transform GetSaberObjectParentTransform(AssetsManager manager)
+        //{
+        //    var file11 = manager.GetAssetsFile(BSConst.KnownFiles.File11);
+        //    var basicSaberModel = file11.FindAsset<GameObject>(x => x.Object.Name == "BasicSaberModel");
 
-            if (basicSaberModel == null)
-                throw new Exception("Couldn't find BasicSaberModel!");
+        //    if (basicSaberModel == null)
+        //        throw new Exception("Couldn't find BasicSaberModel!");
 
-            var transform = basicSaberModel.Object.Components.FirstOrDefault(x => x.Object is Transform)?.Object as Transform;
-            if (transform == null)
-                throw new Exception("Couldn't find Transform on BasicSaberModel!");
+        //    var transform = basicSaberModel.Object.Components.FirstOrDefault(x => x.Object is Transform)?.Object as Transform;
+        //    if (transform == null)
+        //        throw new Exception("Couldn't find Transform on BasicSaberModel!");
 
-            var saberParent = (transform.Children.FirstOrDefault(x => x.Object is Transform
-                    && ((x.Object as Transform).GameObject?.Object?.Name?.EndsWith("Saber") ?? false)).Object as Transform);
-            if (saberParent == null)
-                throw new Exception("Could not find child transform of BasicSaberModel!");
-            return saberParent;
-        }
+        //    var saberParent = (transform.Children.FirstOrDefault(x => x.Object is Transform
+        //            && ((x.Object as Transform).GameObject?.Object?.Name?.EndsWith("Saber") ?? false)).Object as Transform);
+        //    if (saberParent == null)
+        //        throw new Exception("Could not find child transform of BasicSaberModel!");
+        //    return saberParent;
+        //}
 
-        private void SwapToSaberID(AssetsManager manager, string saberID)
-        {
-            var file11 = manager.GetAssetsFile(BSConst.KnownFiles.File11);
+        //private void SwapToSaberID(AssetsManager manager, string saberID)
+        //{
+        //    var file11 = manager.GetAssetsFile(BSConst.KnownFiles.File11);
 
-            var newSaber = file11.FindAsset<GameObject>(x => x.Object.Name == $"{saberID}Saber")?.Object;
-            if (newSaber == null)
-                throw new Exception($"Saber with ID {saberID} does not exist!");
+        //    var newSaber = file11.FindAsset<GameObject>(x => x.Object.Name == $"{saberID}Saber")?.Object;
+        //    if (newSaber == null)
+        //        throw new Exception($"Saber with ID {saberID} does not exist!");
 
-            var newSaberTransform = newSaber.Components.FirstOrDefault(x => x.Object is Transform).Object as Transform;
-            if (newSaberTransform == null)
-                throw new Exception($"Saber with ID {saberID} is missing its parent transform!");
+        //    var newSaberTransform = newSaber.Components.FirstOrDefault(x => x.Object is Transform).Object as Transform;
+        //    if (newSaberTransform == null)
+        //        throw new Exception($"Saber with ID {saberID} is missing its parent transform!");
 
-            var basicSaberModel = file11.FindAsset<GameObject>(x => x.Object.Name == "BasicSaberModel");
+        //    var basicSaberModel = file11.FindAsset<GameObject>(x => x.Object.Name == "BasicSaberModel");
 
-            if (basicSaberModel == null)
-                throw new Exception("Couldn't find BasicSaberModel!");
+        //    if (basicSaberModel == null)
+        //        throw new Exception("Couldn't find BasicSaberModel!");
 
-            var transform = basicSaberModel.Object.Components.FirstOrDefault(x => x.Object is Transform)?.Object as Transform;
-            if (transform == null)
-                throw new Exception("Couldn't find Transform on BasicSaberModel!");
+        //    var transform = basicSaberModel.Object.Components.FirstOrDefault(x => x.Object is Transform)?.Object as Transform;
+        //    if (transform == null)
+        //        throw new Exception("Couldn't find Transform on BasicSaberModel!");
 
-            var saberChild = transform.Children.FirstOrDefault(x => x.Object.GameObject?.Object?.Name?.EndsWith("Saber")??false);
-            if (saberChild == null)
-                throw new Exception("Couldn't find a game object on the BasicSaberModel Transform that ended with -Saber!");
-            int saberIndex = transform.Children.IndexOf(saberChild);
-            saberChild.Object.Father = null;
-            transform.Children[saberIndex] = newSaberTransform.PtrFrom(transform) as ISmartPtr<Transform>;
-            newSaberTransform.Father = transform.PtrFrom(newSaberTransform);
-        }
+        //    var saberChild = transform.Children.FirstOrDefault(x => x.Object.GameObject?.Object?.Name?.EndsWith("Saber")??false);
+        //    if (saberChild == null)
+        //        throw new Exception("Couldn't find a game object on the BasicSaberModel Transform that ended with -Saber!");
+        //    int saberIndex = transform.Children.IndexOf(saberChild);
+        //    saberChild.Object.Father = null;
+        //    transform.Children[saberIndex] = newSaberTransform.PtrFrom(transform) as ISmartPtr<Transform>;
+        //    newSaberTransform.Father = transform.PtrFrom(newSaberTransform);
+        //}
         #endregion
 
         public BeatSaberQuestomConfig GetCurrentConfig(bool suppressImages = false)
         {
-            using (var apkFileProvider = new ApkAssetsFileProvider(_apkFilename, ApkAssetsFileProvider.FileCacheMode.Memory, true))
+            using (var apkFileProvider = new ApkAssetsFileProvider(_apkFilename, FileCacheMode.Memory, true))
             {
-                var manager = new AssetsManager(apkFileProvider, BSConst.GetAssetTypeMap(), false);
-                manager.GetAssetsFile("globalgamemanagers");
-                var file11 = manager.GetAssetsFile(BSConst.KnownFiles.File11);
-                var basicSaberModel = file11.FindAsset<GameObject>(x => x.Object.Name == "BasicSaberModel");
-                var basicSaber = file11.FindAsset<GameObject>(x => x.Object.Name == "BasicSaber");
+                var manager = new AssetsManager(apkFileProvider, BSConst.KnownFiles.AssetsRootPath, BSConst.GetAssetTypeMap());
+                PreloadFiles(manager);
 
                 var config = GetConfig(manager, suppressImages);
 
@@ -488,10 +586,10 @@ namespace QuestomAssets
                         song.SourceOgg = null;
                     }
                 }
-                config.Saber = new SaberModel()
-                {
-                    SaberID = GetCurrentSaberID(manager)
-                };
+                //config.Saber = new SaberModel()
+                //{
+                //    SaberID = GetCurrentSaberID(manager)
+                //};
                 return config;
             }
         }
@@ -499,8 +597,6 @@ namespace QuestomAssets
         private BeatSaberQuestomConfig GetConfig(AssetsManager manager, bool suppressImages)
         {
             BeatSaberQuestomConfig config = new BeatSaberQuestomConfig();
-            var file19 = manager.GetAssetsFile(BSConst.KnownFiles.MainCollectionAssetsFilename);
-            var file17 = manager.GetAssetsFile(BSConst.KnownFiles.SongsAssetsFilename);
             var mainPack = GetMainLevelPack(manager);
             foreach (var packPtr in mainPack.BeatmapLevelPacks)
             {
@@ -565,16 +661,21 @@ namespace QuestomAssets
             return config;
         }
 
+        private void PreloadFiles(AssetsManager manager)
+        {
+            _assetsLoadOrder.ForEach(x => manager.GetAssetsFile(x));
+        }
+
         public void UpdateConfig(BeatSaberQuestomConfig config)
         {
             //todo: basic validation of the config
             if (_readOnly)
                 throw new InvalidOperationException("Cannot update in read only mode.");
 
-            using (var apkFileProvider = new ApkAssetsFileProvider(_apkFilename, ApkAssetsFileProvider.FileCacheMode.Memory, false))
+            using (var apkFileProvider = new ApkAssetsFileProvider(_apkFilename, FileCacheMode.Memory, false))
             {
-                var manager = new AssetsManager(apkFileProvider, BSConst.GetAssetTypeMap(), false);
-                manager.GetAssetsFile("globalgamemanagers");
+                var manager = new AssetsManager(apkFileProvider, BSConst.KnownFiles.AssetsRootPath, BSConst.GetAssetTypeMap());
+                PreloadFiles(manager);
 
                 //get existing playlists and their songs
                 //compare with new ones
@@ -583,12 +684,13 @@ namespace QuestomAssets
 
                 UpdateColorConfig(manager, config.Colors);
 
-                UpdateTextConfig(manager, config.TextChanges);
+                //TODO: something broke
+                //UpdateTextConfig(manager, config.TextChanges);
 
-                if (!UpdateSaberConfig(manager, config.Saber))
-                {
-                    Log.LogErr("Saber failed to update.  Aborting all changes.");
-                }
+                //if (!UpdateSaberConfig(manager, config.Saber))
+                //{
+                //    Log.LogErr("Saber failed to update.  Aborting all changes.");
+                //}
 
                 if (config.Playlists != null)
                 {
@@ -606,62 +708,78 @@ namespace QuestomAssets
             }
         }
 
-
-        private bool UpdateSaberConfig(AssetsManager manager, SaberModel saberCfg)
-        {
-            try
-            {
-                if (saberCfg != null && (!string.IsNullOrWhiteSpace(saberCfg.CustomSaberFolder) || !string.IsNullOrWhiteSpace(saberCfg.SaberID)))
-                {
-                    var currentSaber = GetCurrentSaberID(manager);
-                    if (!string.IsNullOrWhiteSpace(saberCfg.SaberID) && SaberExists(manager, saberCfg.SaberID))
-                    {
-                        if (currentSaber == saberCfg.SaberID)
-                        {
-                            Log.LogMsg($"Current saber is already set to {currentSaber}, no changes needed.");
-                            return true;
-                        }
-                        Log.LogMsg($"SaberID {saberCfg.SaberID} was found already in the assets, using it.");
-                        SwapToSaberID(manager, saberCfg.SaberID);
-                        return true;
-                    }
-                    else
-                    {
-                        SaberInfo newSaber = SaberInfo.FromFolderOrZip(saberCfg.CustomSaberFolder);
-                        if (SaberExists(manager, newSaber.ID))
-                        {
-                            Log.LogErr($"Saber ID {newSaber.ID} that was loaded already exists.  Cannot load another saber with the same name.");
-                            return false;
-                        }
-                        MakeSaber(manager, newSaber);
-                        SwapToSaberID(manager, saberCfg.SaberID);
-                        return true;
-                    }
-                }
-                else
-                {
-                    Log.LogMsg("Saber config is null, saber configuration will not be changed.");
-                    return true;
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.LogErr("Failed to update saber configuration.", ex);
-                return false;
-            }
-        }
-        //private void UpdateSaberConfig(AssetsManager manager)
+        //private bool UpdateSaberConfig(AssetsManager manager, SaberModel saberCfg)
         //{
-        //    var currentSaber = GetCurrentSaberID(manager);
-        //    if (saberInfo == null || saberInfo.ID == null)
+        //    try
         //    {
-        //        Log.LogMsg("No SaberID provided, saber will not be changed.");
-        //        return;
+        //        if (saberCfg != null && !string.IsNullOrWhiteSpace(saberCfg.CustomSaberFolder))
+        //        {
+
+        //            SaberInfo newSaber = SaberInfo.FromFolderOrZip(saberCfg.CustomSaberFolder);
+        //            if (SaberExists(manager, newSaber.ID))
+        //            {
+        //                Log.LogErr($"Saber ID {newSaber.ID} that was loaded already exists.  Cannot load another saber with the same name.");
+        //                return false;
+        //            }
+        //            LoadSaberMesh(manager, newSaber);
+        //            return true;
+
+        //        }
+        //        else
+        //        {
+        //            Log.LogMsg("Saber config is null, saber configuration will not be changed.");
+        //            return true;
+        //        }
         //    }
-        //    if (saberInfo.ID.ToLower() == currentSaber.ToLower())
+        //    catch (Exception ex)
         //    {
-        //        Log.LogMsg("Current saber ID is already set, no change needed.");
-        //        return;
+        //        Log.LogErr("Failed to update saber configuration.", ex);
+        //        return false;
+        //    }
+        //}
+
+        //not currently working
+        //private bool UpdateSaberConfig(AssetsManager manager, SaberModel saberCfg)
+        //{
+        //    try
+        //    {
+        //        if (saberCfg != null && (!string.IsNullOrWhiteSpace(saberCfg.CustomSaberFolder) || !string.IsNullOrWhiteSpace(saberCfg.SaberID)))
+        //        {
+        //            var currentSaber = GetCurrentSaberID(manager);
+        //            if (!string.IsNullOrWhiteSpace(saberCfg.SaberID) && SaberExists(manager, saberCfg.SaberID))
+        //            {
+        //                if (currentSaber == saberCfg.SaberID)
+        //                {
+        //                    Log.LogMsg($"Current saber is already set to {currentSaber}, no changes needed.");
+        //                    return true;
+        //                }
+        //                Log.LogMsg($"SaberID {saberCfg.SaberID} was found already in the assets, using it.");
+        //                SwapToSaberID(manager, saberCfg.SaberID);
+        //                return true;
+        //            }
+        //            else
+        //            {
+        //                SaberInfo newSaber = SaberInfo.FromFolderOrZip(saberCfg.CustomSaberFolder);
+        //                if (SaberExists(manager, newSaber.ID))
+        //                {
+        //                    Log.LogErr($"Saber ID {newSaber.ID} that was loaded already exists.  Cannot load another saber with the same name.");
+        //                    return false;
+        //                }
+        //                MakeSaber(manager, newSaber);
+        //                SwapToSaberID(manager, newSaber.ID);
+        //                return true;
+        //            }
+        //        }
+        //        else
+        //        {
+        //            Log.LogMsg("Saber config is null, saber configuration will not be changed.");
+        //            return true;
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Log.LogErr("Failed to update saber configuration.", ex);
+        //        return false;
         //    }
         //}
 
@@ -669,15 +787,15 @@ namespace QuestomAssets
         {
             //get the old config before we start on this
             var originalConfig = GetConfig(manager, false);
-            var songsAssetFile = manager.GetAssetsFile(BSConst.KnownFiles.SongsAssetsFilename);
+            var songsAssetFile = GetSongsAssetsFile(manager);
+            var aoModel = GetAlwaysOwnedModel(manager);
             foreach (var playlist in config.Playlists)
             {
-                UpdatePlaylistConfig(manager, playlist);
+                UpdatePlaylistConfig(songsAssetFile, playlist);
             }
 
             //open the assets with the main levels collection, find the file index of sharedassets17.assets, and add the playlists to it
-            var mainLevelsFile = manager.GetAssetsFile(BSConst.KnownFiles.MainCollectionAssetsFilename);
-            var file17Index = mainLevelsFile.GetFileIDForFilename(BSConst.KnownFiles.SongsAssetsFilename);
+         
             var mainLevelPack = GetMainLevelPack(manager);
 
 
@@ -712,6 +830,10 @@ namespace QuestomAssets
             //relink all the level packs in order
             var addPacks = config.Playlists.Select(x => x.LevelPackObject.PtrFrom(mainLevelPack));
             mainLevelPack.BeatmapLevelPacks.AddRange(addPacks);
+
+            //link them to the always owned ones
+            var addPacksOwned = config.Playlists.Select(x => x.LevelPackObject.PtrFrom(aoModel));
+            aoModel.AlwaysOwnedPacks.AddRange(addPacksOwned);
 
             //do a first loop to guess at the file size
             Int64 originalApkSize = new FileInfo(_apkFilename).Length;
@@ -825,28 +947,27 @@ namespace QuestomAssets
             textAsset.Script = Utils.TextUtils.WriteLocaleText(textKeyPairs, new List<char>() { ',', ',', '\n' });
         }
 
+        private ColorManager GetColorManager(AssetsManager manager)
+        {
+            var colorManager = manager.MassFirstOrDefaultAsset<ColorManager>(x => true)?.Object;
+            if (colorManager == null)
+                throw new Exception("Unable to find the color manager asset!");
+            return colorManager;
+        }
+
         private TextAsset GetBeatSaberTextAsset(AssetsManager manager)
         {
-            var textAssetFile = manager.GetAssetsFile(BSConst.KnownFiles.TextAssetFilename);
-            var textAssets = textAssetFile.FindAsset<TextAsset>(x => x.Object.Name == "BeatSaber");
+
+            var textAssets = manager.MassFirstOrDefaultAsset<TextAsset>(x => x.Object.Name == "BeatSaber"); ;
             if (textAssets == null)
                 throw new Exception("Unable to find any TextAssets! Perhaps the ClassID/ScriptHash are invalid?");
             // Literally the only object in the TextAssetFile is "BeatSaber" at PathID=1
             return textAssets.Object;
         }
 
-        private ColorManager GetColorManager(AssetsManager manager)
-        {
-            var colorFile = manager.GetAssetsFile(BSConst.KnownFiles.ColorAssetsFilename);
-            var colorManager = colorFile.FindAsset<ColorManager>(x=> true)?.Object;
-            if (colorManager == null)
-                throw new Exception("Unable to find the color manager asset!");
-            return colorManager;
-        }
-
         public bool ApplyPatchSettingsFile()
         {
-            string filename = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location), "patchsettings.json");
+            string filename = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "patchsettings.json");
             if (!File.Exists(filename))
             {
                 Log.LogErr($"Can't apply patch settings from file, {filename} does not exist!");
@@ -870,7 +991,7 @@ namespace QuestomAssets
 
         public bool ApplyPatch(FilePatch patch)
         {
-            using (var apkFileProvider = new ApkAssetsFileProvider(_apkFilename, ApkAssetsFileProvider.FileCacheMode.Memory, false))
+            using (var apkFileProvider = new ApkAssetsFileProvider(_apkFilename, FileCacheMode.Memory, false))
             {
                 if (!Patcher.Patch(apkFileProvider, patch))
                 {
@@ -883,11 +1004,36 @@ namespace QuestomAssets
 
         public void SignAPK()
         {
-            using (var apkFileProvider = new ApkAssetsFileProvider(_apkFilename, ApkAssetsFileProvider.FileCacheMode.None, false))
+            using (var apkFileProvider = new ApkAssetsFileProvider(_apkFilename, FileCacheMode.None, false))
             {
                 ApkSigner signer = new ApkSigner(_pemData);
                 signer.Sign(apkFileProvider);
             }
+        }
+
+        private List<string> GetAssetsLoadOrderFile()
+        {
+            string filename = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "assetsLoadOrder.json");
+            if (!File.Exists(filename))
+            {
+                Log.LogErr($"Can't find {filename}!  Default assets load order will be used.");
+                return null;
+            }
+            List<string> loadOrder = new List<string>();
+            try
+            {
+                using (var jr = new JsonTextReader(new StreamReader(filename)))
+                    loadOrder = new JsonSerializer().Deserialize<List<string>>(jr);
+                        }
+            catch (Exception ex)
+            {
+                Log.LogErr($"Error loading {filename}!  Default assets load order will be used.", ex);
+                return null;
+            }
+            if (loadOrder == null || loadOrder.Count < 1)
+                return null;
+
+            return loadOrder;
         }
 
     }

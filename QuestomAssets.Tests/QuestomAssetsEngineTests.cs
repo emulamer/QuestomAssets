@@ -9,7 +9,7 @@ namespace Tests
 {
     public class QuestomAssetsEngineTests
     {
-        private const string BS_APK_FILE = @"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\platform-tools\1.0.2baseoriginal.apk";
+        private const string BS_APK_FILE = @"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\platform-tools\1.1.0baseoriginal.apk";
         private const string TEST_SONG_FOLDER = @"TestSong";
         public const string COVER_ART_FILE = @"TestCover.png";
         private const string _apkFile = "beatsaber_TESTS.apk";

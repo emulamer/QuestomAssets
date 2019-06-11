@@ -6,7 +6,7 @@ using System.Text;
 
 namespace QuestomAssets.AssetsChanger
 {
-    public class MeshObject : AssetsObject
+    public class MeshObject : AssetsObject, IHaveName
     {
         //public object SubMeshes { get; set; }
 

@@ -28,7 +28,15 @@ namespace QuestomAssets.AssetsChanger
         protected override void Parse(AssetsReader reader)
         {
             base.Parse(reader);
-            GameObject = SmartPtr<GameObject>.Read(ObjectInfo.ParentFile, this, reader);
+            try
+            {
+                GameObject = SmartPtr<GameObject>.Read(ObjectInfo.ParentFile, this, reader);
+            }
+            catch (Exception ex)
+            {
+                Log.LogErr("Component failed to load its GameObject... allowing it to continue because this happens with bundles?");
+                GameObject = null;
+            }
         }
 
         protected override void WriteBase(AssetsWriter writer)
