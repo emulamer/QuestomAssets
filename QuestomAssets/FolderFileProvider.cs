@@ -31,12 +31,14 @@ namespace QuestomAssets
 
         public void Delete(string filename)
         {
+            throw new NotImplementedException("I haven't tested this yet, probably it'll work fine, but don't want to delete the root of a drive.");
             CheckRO();
             File.Delete(Path.Combine(_rootFolder, FwdToFS(filename)));
         }
 
         public void DeleteFiles(string pattern)
         {
+            throw new NotImplementedException("I haven't tested this yet, probably it'll work fine, but don't want to delete the root of a drive.");
             CheckRO();
             foreach (var filename in FindFiles(pattern))
             {

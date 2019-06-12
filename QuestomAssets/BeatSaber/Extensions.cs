@@ -59,7 +59,8 @@ namespace QuestomAssets.BeatSaber
             if (found != null)
                 return found;
 
-            found = FindFirstOfSplit(fp, fp.FindFiles("*" + fileNameOnly+".split*").OrderBy(x => x.Length).FirstOrDefault());
+            if (found != null)
+                found = FindFirstOfSplit(fp, fp.FindFiles("*" + fileNameOnly+".split*").OrderBy(x => x.Length).FirstOrDefault());
 
             return found;
         }
