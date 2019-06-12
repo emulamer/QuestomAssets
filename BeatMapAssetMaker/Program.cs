@@ -263,59 +263,59 @@ namespace BeatmapAssetMaker
                 QuestomAssetsEngine q = new QuestomAssetsEngine(args.ApkFile);
 
                 Log.LogMsg($"Loading configuration...");
-                var cfg = q.GetCurrentConfig(true);
-                Log.LogMsg($"Configuration loaded");
+                //var cfg = q.GetCurrentConfig(true);
+                //Log.LogMsg($"Configuration loaded");
 
-                if (!args.NoPatch)
-                {
-                    Log.LogMsg($"Applying patches...");
-                    if (!q.ApplyPatchSettingsFile())
-                    {
-                        Log.LogErr("Failed to apply patches.  Cannot continue.");
-                        return -1;
-                    }
-                }
+                //if (!args.NoPatch)
+                //{
+                //    Log.LogMsg($"Applying patches...");
+                //    if (!q.ApplyPatchSettingsFile())
+                //    {
+                //        Log.LogErr("Failed to apply patches.  Cannot continue.");
+                //        return -1;
+                //    }
+                //}
 
-                BeatSaberPlaylist playlist = cfg.Playlists.FirstOrDefault(x => x.PlaylistID == "CustomSongs");
-                if (playlist == null)
-                {
-                    Log.LogMsg("Playlist doesn't already exist, creating it");
-                    playlist = new BeatSaberPlaylist()
-                    {
-                        PlaylistID = "CustomSongs",
-                        PlaylistName = "Custom Songs"
-                    };
-                    cfg.Playlists.Add(playlist);
-                }
-                else if (args.DeleteSongs)
-                {
-                    Log.LogMsg("Deleting current songs from playlist before reloading");
-                    playlist.SongList.Clear();
-                }
-                try
-                {
-                    playlist.CoverArt = string.IsNullOrWhiteSpace(args.CoverArt) ? null : new Bitmap(args.CoverArt);
-                }
-                catch (Exception ex)
-                {
-                    Log.LogErr($"Unable to load playlist cover art from {args.CoverArt}", ex);
-                    playlist.CoverArt = null;
-                }
-                Log.LogMsg($"Attempting to load {customSongsFolders.Count} custom songs...");
-                foreach (var cs in customSongsFolders)
-                {
-                    playlist.SongList.Add(new BeatSaberSong()
-                    {
-                        CustomSongFolder = cs
-                    });
-                }
+                //BeatSaberPlaylist playlist = cfg.Playlists.FirstOrDefault(x => x.PlaylistID == "CustomSongs");
+                //if (playlist == null)
+                //{
+                //    Log.LogMsg("Playlist doesn't already exist, creating it");
+                //    playlist = new BeatSaberPlaylist()
+                //    {
+                //        PlaylistID = "CustomSongs",
+                //        PlaylistName = "Custom Songs"
+                //    };
+                //    cfg.Playlists.Add(playlist);
+                //}
+                //else if (args.DeleteSongs)
+                //{
+                //    Log.LogMsg("Deleting current songs from playlist before reloading");
+                //    playlist.SongList.Clear();
+                //}
+                //try
+                //{
+                //    playlist.CoverArt = string.IsNullOrWhiteSpace(args.CoverArt) ? null : new Bitmap(args.CoverArt);
+                //}
+                //catch (Exception ex)
+                //{
+                //    Log.LogErr($"Unable to load playlist cover art from {args.CoverArt}", ex);
+                //    playlist.CoverArt = null;
+                //}
+                //Log.LogMsg($"Attempting to load {customSongsFolders.Count} custom songs...");
+                //foreach (var cs in customSongsFolders)
+                //{
+                //    playlist.SongList.Add(new BeatSaberSong()
+                //    {
+                //        CustomSongFolder = cs
+                //    });
+                //}
 
-                cfg.Saber = new SaberModel()
-                {
-                    CustomSaberFolder = @"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\dist\sabers"
-                };
-                Log.LogMsg("Applying new configuration...");
-                q.UpdateConfig(cfg);
+                //cfg.Saber = new SaberModel()
+                //{
+                //    CustomSaberFolder = @"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\dist\sabers"
+                //};
+                //Log.LogMsg("Applying new configuration...");
+               // q.UpdateConfig(cfg);
                 Log.LogMsg("Configuration updated");
 
                 Log.LogMsg("Signing APK...");
