@@ -41,10 +41,10 @@ namespace QuestomAssets
                     "231368cb9c1d5dd43988f2a85226e7d7",
                     "sharedassets11.assets",
                     "sharedassets18.assets",
-                    "sharedassets20.assets"                    
+                    "sharedassets20.assets"
                 };
             }
-        }
+
             _tempFolder = tempFolder;
         }
 
@@ -567,33 +567,33 @@ namespace QuestomAssets
         //}
         #endregion
 
-        public BeatSaberQuestomConfig GetCurrentConfig(IAssetsFileProvider fileProvider, bool suppressImages = false)
+        public BeatSaberQuestomConfig GetCurrentConfig(IAssetsFileProvider fileProvider, string assetsRootPath, bool suppressImages = false)
         {
 
-        var manager = new AssetsManager(fileProvider, BSConst.GetAssetTypeMap(), false);
-        PreloadFiles(manager);
-            
-           
+            var manager = new AssetsManager(fileProvider, assetsRootPath, BSConst.GetAssetTypeMap());
+            PreloadFiles(manager);
+
+
 
             var config = GetConfig(manager, suppressImages);
 
-                //clear out any of the internal refs that were used so the GC can clean things up
-                foreach (var p in config.Playlists)
+            //clear out any of the internal refs that were used so the GC can clean things up
+            foreach (var p in config.Playlists)
+            {
+                p.CoverArtSprite = null;
+                p.LevelPackObject = null;
+                foreach (var song in p.SongList)
                 {
-                    p.CoverArtSprite = null;
-                    p.LevelPackObject = null;
-                    foreach (var song in p.SongList)
-                    {
-                        song.LevelData = null;
-                        song.SourceOgg = null;
-                    }
+                    song.LevelData = null;
+                    song.SourceOgg = null;
                 }
-                //config.Saber = new SaberModel()
-                //{
-                //    SaberID = GetCurrentSaberID(manager)
-                //};
-                return config;
             }
+            //config.Saber = new SaberModel()
+            //{
+            //    SaberID = GetCurrentSaberID(manager)
+            //};
+            return config;
+        }
         
 
         private BeatSaberQuestomConfig GetConfig(AssetsManager manager, bool suppressImages)
@@ -667,7 +667,8 @@ namespace QuestomAssets
         {
             _assetsLoadOrder.ForEach(x => manager.GetAssetsFile(x));
         }
-            public void UpdateConfig(BeatSaberQuestomConfig config, IAssetsFileProvider fileProvider)
+
+        public void UpdateConfig(BeatSaberQuestomConfig config, IAssetsFileProvider fileProvider, string assetsRootPath)
         {
             //todo: basic validation of the config
             if (_readOnly)
@@ -675,9 +676,9 @@ namespace QuestomAssets
 
 
 
-            var manager = new AssetsManager(fileProvider, BSConst.GetAssetTypeMap(), false);
+            var manager = new AssetsManager(fileProvider, assetsRootPath, BSConst.GetAssetTypeMap());
 
-                PreloadFiles(manager);
+            PreloadFiles(manager);
 
             //get existing playlists and their songs
             //compare with new ones
@@ -686,13 +687,13 @@ namespace QuestomAssets
 
             UpdateColorConfig(manager, config.Colors);
 
-                //TODO: something broke
-                //UpdateTextConfig(manager, config.TextChanges);
+            //TODO: something broke
+            //UpdateTextConfig(manager, config.TextChanges);
 
-                //if (!UpdateSaberConfig(manager, config.Saber))
-                //{
-                //    Log.LogErr("Saber failed to update.  Aborting all changes.");
-                //}
+            //if (!UpdateSaberConfig(manager, config.Saber))
+            //{
+            //    Log.LogErr("Saber failed to update.  Aborting all changes.");
+            //}
 
             if (config.Playlists != null)
             {
@@ -967,14 +968,6 @@ namespace QuestomAssets
             return textAssets.Object;
         }
 
-        private ColorManager GetColorManager(AssetsManager manager)
-        {
-            var colorFile = manager.GetAssetsFile(BSConst.KnownFiles.ColorAssetsFilename);
-            var colorManager = colorFile.FindAsset<ColorManager>(x=> true)?.Object;
-            if (colorManager == null)
-                throw new Exception("Unable to find the color manager asset!");
-            return colorManager;
-        }
 
     public bool ApplyPatchSettingsFile(IAssetsFileProvider fileProvider)
     {

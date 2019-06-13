@@ -181,10 +181,13 @@ namespace QuestomAssets
             return entry.UncompressedSize;
         }
 
-        public void Save()
+        public void Save(string toFile = null)
         {
             CheckRO();
-            _zipFile.Save();
+            if (toFile != null)
+                _zipFile.Save(toFile);
+            else
+                _zipFile.Save();
             _streamsToClose.ForEach(x => x.Dispose());
             _streamsToClose.Clear();
         }

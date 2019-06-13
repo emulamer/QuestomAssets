@@ -93,7 +93,7 @@ namespace QuestomAssets
             return File.ReadAllBytes(Path.Combine(_rootFolder, FwdToFS(filename)));
         }
 
-        public void Save()
+        public void Save(string toFile = null)
         {
             //save is instant!
         }

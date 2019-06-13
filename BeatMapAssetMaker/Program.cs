@@ -105,7 +105,7 @@ namespace BeatmapAssetMaker
             {
                 Log.LogMsg($"Opening APK at '{args.ApkFile}'");
                 QuestomAssetsEngine q = new QuestomAssetsEngine();
-                using (var apkFileProvider = new ApkAssetsFileProvider(args.ApkFile, ApkAssetsFileProvider.FileCacheMode.Memory, false))
+                using (var apkFileProvider = new ApkAssetsFileProvider(args.ApkFile, FileCacheMode.Memory, false))
                 {
                     if (!args.NoPatch)
                     {
@@ -154,10 +154,10 @@ namespace BeatmapAssetMaker
 
 
                     Log.LogMsg("Applying new configuration...");
-                    q.UpdateConfig(config, apkFileProvider);
+                    q.UpdateConfig(config, apkFileProvider, BSConst.KnownFiles.AssetsRootPath);
                     Log.LogMsg("Configuration updated");
                 }
-                using (var apkFileProvider = new ApkAssetsFileProvider(args.ApkFile, ApkAssetsFileProvider.FileCacheMode.Memory, false))
+                using (var apkFileProvider = new ApkAssetsFileProvider(args.ApkFile, FileCacheMode.Memory, false))
                 {
                     Log.LogMsg("Signing APK...");
                     q.SignAPK(apkFileProvider);
@@ -184,12 +184,12 @@ namespace BeatmapAssetMaker
             {
 
                 Log.LogMsg($"Opening APK at '{args.ApkFile}'");
-                using (var apkFileProvider = new ApkAssetsFileProvider(args.ApkFile, ApkAssetsFileProvider.FileCacheMode.Memory, false))
+                using (var apkFileProvider = new ApkAssetsFileProvider(args.ApkFile, FileCacheMode.Memory, false))
                 {
                     QuestomAssetsEngine q = new QuestomAssetsEngine(true);
 
                     Log.LogMsg($"Loading configuration...");
-                    var cfg = q.GetCurrentConfig(apkFileProvider, args.NoImages);
+                    var cfg = q.GetCurrentConfig(apkFileProvider, BSConst.KnownFiles.AssetsRootPath, args.NoImages);
                     Log.LogMsg($"Configuration loaded");
 
                     TextWriter outWriter = null;
@@ -255,65 +255,66 @@ namespace BeatmapAssetMaker
             try
             {
                 Log.LogMsg($"Opening APK at '{args.ApkFile}'");
-                using (var apkFileProvider = new ApkAssetsFileProvider(args.ApkFile, ApkAssetsFileProvider.FileCacheMode.Memory, false))
-                { 
+                using (var apkFileProvider = new ApkAssetsFileProvider(args.ApkFile, FileCacheMode.Memory, false))
+                {
                     QuestomAssetsEngine q = new QuestomAssetsEngine();
 
-                    Log.LogMsg($"Loading configuration...");
-                    var cfg = q.GetCurrentConfig(apkFileProvider, true);
-                    Log.LogMsg($"Configuration loaded");
+                    //Log.LogMsg($"Loading configuration...");
+                    //var cfg = q.GetCurrentConfig(apkFileProvider, BSConst.KnownFiles.AssetsRootPath, true);
+                    //Log.LogMsg($"Configuration loaded");
 
-                    if (!args.NoPatch)
-                    {
-                        Log.LogMsg($"Applying patches...");
-                        if (!q.ApplyPatchSettingsFile(apkFileProvider))
-                        {
-                            Log.LogErr("Failed to apply patches.  Cannot continue.");
-                            return -1;
-                        }
-                    }
+                    //if (!args.NoPatch)
+                    //{
+                    //    Log.LogMsg($"Applying patches...");
+                    //    if (!q.ApplyPatchSettingsFile(apkFileProvider))
+                    //    {
+                    //        Log.LogErr("Failed to apply patches.  Cannot continue.");
+                    //        return -1;
+                    //    }
+                    //}
 
-                    BeatSaberPlaylist playlist = cfg.Playlists.FirstOrDefault(x => x.PlaylistID == "CustomSongs");
-                    if (playlist == null)
-                    {
-                        Log.LogMsg("Playlist doesn't already exist, creating it");
-                        playlist = new BeatSaberPlaylist()
-                        {
-                            PlaylistID = "CustomSongs",
-                            PlaylistName = "Custom Songs"
-                        };
-                        cfg.Playlists.Add(playlist);
-                    }
-                    else if (args.DeleteSongs)
-                    {
-                        Log.LogMsg("Deleting current songs from playlist before reloading");
-                        playlist.SongList.Clear();
-                    }
-                    try
-                    {
-                        playlist.CoverArtBytes = string.IsNullOrWhiteSpace(args.CoverArt) ? null : File.ReadAllBytes(args.CoverArt);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.LogErr($"Unable to load playlist cover art from {args.CoverArt}", ex);
-                        playlist.CoverArtBytes = null;
-                    }
-                    Log.LogMsg($"Attempting to load {customSongsFolders.Count} custom songs...");
-                    foreach (var cs in customSongsFolders)
-                    {
-                        playlist.SongList.Add(new BeatSaberSong()
-                        {
-                            CustomSongFolder = cs
-                        });
-                    }
+                    //BeatSaberPlaylist playlist = cfg.Playlists.FirstOrDefault(x => x.PlaylistID == "CustomSongs");
+                    //if (playlist == null)
+                    //{
+                    //    Log.LogMsg("Playlist doesn't already exist, creating it");
+                    //    playlist = new BeatSaberPlaylist()
+                    //    {
+                    //        PlaylistID = "CustomSongs",
+                    //        PlaylistName = "Custom Songs"
+                    //    };
+                    //    cfg.Playlists.Add(playlist);
+                    //}
+                    //else if (args.DeleteSongs)
+                    //{
+                    //    Log.LogMsg("Deleting current songs from playlist before reloading");
+                    //    playlist.SongList.Clear();
+                    //}
+                    //try
+                    //{
+                    //    playlist.CoverArtBytes = string.IsNullOrWhiteSpace(args.CoverArt) ? null : File.ReadAllBytes(args.CoverArt);
+                    //}
+                    //catch (Exception ex)
+                    //{
+                    //    Log.LogErr($"Unable to load playlist cover art from {args.CoverArt}", ex);
+                    //    playlist.CoverArtBytes = null;
+                    //}
+                    //Log.LogMsg($"Attempting to load {customSongsFolders.Count} custom songs...");
+                    //foreach (var cs in customSongsFolders)
+                    //{
+                    //    playlist.SongList.Add(new BeatSaberSong()
+                    //    {
+                    //        CustomSongFolder = cs
+                    //    });
+                    //}
                     Log.LogMsg("Applying new configuration...");
-                    q.UpdateConfig(cfg, apkFileProvider);
+                  //  q.UpdateConfig(cfg, apkFileProvider, BSConst.KnownFiles.AssetsRootPath);
                     Log.LogMsg("Configuration updated");
 
-                Log.LogMsg("Signing APK...");
-                q.SignAPK();
-                Log.LogMsg("APK signed");
-                return 0;
+                    Log.LogMsg("Signing APK...");
+                    q.SignAPK(apkFileProvider);
+                    Log.LogMsg("APK signed");
+                    return 0;
+                }
             }
             catch (Exception ex)
             {

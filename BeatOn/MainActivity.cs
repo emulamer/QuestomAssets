@@ -9,6 +9,9 @@ using System.Collections.Generic;
 using Android.Content;
 using Java.Interop;
 using QuestomAssets;
+using System.IO;
+using System.Linq;
+using System;
 
 namespace BeatOn
 {
@@ -36,19 +39,65 @@ namespace BeatOn
             {
                 if (info.ActivityInfo.TaskAffinity == "com.beatgames.beatsaber")
                 {
+                    var customSongsFolders = GetCustomSongsFromPath("/sdcard/BS/ToConvert");
+
                     QuestomAssets.Utils.ImageUtils.Instance = new ImageUtilsDroid();
                     var file = info.ActivityInfo.ApplicationInfo.PublicSourceDir;
-                    using (var apkFileProvider = new ApkAssetsFileProvider(file, ApkAssetsFileProvider.FileCacheMode.Memory, false, System.IO.Path.GetTempPath()))
+                    using (var fp = new FolderFileProvider("/sdcard/Android/data/com.beatgames.beatsaber/files/assets", false))// file, FileCacheMode.Memory, false, System.IO.Path.GetTempPath()))
                     {
                         QuestomAssets.QuestomAssetsEngine qae = new QuestomAssets.QuestomAssetsEngine();
-                        var cfg = qae.GetCurrentConfig(apkFileProvider);
-                        qae.SignAPK(apkFileProvider);
+                        var cfg = qae.GetCurrentConfig(fp, "/sdcard/Android/data/com.beatgames.beatsaber/files/assets");
+
+                        
+                        BeatSaberPlaylist playlist = cfg.Playlists.FirstOrDefault(x => x.PlaylistID == "CustomSongs");
+                        if (playlist == null)
+                        {
+                            Log.LogMsg("Playlist doesn't already exist, creating it");
+                            playlist = new BeatSaberPlaylist()
+                            {
+                                PlaylistID = "CustomSongs",
+                                PlaylistName = "Custom Songs"
+                            };
+                            cfg.Playlists.Add(playlist);
+                        }
+
+                       
+                        Log.LogMsg($"Attempting to load {customSongsFolders.Count} custom songs...");
+                        foreach (var cs in customSongsFolders)
+                        {
+                            playlist.SongList.Add(new BeatSaberSong()
+                            {
+                                CustomSongFolder = cs
+                            });
+                        }
+                        Log.LogMsg("Applying new configuration...");
+                        qae.UpdateConfig(cfg, fp, "/sdcard/Android/data/com.beatgames.beatsaber/files/assets");
                     }
-                    
+
                 }
                
 
             }
+        }
+
+        static List<string> GetCustomSongsFromPath(string path)
+        {
+            List<string> customSongsFolders = new List<string>();
+
+            if (File.Exists(Path.Combine(path, "Info.dat")))
+            {
+                //do one
+                Log.LogErr("Found Info.dat in customSongsFolder, injecting one custom song.");
+                customSongsFolders.Add(path);
+            }
+            else
+            {
+                //do many
+                List<string> foundSongs = Directory.EnumerateDirectories(path).Where(y => File.Exists(Path.Combine(y, "Info.dat"))).ToList();
+                Log.LogMsg($"Found {foundSongs.Count()} custom songs to inject");
+                customSongsFolders.AddRange(foundSongs);
+            }
+            return customSongsFolders;
         }
 
         public override void OnRequestPermissionsResult(int requestCode, string[] permissions, [GeneratedEnum] Android.Content.PM.Permission[] grantResults)
