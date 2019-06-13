@@ -103,8 +103,6 @@ namespace QuestomAssets.BeatSaber
                         difficultyBeatmap.BeatmapData.Shuffle = beatmapLevel.Shuffle;
                         difficultyBeatmap.BeatmapData.ShufflePeriod = beatmapLevel.ShufflePeriod;
                         difficultyBeatmap.BeatmapData.JsonData = jsonData;
-                        difficultyBeatmap.BeatmapData.TransformToProjectedData();
-                        difficultyBeatmap.BeatmapData.JsonData = null;
 
                         _assetsFile.AddObject(difficultyBeatmap.BeatmapData, true);
                         difficultyBeatmap.BeatmapDataPtr = difficultyBeatmap.BeatmapData.PtrFrom(beatmapLevel);
@@ -258,7 +256,7 @@ namespace QuestomAssets.BeatSaber
 
             //slightly less hacky than before, but only a little
             var extrasCover = _assetsFile.Manager.MassFirstAsset<SpriteObject>(x => x.Object.Name == "ExtrasCover");
-            SpriteObject coverAsset = extrasCover.Clone().Object;
+            SpriteObject coverAsset = extrasCover.Clone();
             coverAsset.Name = assetName;
             coverAsset.Texture = packCover.PtrFrom(coverAsset);
             _assetsFile.AddObject(coverAsset, true);
@@ -267,7 +265,7 @@ namespace QuestomAssets.BeatSaber
 
         private static void SetFallbackCoverTexture(Texture2DObject texture)
         {
-            byte[] imageBytes = File.ReadAllBytes(Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location), "CustomSongsCover.ETC_RGB4"));
+            byte[] imageBytes = File.ReadAllBytes(Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "CustomSongsCover.ETC_RGB4"));
             int mips = 11;
 
             texture.ForcedFallbackFormat = 4;

@@ -8,7 +8,7 @@ namespace QuestomAssets.AssetsChanger
     public interface IAssetsFileProvider : IDisposable
     {
         List<string> FindFiles(string pattern);
-        Stream GetReadStream(string filename);
+        Stream GetReadStream(string filename, bool bypassCache = false);
         byte[] Read(string filename);
         void Write(string filename, byte[] data, bool overwrite = true, bool compressData = true);
         void WriteFile(string sourceFilename, string targetFilename, bool overwrite = true, bool compressData = true);

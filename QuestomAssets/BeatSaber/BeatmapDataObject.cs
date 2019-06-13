@@ -7,6 +7,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
+using Newtonsoft.Json.Linq;
 
 namespace QuestomAssets.BeatSaber
 {
@@ -34,8 +35,6 @@ namespace QuestomAssets.BeatSaber
         {
             base.Parse(reader);
             JsonData = reader.ReadString();
-            SignatureBytes = reader.ReadArray();
-            ProjectedData = reader.ReadArray();
             reader.AlignTo(4);
         }
 
@@ -43,32 +42,33 @@ namespace QuestomAssets.BeatSaber
         {
             base.WriteBase(writer);
             writer.Write(JsonData);
-            writer.WriteArray(SignatureBytes);
-            writer.WriteArray(ProjectedData);
+            writer.WriteArray(new byte[128]);
+            writer.Write((Int32)0);
             writer.AlignTo(4);
         }
-        
-        public void TransformToProjectedData()
-        {
-            if (string.IsNullOrWhiteSpace(JsonData))
-                throw new InvalidOperationException("JsonData must be set before transforming to ProjectedData.");
-            
-            var saveData = BeatmapSaveData.DeserializeFromJSONString(JsonData);
-
-            ProjectedData = saveData.SerializeToBinary();
-        }
-
-        public void TransformToJsonData()
-        {
-            if (ProjectedData == null || ProjectedData.Length < 1)
-                throw new InvalidOperationException("ProjectedData must be set before transforming to JsonData.");
-
-            var saveData = BeatmapSaveData.DeserializeFromFromBinary(ProjectedData);
-            JsonData = saveData.SerializeToJSONString();
-        }
-
+        private string _jsonData;
         [JsonProperty("_jsonData")]
-        public string JsonData { get; set; }
+        public string JsonData
+        {
+            get
+            {
+                return _jsonData;
+            }
+            set
+            {
+                var json = value;
+                if (json != null)
+                {
+                    var jo = JObject.Parse(json);
+                    if (jo.ContainsKey("_BPMChanges"))
+                    {
+                        jo.Remove("_BPMChanges");
+                        json = jo.ToString(Formatting.None);
+                    }
+                }
+                _jsonData = value;
+            }
+        }
 
         [JsonProperty("_signatureBytes")]
         public byte[] SignatureBytes { get; set; } = new byte[128];

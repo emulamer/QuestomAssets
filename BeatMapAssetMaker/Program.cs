@@ -310,11 +310,10 @@ namespace BeatmapAssetMaker
                     q.UpdateConfig(cfg, apkFileProvider);
                     Log.LogMsg("Configuration updated");
 
-                    Log.LogMsg("Signing APK...");
-                    q.SignAPK(apkFileProvider);
-                    Log.LogMsg("APK signed");
-                    return 0;
-                }
+                Log.LogMsg("Signing APK...");
+                q.SignAPK();
+                Log.LogMsg("APK signed");
+                return 0;
             }
             catch (Exception ex)
             {

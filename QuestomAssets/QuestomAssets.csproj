@@ -16,10 +16,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="assetsLoadOrder.json" />
     <None Remove="patchsettings.json" />
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="assetsLoadOrder.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="patchsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

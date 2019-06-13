@@ -28,6 +28,17 @@ namespace QuestomAssets.AssetsChanger
         public List<ExternalFile> ExternalFiles { get; set; }
         public AssetsFile ParentFile { get; set; }
 
+        private int PreloadObjectOrder(ObjectRecord record)
+        {
+            switch (Types[record.TypeIndex].ClassID)
+            {
+                case AssetsConstants.ClassID.MonoScriptType:
+                    return 0;
+                default:
+                    return 10000;
+            }
+        }
+
         public void Parse(AssetsReader reader)
         {
             Version = reader.ReadCStr();
@@ -38,13 +49,17 @@ namespace QuestomAssets.AssetsChanger
             {
                 Types.Add(new AssetsType(reader, HasTypeTrees));
             }
+
+            List<ObjectRecord> records = new List<ObjectRecord>();
             int numObj = reader.ReadInt32();
+
             for (int i = 0; i < numObj; i++)
             {
                 reader.AlignTo(4);
-                var obj = ObjectInfo<AssetsObject>.Parse(ParentFile, reader);
-                ObjectInfos.Add(obj);
+                var obj = new ObjectRecord(reader);
+                records.Add(obj);
             }
+
             int numAdds = reader.ReadInt32();
             for (int i = 0; i < numAdds; i++)
             {
@@ -57,6 +72,13 @@ namespace QuestomAssets.AssetsChanger
                 ExternalFiles.Add(new ExternalFile(reader));
             }
             reader.ReadCStr();
+
+            //load the object infos in order based on their type
+            foreach (var record in records.OrderBy(x=> PreloadObjectOrder(x)).ThenBy(x=> x.ObjectID))
+            {
+                var obj = ObjectInfo<AssetsObject>.Parse(ParentFile, record);
+                ObjectInfos.Add(obj);
+            }
         }
 
         public void Write(AssetsWriter writer)

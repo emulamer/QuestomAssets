@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using System.Reflection;
+using System.Collections;
 
 namespace QuestomAssets.AssetsChanger
 {
@@ -49,11 +50,13 @@ namespace QuestomAssets.AssetsChanger
             BaseStream.Seek(Header.ObjectDataOffset, SeekOrigin.Begin);
             return new AssetsReader(BaseStream);
         }
-
+        private bool _hasChanges = false;
         public bool HasChanges
         {
             get
             {
+                if (_hasChanges)
+                    return true;
                 var newPtrs = _knownPointers.Where(x => x.Owner.ObjectInfo.ParentFile == this && x.IsNew).ToList();
                 if (newPtrs.Any())
                 {
@@ -66,29 +69,52 @@ namespace QuestomAssets.AssetsChanger
                 }
                 return false;
             }
+            set
+            {
+                _hasChanges = true;
+            }
+        }
+
+        public int GetOrCreateMatchingTypeIndex(AssetsType type)
+        {
+            var toFileType = Metadata.Types.Where(x => x.ClassID == type.ClassID 
+            //only require hashes to match if it's a monobehaviour
+            && (x.ClassID != AssetsConstants.ClassID.MonoBehaviourScriptType || (x.TypeHash == type.TypeHash && x.ScriptHash == type.ScriptHash)))
+                //order by class ID and typehash matching first (prefer type hash)
+                .OrderBy(x => ((x.ScriptHash == type.ScriptHash)?0:1) + ((x.TypeHash == type.TypeHash)?0:2))
+                .FirstOrDefault();
+            if (toFileType == null)
+            {
+                throw new NotSupportedException($"Target file does not seem to have a type that matches the source file's type.  Adding in other type references isn't supported yet.");
+            }
+            return Metadata.Types.IndexOf(toFileType);
         }
 
         public Stream BaseStream { get; private set; }
+
         
-        public AssetsFile(AssetsManager manager, string assetsFileName, Stream assetsFileStream, bool load = true)
+        public AssetsFile(AssetsManager manager, string assetsFileName, Stream assetsFileStream, bool loadData = true)
         {
             Manager = manager;
             if (!assetsFileStream.CanSeek)
                 throw new NotSupportedException("Stream must support seeking!");
             BaseStream = assetsFileStream;
             AssetsFileName = assetsFileName;
-            if (load)
-                Load();
-        }
-        public void Load()
-        {
-
             BaseStream.Seek(0, SeekOrigin.Begin);
-
             using (AssetsReader reader = new AssetsReader(BaseStream, false))
             {
                 Header = new AssetsFileHeader(reader);
             }
+
+            if (Header.MetadataSize > Header.FileSize || Header.ObjectDataOffset < Header.MetadataSize || Header.Version != 17)
+                throw new NotSupportedException($"{AssetsFileName} doesn't appear to be a valid assets file, or {Header.Version} is unsupported!");
+
+            if (loadData)
+                LoadData();
+        }
+        public void LoadData()
+        {
+            BaseStream.Seek(Header.HeaderSize, SeekOrigin.Begin);
             using (AssetsReader reader = new AssetsReader(BaseStream, false))
             {
                 Metadata = new AssetsMetadata(this);
@@ -96,12 +122,15 @@ namespace QuestomAssets.AssetsChanger
             }
             BaseStream.Seek(Header.ObjectDataOffset, SeekOrigin.Begin);
 
+            if (Manager.ForceLoadAllFiles)
+            {
+                foreach (var ext in Metadata.ExternalFiles)
+                {
+                    Manager.GetAssetsFile(ext.FileName);
+                }
+            }
             if (!Manager.LazyLoad)
             {
-                //foreach (var ext in Metadata.ExternalFiles)
-                //{
-                //    manager.GetAssetsFile(ext.FileName);
-                //}
                 foreach (var oi in Metadata.ObjectInfos)
                 {
                     var o = oi.Object;
@@ -178,11 +207,17 @@ namespace QuestomAssets.AssetsChanger
             }
 
             objectsMS.CopyTo(outputStream);
+            _hasChanges = false;
         }
 
         public long GetNextObjectID()
         {
-            return Metadata.ObjectInfos.Max(x => x.ObjectID) + 1;
+            long nextID = Metadata.ObjectInfos.Max(x => x.ObjectID);
+            //if they're all negative, make a MORE negative one
+            if (nextID < 0)
+                return Metadata.ObjectInfos.Min(x => x.ObjectID) - 1;
+
+            return nextID + 1;
         }
 
         public void AddObject(AssetsObject assetsObject, bool assignNextObjectID = true)
@@ -241,7 +276,11 @@ namespace QuestomAssets.AssetsChanger
             {
                 var objInfo = Metadata.ObjectInfos.FirstOrDefault(x => x.ObjectID == pathID);
                 if (objInfo == null)
-                    throw new Exception($"Object info could not be found for path id {pathID} in file {AssetsFileName}");
+                {
+                    Log.LogErr($"Object info could not be found for path id {pathID} in file {AssetsFileName}!!!!");
+                    return null;
+                    //throw new Exception($"Object info could not be found for path id {pathID} in file {AssetsFileName}");
+                }
                 var objTypedInfo = objInfo as IObjectInfo<T>;
                 if (objTypedInfo == null)
                     throw new Exception($"Object was the wrong type!  Pointer expected {typeof(T).Name}, target was actually {(objInfo.GetType().GenericTypeArguments[0]?.Name)}");
@@ -302,6 +341,9 @@ namespace QuestomAssets.AssetsChanger
             CleanupPtrs(assetsObject.ObjectInfo);
         }
 
+       
+
         
+
     }
 }

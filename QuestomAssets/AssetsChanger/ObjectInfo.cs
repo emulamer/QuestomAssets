@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Collections;
+using QuestomAssets.Utils;
 
 namespace QuestomAssets.AssetsChanger
 {
@@ -19,7 +21,7 @@ namespace QuestomAssets.AssetsChanger
         void Write(AssetsWriter writer);
         AssetsType Type { get; }
         bool IsNew { get; }
-        IObjectInfo<T> Clone();
+        T Clone(AssetsFile toFile = null);
     }
     public class ObjectInfo<T> : IObjectInfo<T> where T: AssetsObject
     {
@@ -44,12 +46,20 @@ namespace QuestomAssets.AssetsChanger
             }
         }
 
-        public IObjectInfo<T> Clone()
+        public T Clone(AssetsFile toFile = null)
         {
             T newObj = null;
             using (var ms = new MemoryStream())
             {
-                ObjectInfo<T> newInfo = (ObjectInfo<T>)ObjectInfo<T>.FromTypeIndex(ParentFile, TypeIndex, null);
+                int typeIndex = TypeIndex;
+                if (toFile != null)
+                {
+                    var type = ParentFile.Metadata.Types[typeIndex];
+                    typeIndex = toFile.GetOrCreateMatchingTypeIndex(type);
+                }
+                //we do want to get the types from the new file
+                ObjectInfo<T> newInfo = (ObjectInfo<T>)ObjectInfo<T>.FromTypeIndex(toFile??ParentFile,typeIndex, null);
+                
                 newInfo.DataOffset = 0;
                 newInfo.ObjectID = 0;
                 using (var writer = new AssetsWriter(ms))
@@ -58,15 +68,23 @@ namespace QuestomAssets.AssetsChanger
                 }
                 newInfo.DataSize = (int)ms.Length;
                 ms.Seek(0, SeekOrigin.Begin);
+
+                //parent file has to be set to properly to the original file to create pointers
+                if (toFile != null)
+                    newInfo.ParentFile = ParentFile;
                 using (var reader = new AssetsReader(ms))
                 {
                     newObj = (T)Activator.CreateInstance(typeof(T), newInfo, reader);
                 }
+                //set it back so that things moving forward think it's in the new file.
+                if (toFile != null)
+                    newInfo.ParentFile = toFile;
+
                 newInfo.DataOffset = -1;
                 newInfo.DataSize = -1;
                 newInfo._object = newObj;
             }
-            return (IObjectInfo<T>)newObj.ObjectInfo;
+            return (T)newObj;
         }
 
         private ObjectInfo()
@@ -82,16 +100,25 @@ namespace QuestomAssets.AssetsChanger
             _object = assetsObject;
         }
 
-        internal static IObjectInfo<AssetsObject> Parse(AssetsFile file, AssetsReader reader)
+        //internal static IObjectInfo<AssetsObject> Parse(AssetsFile file, AssetsReader reader)
+        //{
+        //    var objectID = reader.ReadInt64();
+        //    var dataOffset = reader.ReadInt32();
+        //    var dataSize = reader.ReadInt32();
+        //    var typeIndex = reader.ReadInt32();
+        //    var obji = FromTypeIndex(file, typeIndex, null);
+        //    obji.ObjectID = objectID;
+        //    obji.DataOffset = dataOffset;
+        //    obji.DataSize = dataSize;
+        //    return obji;
+        //}
+
+        internal static IObjectInfo<AssetsObject> Parse(AssetsFile file, ObjectRecord record)
         {
-            var objectID = reader.ReadInt64();
-            var dataOffset = reader.ReadInt32();
-            var dataSize = reader.ReadInt32();
-            var typeIndex = reader.ReadInt32();
-            var obji = FromTypeIndex(file, typeIndex, null);
-            obji.ObjectID = objectID;
-            obji.DataOffset = dataOffset;
-            obji.DataSize = dataSize;
+            var obji = FromTypeIndex(file, record.TypeIndex, null);
+            obji.ObjectID = record.ObjectID;
+            obji.DataOffset = record.DataOffset;
+            obji.DataSize = record.DataSize;
             return obji;
         }
 
@@ -166,6 +193,9 @@ namespace QuestomAssets.AssetsChanger
                     break;
                 case AssetsConstants.ClassID.TransformClassID:
                     type = typeof(Transform);
+                    break;
+                case AssetsConstants.ClassID.RectTransformClassID:
+                    type = typeof(RectTransform);
                     break;
                 default:
                     type = typeof(AssetsObject);

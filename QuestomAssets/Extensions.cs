@@ -11,6 +11,19 @@ namespace QuestomAssets
     public static class Extensions
     {
 
+        public static T DeepClone<T>(this IObjectInfo<T> source, AssetsFile toFile = null, List<CloneExclusion> exclusions = null, List<AssetsObject> addedObjects = null) where T : AssetsObject
+        {
+            return Cloner.DeepClone<T>((T)source.Object, toFile, addedObjects, null, exclusions);
+        }
+        public static string ToBase64PNG(this Bitmap image)
+        {            
+            using (MemoryStream ms = new MemoryStream())
+            {
+                image.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+                return Convert.ToBase64String(ms.ToArray());
+            }
+        }
+
         public static byte[] ToPngBytes(this Texture2DObject texture)
         {
             return ImageUtils.Instance.TextureToBitmap(texture);
