@@ -1,15 +1,13 @@
 
-<LinearLayout
+<GridLayout
 	xmlns:android="http://schemas.android.com/apk/res/android"
-	android:orientation="horizontal"
 	android:minWidth="25px"
 	android:minHeight="25px"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
-	android:id="@+id/linearLayout1" >
-	<fragment
-		android:name="BeatOn.MainFragment"
-		android:layout_width="wrap_content"
-		android:layout_height="match_parent"
-		android:id="@+id/fragment1" />
-</LinearLayout>
+	android:id="@+id/gridLayout1" >
+	<Button
+		android:text="Button"
+		android:id="@+id/button1"
+		 />
+</GridLayout>

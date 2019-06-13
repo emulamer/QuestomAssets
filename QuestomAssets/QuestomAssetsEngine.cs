@@ -12,9 +12,9 @@ namespace QuestomAssets
 
     public class QuestomAssetsEngine
     {
-        private string _apkFilename;
         private bool _readOnly;
         private string _pemData;
+        private string _tempFolder;
 
         //TODO: fix cross-asset file loading of stuff before turning this to false, some of the OST Vol 1 songs are in another file
         public bool HideOriginalPlaylists { get; private set; } = true;
@@ -25,11 +25,11 @@ namespace QuestomAssets
         /// <param name="apkFilename">The path to the Beat Saber APK file</param>
         /// <param name="readOnly">True to open the APK read only</param>
         /// <param name="pemCertificateData">The contents of the PEM certificate that will be used to sign the APK.  If omitted, a new self signed cert will be generated.</param>
-        public QuestomAssetsEngine(string apkFilename, bool readOnly = false, string pemCertificateData = BSConst.DebugCertificatePEM)
+        public QuestomAssetsEngine(bool readOnly = false, string pemCertificateData = BSConst.DebugCertificatePEM, string tempFolder = null)
         {
             _readOnly = readOnly;
-            _apkFilename = apkFilename;
             _pemData = pemCertificateData;
+            _tempFolder = tempFolder;
         }
 
         private MainLevelPackCollectionObject GetMainLevelPack(AssetsManager manager)
@@ -67,14 +67,14 @@ namespace QuestomAssets
             }
 
             playlist.LevelPackObject = levelPack;
-            
 
-            levelPack.PackName = playlist.PlaylistName??levelPack.PackName;
-            if (playlist.CoverArt != null)
+
+            levelPack.PackName = playlist.PlaylistName ?? levelPack.PackName;
+            if (playlist.CoverArtBytes != null)
             {
                 Log.LogMsg($"Loading cover art for playlist ID '{playlist.PlaylistID}'");
 
-                playlist.CoverArtSprite = loader.LoadPackCover(playlist.PlaylistID, playlist.CoverArt);
+                playlist.CoverArtSprite = loader.LoadPackCover(playlist.PlaylistID, playlist.CoverArtBytes);
                 playlist.LevelPackObject.CoverImage = playlist.CoverArtSprite.PtrFrom(playlist.LevelPackObject);
             }
             else
@@ -131,7 +131,7 @@ namespace QuestomAssets
             BeatmapLevelDataObject level = null;
             if (!string.IsNullOrWhiteSpace(song.SongID))
             {
-                var levels = songsAssetFile.FindAssets<BeatmapLevelDataObject>(x => x.Object.LevelID == song.SongID).Select(x=>x.Object).ToList();
+                var levels = songsAssetFile.FindAssets<BeatmapLevelDataObject>(x => x.Object.LevelID == song.SongID).Select(x => x.Object).ToList();
                 if (levels.Count() > 0)
                 {
                     if (levels.Count() > 1)
@@ -160,7 +160,7 @@ namespace QuestomAssets
                 {
                     string oggPath;
                     var deser = loader.DeserializeFromJson(song.CustomSongFolder, song.SongID);
-                    var found = songsAssetFile.FindAssets<BeatmapLevelDataObject>(x => x.Object.LevelID == deser.LevelID).Select(x=> x.Object).FirstOrDefault();
+                    var found = songsAssetFile.FindAssets<BeatmapLevelDataObject>(x => x.Object.LevelID == deser.LevelID).Select(x => x.Object).FirstOrDefault();
                     if (found != null)
                     {
                         Log.LogErr($"No song id was specified, but the level {found.LevelID} is already in the assets, skipping it.");
@@ -223,7 +223,7 @@ namespace QuestomAssets
                 audioFilesToDelete.Add(audioClip.Resource.Source);
                 file17.DeleteObject(audioClip);
             }
-            
+
         }
 
         private void RemoveLevelPackAssets(AssetsManager manager, BeatmapLevelPackObject levelPack)
@@ -235,8 +235,8 @@ namespace QuestomAssets
             var sprite = levelPack.CoverImage.Object;
             var texture = sprite.Texture.Object;
             songsAssetFile.DeleteObject(levelPack);
-            songsAssetFile.DeleteObject(collection);            
-            songsAssetFile.DeleteObject(texture);            
+            songsAssetFile.DeleteObject(collection);
+            songsAssetFile.DeleteObject(texture);
             songsAssetFile.DeleteObject(sprite);
         }
 
@@ -250,7 +250,7 @@ namespace QuestomAssets
                 throw new ArgumentNullException("saberInfo.ID must not be null or empty!");
 
             var file11 = manager.GetAssetsFile(BSConst.KnownFiles.File11);
-            
+
             //lots of double checking things in this function, first time I've done object manipulation this detailed
 
             var newSaber = file11.FindAsset<GameObject>(x => x.Object.Name == $"{saberInfo.ID}Saber")?.Object;
@@ -264,7 +264,7 @@ namespace QuestomAssets
             var transform = basicSaber.Components.FirstOrDefault(x => x is SmartPtr<Transform>)?.Object as Transform;
             if (transform == null)
                 throw new Exception("Unable to find Transform on Saber!");
-            
+
             var saberBladeGOTransform = transform.Children.FirstOrDefault(x => x.Object.GameObject?.Object.Name == "SaberBlade")?.Object;
             var saberGlowingEdgesGOTransform = transform.Children.FirstOrDefault(x => x.Object.GameObject?.Object.Name == "SaberGlowingEdges")?.Object;
             var saberHandleGOTransform = transform.Children.FirstOrDefault(x => x.Object.GameObject?.Object.Name == "SaberHandle")?.Object;
@@ -321,7 +321,7 @@ namespace QuestomAssets
             file11.AddObject(newSaberHandleMesh);
 
             //clone the MeshFilters, set their Mesh pointers to the new parts above.
-            var newSaberBladeMeshFilter = saberBladeMeshFilter.ObjectInfo.Clone().Object as  MeshFilterObject;
+            var newSaberBladeMeshFilter = saberBladeMeshFilter.ObjectInfo.Clone().Object as MeshFilterObject;
             newSaberBladeMeshFilter.Mesh = newSaberBladeMesh.PtrFrom(newSaberBladeMeshFilter);
             file11.AddObject(newSaberBladeMeshFilter);
 
@@ -455,7 +455,7 @@ namespace QuestomAssets
             if (transform == null)
                 throw new Exception("Couldn't find Transform on BasicSaberModel!");
 
-            var saberChild = transform.Children.FirstOrDefault(x => x.Object.GameObject?.Object?.Name?.EndsWith("Saber")??false);
+            var saberChild = transform.Children.FirstOrDefault(x => x.Object.GameObject?.Object?.Name?.EndsWith("Saber") ?? false);
             if (saberChild == null)
                 throw new Exception("Couldn't find a game object on the BasicSaberModel Transform that ended with -Saber!");
             int saberIndex = transform.Children.IndexOf(saberChild);
@@ -465,35 +465,33 @@ namespace QuestomAssets
         }
         #endregion
 
-        public BeatSaberQuestomConfig GetCurrentConfig(bool suppressImages = false)
+        public BeatSaberQuestomConfig GetCurrentConfig(IAssetsFileProvider fileProvider, bool suppressImages = false)
         {
-            using (var apkFileProvider = new ApkAssetsFileProvider(_apkFilename, ApkAssetsFileProvider.FileCacheMode.Memory, true))
+            var manager = new AssetsManager(fileProvider, BSConst.GetAssetTypeMap(), false);
+            manager.GetAssetsFile("globalgamemanagers");
+            var file11 = manager.GetAssetsFile(BSConst.KnownFiles.File11);
+            var basicSaberModel = file11.FindAsset<GameObject>(x => x.Object.Name == "BasicSaberModel");
+            var basicSaber = file11.FindAsset<GameObject>(x => x.Object.Name == "BasicSaber");
+
+            var config = GetConfig(manager, suppressImages);
+
+            //clear out any of the internal refs that were used so the GC can clean things up
+            foreach (var p in config.Playlists)
             {
-                var manager = new AssetsManager(apkFileProvider, BSConst.GetAssetTypeMap(), false);
-                manager.GetAssetsFile("globalgamemanagers");
-                var file11 = manager.GetAssetsFile(BSConst.KnownFiles.File11);
-                var basicSaberModel = file11.FindAsset<GameObject>(x => x.Object.Name == "BasicSaberModel");
-                var basicSaber = file11.FindAsset<GameObject>(x => x.Object.Name == "BasicSaber");
-
-                var config = GetConfig(manager, suppressImages);
-
-                //clear out any of the internal refs that were used so the GC can clean things up
-                foreach (var p in config.Playlists)
+                p.CoverArtSprite = null;
+                p.LevelPackObject = null;
+                foreach (var song in p.SongList)
                 {
-                    p.CoverArtSprite = null;
-                    p.LevelPackObject = null;
-                    foreach (var song in p.SongList)
-                    {
-                        song.LevelData = null;
-                        song.SourceOgg = null;
-                    }
+                    song.LevelData = null;
+                    song.SourceOgg = null;
                 }
-                config.Saber = new SaberModel()
-                {
-                    SaberID = GetCurrentSaberID(manager)
-                };
-                return config;
             }
+            config.Saber = new SaberModel()
+            {
+                SaberID = GetCurrentSaberID(manager)
+            };
+            return config;
+
         }
 
         private BeatSaberQuestomConfig GetConfig(AssetsManager manager, bool suppressImages)
@@ -518,8 +516,8 @@ namespace QuestomAssets
                     {
                         var coverSprite = pack.CoverImage.Object;
                         var coverTex = coverSprite.Texture.Object;
-                        packModel.CoverArt = coverTex.ToBitmap();
-                        packModel.CoverArtBase64PNG = packModel.CoverArt.ToBase64PNG();
+                        packModel.CoverArtBytes = coverTex.ToPngBytes();
+                        packModel.CoverArtBase64PNG = Convert.ToBase64String(packModel.CoverArtBytes);
                     }
                     catch (Exception ex)
                     {
@@ -545,8 +543,8 @@ namespace QuestomAssets
                             var songCover = songObj.CoverImageTexture2D.Object;
                             try
                             {
-                                songModel.CoverArt = songCover.ToBitmap();
-                                songModel.CoverArtBase64PNG = songModel.CoverArt.ToBase64PNG();
+                                songModel.CoverArtBytes = songCover.ToPngBytes();
+                                songModel.CoverArtBase64PNG = Convert.ToBase64String(songModel.CoverArtBytes);
                             }
                             catch (Exception ex)
                             {
@@ -565,47 +563,46 @@ namespace QuestomAssets
             return config;
         }
 
-        public void UpdateConfig(BeatSaberQuestomConfig config)
+        public void UpdateConfig(BeatSaberQuestomConfig config, IAssetsFileProvider fileProvider)
         {
             //todo: basic validation of the config
             if (_readOnly)
                 throw new InvalidOperationException("Cannot update in read only mode.");
 
-            using (var apkFileProvider = new ApkAssetsFileProvider(_apkFilename, ApkAssetsFileProvider.FileCacheMode.Memory, false))
+
+
+            var manager = new AssetsManager(fileProvider, BSConst.GetAssetTypeMap(), false);
+            manager.GetAssetsFile("globalgamemanagers");
+
+            //get existing playlists and their songs
+            //compare with new ones
+            //generate a diff
+            //etc.
+
+            UpdateColorConfig(manager, config.Colors);
+
+            UpdateTextConfig(manager, config.TextChanges);
+
+            if (!UpdateSaberConfig(manager, config.Saber))
             {
-                var manager = new AssetsManager(apkFileProvider, BSConst.GetAssetTypeMap(), false);
-                manager.GetAssetsFile("globalgamemanagers");
-
-                //get existing playlists and their songs
-                //compare with new ones
-                //generate a diff
-                //etc.
-
-                UpdateColorConfig(manager, config.Colors);
-
-                UpdateTextConfig(manager, config.TextChanges);
-
-                if (!UpdateSaberConfig(manager, config.Saber))
-                {
-                    Log.LogErr("Saber failed to update.  Aborting all changes.");
-                }
-
-                if (config.Playlists != null)
-                {
-                    UpdateMusicConfig(manager, config, apkFileProvider);
-                }
-                else
-                {
-                    Log.LogMsg("Playlists is null, song configuration will not be changed.");
-                }                
-
-                Log.LogMsg("Serializing all assets...");
-                manager.WriteAllOpenAssets();
-
-                apkFileProvider.Save();
+                Log.LogErr("Saber failed to update.  Aborting all changes.");
             }
-        }
 
+            if (config.Playlists != null)
+            {
+                UpdateMusicConfig(manager, config, fileProvider);
+            }
+            else
+            {
+                Log.LogMsg("Playlists is null, song configuration will not be changed.");
+            }
+
+            Log.LogMsg("Serializing all assets...");
+            manager.WriteAllOpenAssets();
+
+            fileProvider.Save();
+
+        }
 
         private bool UpdateSaberConfig(AssetsManager manager, SaberModel saberCfg)
         {
@@ -713,24 +710,24 @@ namespace QuestomAssets
             var addPacks = config.Playlists.Select(x => x.LevelPackObject.PtrFrom(mainLevelPack));
             mainLevelPack.BeatmapLevelPacks.AddRange(addPacks);
 
-            //do a first loop to guess at the file size
-            Int64 originalApkSize = new FileInfo(_apkFilename).Length;
-            Int64 sizeGuess = originalApkSize;
-            foreach (var pl in config.Playlists)
-            {
-                foreach (var sng in pl.SongList)
-                {
-                    if (sng.SourceOgg != null)
-                    {
-                        var clip = sng.LevelData.AudioClip.Object;
-                        sizeGuess += new FileInfo(sng.SourceOgg).Length;
-                    }
-                }
-            }
-            foreach (var toDelete in audioFilesToDelete)
-            {
-                sizeGuess -= apkFileProvider.GetFileSize(BSConst.KnownFiles.AssetsRootPath + toDelete);
-            }
+            ////do a first loop to guess at the file size
+            //Int64 originalApkSize = new FileInfo(_apkFilename).Length;
+            //Int64 sizeGuess = originalApkSize;
+            //foreach (var pl in config.Playlists)
+            //{
+            //    foreach (var sng in pl.SongList)
+            //    {
+            //        if (sng.SourceOgg != null)
+            //        {
+            //            var clip = sng.LevelData.AudioClip.Object;
+            //            sizeGuess += new FileInfo(sng.SourceOgg).Length;
+            //        }
+            //    }
+            //}
+            //foreach (var toDelete in audioFilesToDelete)
+            //{
+            //    sizeGuess -= apkFileProvider.GetFileSize(BSConst.KnownFiles.AssetsRootPath + toDelete);
+            //}
 
             Log.LogMsg("");
             Log.LogMsg("Playlists:");
@@ -741,18 +738,18 @@ namespace QuestomAssets
             Log.LogMsg($"  Added:   {addedSongs.Count()}");
             Log.LogMsg($"  Removed: {removeSongs.Count()}");
             Log.LogMsg("");
-            Log.LogMsg($"Original APK size:     {originalApkSize:n0}");
-            Log.LogMsg($"Guesstimated new size: {sizeGuess:n0}");
-            Log.LogMsg("");
+            //Log.LogMsg($"Original APK size:     {originalApkSize:n0}");
+            //Log.LogMsg($"Guesstimated new size: {sizeGuess:n0}");
+            //Log.LogMsg("");
 
-            if (sizeGuess > Int32.MaxValue)
-            {
-                Log.LogErr("***************ERROR*****************");
-                Log.LogErr($"Guesstimating a file size around {sizeGuess / (Int64)1000000}MB , this will crash immediately upon launch.");
-                Log.LogErr($"The file size MUST be less than {Int32.MaxValue / (int)1000000}MB");
-                Log.LogErr("***************ERROR*****************");
-                throw new OverflowException("File might exceed 2.1GB, aborting.");
-            }
+            //if (sizeGuess > Int32.MaxValue)
+            //{
+            //    Log.LogErr("***************ERROR*****************");
+            //    Log.LogErr($"Guesstimating a file size around {sizeGuess / (Int64)1000000}MB , this will crash immediately upon launch.");
+            //    Log.LogErr($"The file size MUST be less than {Int32.MaxValue / (int)1000000}MB");
+            //    Log.LogErr("***************ERROR*****************");
+            //    throw new OverflowException("File might exceed 2.1GB, aborting.");
+            //}
 
             ////////START WRITING DATA
 
@@ -838,13 +835,13 @@ namespace QuestomAssets
         private ColorManager GetColorManager(AssetsManager manager)
         {
             var colorFile = manager.GetAssetsFile(BSConst.KnownFiles.ColorAssetsFilename);
-            var colorManager = colorFile.FindAsset<ColorManager>(x=> true)?.Object;
+            var colorManager = colorFile.FindAsset<ColorManager>(x => true)?.Object;
             if (colorManager == null)
                 throw new Exception("Unable to find the color manager asset!");
             return colorManager;
         }
 
-        public bool ApplyPatchSettingsFile()
+        public bool ApplyPatchSettingsFile(IAssetsFileProvider fileProvider)
         {
             string filename = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location), "patchsettings.json");
             if (!File.Exists(filename))
@@ -859,7 +856,7 @@ namespace QuestomAssets
             Log.LogMsg($"Found {patches.Count} files to patch in {filename}");
             foreach (var patch in patches)
             {
-                if (!ApplyPatch(patch))
+                if (!ApplyPatch(fileProvider, patch))
                 {
                     Log.LogErr($"Failed to apply patch... aborting any further patching...");
                     return false;
@@ -868,26 +865,20 @@ namespace QuestomAssets
             return true;
         }
 
-        public bool ApplyPatch(FilePatch patch)
+        public bool ApplyPatch(IAssetsFileProvider fileProvider, FilePatch patch)
         {
-            using (var apkFileProvider = new ApkAssetsFileProvider(_apkFilename, ApkAssetsFileProvider.FileCacheMode.Memory, false))
+            if (!Patcher.Patch(fileProvider, patch))
             {
-                if (!Patcher.Patch(apkFileProvider, patch))
-                {
-                    Log.LogErr($"File {patch.Filename} failed to patch!");
-                    return false;
-                }
+                Log.LogErr($"File {patch.Filename} failed to patch!");
+                return false;
             }
             return true;
         }
 
-        public void SignAPK()
+        public void SignAPK(IAssetsFileProvider fileProvider)
         {
-            using (var apkFileProvider = new ApkAssetsFileProvider(_apkFilename, ApkAssetsFileProvider.FileCacheMode.None, false))
-            {
-                ApkSigner signer = new ApkSigner(_pemData);
-                signer.Sign(apkFileProvider);
-            }
+            ApkSigner signer = new ApkSigner(_pemData);
+            signer.Sign(fileProvider);
         }
 
     }

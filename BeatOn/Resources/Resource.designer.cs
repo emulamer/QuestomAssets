@@ -4259,6 +4259,9 @@ namespace BeatOn
 			// aapt resource value: 0x7f0b00c4
 			public const int button = 2131427524;
 			
+			// aapt resource value: 0x7f0b00ad
+			public const int button1 = 2131427501;
+			
 			// aapt resource value: 0x7f0b0084
 			public const int buttonPanel = 2131427460;
 			
@@ -4463,11 +4466,11 @@ namespace BeatOn
 			// aapt resource value: 0x7f0b0079
 			public const int forever = 2131427449;
 			
-			// aapt resource value: 0x7f0b00ad
-			public const int fragment1 = 2131427501;
-			
 			// aapt resource value: 0x7f0b001d
 			public const int ghost_view = 2131427357;
+			
+			// aapt resource value: 0x7f0b00ac
+			public const int gridLayout1 = 2131427500;
 			
 			// aapt resource value: 0x7f0b0141
 			public const int grid_frame = 2131427649;
@@ -4702,9 +4705,6 @@ namespace BeatOn
 			
 			// aapt resource value: 0x7f0b002b
 			public const int line3 = 2131427371;
-			
-			// aapt resource value: 0x7f0b00ac
-			public const int linearLayout1 = 2131427500;
 			
 			// aapt resource value: 0x7f0b002f
 			public const int listMode = 2131427375;

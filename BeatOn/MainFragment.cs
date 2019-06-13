@@ -28,6 +28,17 @@ namespace BeatOn
 
             BrandColor = Resource.Color.colorPrimaryDark;
             SearchAffordanceColor = Resource.Color.colorPrimary;
+            ItemViewClicked += MainFragment_ItemViewClicked; ItemViewSelected += MainFragment_ItemViewSelected;
+        }
+
+        private void MainFragment_ItemViewSelected(object sender, Android.Support.V17.Leanback.Widget.ItemViewSelectedEventArgs e)
+        {
+         
+        }
+
+        private void MainFragment_ItemViewClicked(object sender, Android.Support.V17.Leanback.Widget.ItemViewClickedEventArgs e)
+        {
+           
         }
 
         public override void OnCreate(Bundle savedInstanceState)
