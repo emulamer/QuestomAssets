@@ -35,7 +35,7 @@ namespace QuestomAssets.AssetsChanger
             Father = SmartPtr<Transform>.Read(ObjectInfo.ParentFile, this, reader);            
         }
 
-        public override void Write(AssetsWriter writer)
+        protected override void WriteObject(AssetsWriter writer)
         {
             base.WriteBase(writer);
             LocalRotation.Write(writer);

@@ -107,7 +107,7 @@ namespace QuestomAssets.BeatSaber
         public ISmartPtr<AudioClipObject> AudioClip { get; set; }
 
 
-        public override void Write(AssetsWriter writer)
+        protected override void WriteObject(AssetsWriter writer)
         {
             base.WriteBase(writer);
             writer.Write(LevelID);

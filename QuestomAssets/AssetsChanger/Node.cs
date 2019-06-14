@@ -83,7 +83,7 @@ namespace QuestomAssets.AssetsChanger
         {
             var trackedObjects = new Dictionary<object, Node>();
             var node = new Node() { Text = "All Assets", TypeName = manager.GetType().Name, Obj = manager, Depth = 0};
-            foreach (var f in manager.OpenFiles.OrderBy(x => x.AssetsFileName))
+            foreach (var f in manager.OpenFiles.OrderBy(x => x.AssetsFilename))
                 node.AddNode(MakeNode(f, 0, trackedObjects));
             return node;
         }
@@ -97,7 +97,7 @@ namespace QuestomAssets.AssetsChanger
             {
                 depth += 1;
             }
-            var node = new Node() { Text = file.AssetsFileName, TypeName = file.GetType().Name, Obj = file, Depth = depth };
+            var node = new Node() { Text = file.AssetsFilename, TypeName = file.GetType().Name, Obj = file, Depth = depth };
             foreach (var o in file.Metadata.ObjectInfos.Select(x => x.Object))
                 node.AddNode(MakeNode(o, depth, trackedObjects));
             return node;

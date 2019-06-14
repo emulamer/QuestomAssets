@@ -67,7 +67,7 @@ namespace BeatmapAssetMaker
             };
         }
 
-        public byte[] TextureToBitmap(Texture2DObject texture)
+        public byte[] TextureToPngBytes(Texture2DObject texture)
         {
             //does unity store mips of compressed textures individually, or does it compress the entire thing?
             switch (texture.TextureFormat)

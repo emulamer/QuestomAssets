@@ -38,7 +38,7 @@ namespace QuestomAssets.BeatSaber
             PreviewBeatmapLevelPacks = reader.ReadArrayOf(x => SmartPtr<MonoBehaviourObject>.Read(ObjectInfo.ParentFile, this, x)).Cast<ISmartPtr<MonoBehaviourObject>>().ToList();
         }
 
-        public override void Write(AssetsWriter writer)
+        protected override void WriteObject(AssetsWriter writer)
         {
             base.WriteBase(writer);
             writer.Write(BeatmapLevelPacks.Count());

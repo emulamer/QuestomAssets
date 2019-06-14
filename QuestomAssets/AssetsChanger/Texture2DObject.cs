@@ -45,7 +45,7 @@ namespace QuestomAssets.AssetsChanger
             reader.AlignTo(4);
             StreamData = new StreamingInfo(reader);
         }
-        public override void Write(AssetsWriter writer)
+        protected override void WriteObject(AssetsWriter writer)
         {
             base.WriteBase(writer);
             writer.Write(Name);

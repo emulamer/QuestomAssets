@@ -49,7 +49,7 @@ namespace QuestomAssets.AssetsChanger
             writer.WriteArrayOf(SceneHashes, (x, y) => x.Write(y));
         }
 
-        public override void Write(AssetsWriter writer)
+        protected override void WriteObject(AssetsWriter writer)
         {
             WriteBase(writer);
         }

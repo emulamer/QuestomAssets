@@ -39,6 +39,13 @@ namespace QuestomAssets.AssetsChanger
             }
         }
 
+        private bool ShouldForceLoadObject(ObjectRecord record)
+        {
+            if (Types[record.TypeIndex].ClassID == AssetsConstants.ClassID.MonoScriptType)
+                return true;
+            return false;
+        }
+
         public void Parse(AssetsReader reader)
         {
             Version = reader.ReadCStr();
@@ -78,6 +85,10 @@ namespace QuestomAssets.AssetsChanger
             {
                 var obj = ObjectInfo<AssetsObject>.Parse(ParentFile, record);
                 ObjectInfos.Add(obj);
+                if (ShouldForceLoadObject(record))
+                {
+                    var o = obj.Object;
+                }
             }
         }
 

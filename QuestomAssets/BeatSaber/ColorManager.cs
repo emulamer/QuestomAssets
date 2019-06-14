@@ -28,7 +28,7 @@ namespace QuestomAssets.BeatSaber
             ColorB = SmartPtr<MonoBehaviourObject>.Read(ObjectInfo.ParentFile, this, reader);
         }
 
-        public override void Write(AssetsWriter writer)
+        protected override void WriteObject(AssetsWriter writer)
         {
             WriteBase(writer);
             PlayerModel.Write(writer);

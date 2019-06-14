@@ -1,6 +1,6 @@
 [submodule "StbSharp"]
 	path = StbSharp
 	url = https://github.com/emulamer/StbSharp.git
-[submodule "ETCPACK"]
-	path = ETCPACK
-	url = https://github.com/emulamer/ETCPACK
+[submodule "beatsaber-hook"]
+	path = beatsaber-hook
+	url = https://github.com/emulamer/beatsaber-hook

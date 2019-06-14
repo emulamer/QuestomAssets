@@ -21,7 +21,7 @@ namespace QuestomAssets.AssetsChanger
             Mesh = SmartPtr<MeshObject>.Read(ObjectInfo.ParentFile, this, reader);
         }
 
-        public override void Write(AssetsWriter writer)
+        protected override void WriteObject(AssetsWriter writer)
         {
             base.WriteBase(writer);
             Mesh.Write(writer);

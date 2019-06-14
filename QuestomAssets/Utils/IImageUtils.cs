@@ -5,7 +5,7 @@ namespace QuestomAssets.Utils
     public interface IImageUtils
     {
         void AssignImageToTexture(byte[] imageData, Texture2DObject targetTexture, int targetWidth, int targetHeight, int targetMips = int.MaxValue, TextureConversionFormat format = TextureConversionFormat.Auto);
-        byte[] TextureToBitmap(Texture2DObject texture);
+        byte[] TextureToPngBytes(Texture2DObject texture);
     }
 
     public static class ImageUtils

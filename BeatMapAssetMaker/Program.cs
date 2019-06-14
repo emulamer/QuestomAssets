@@ -104,13 +104,14 @@ namespace BeatmapAssetMaker
             try
             {
                 Log.LogMsg($"Opening APK at '{args.ApkFile}'");
-                QuestomAssetsEngine q = new QuestomAssetsEngine();
+                
                 using (var apkFileProvider = new ApkAssetsFileProvider(args.ApkFile, FileCacheMode.Memory, false))
                 {
+                    QuestomAssetsEngine q = new QuestomAssetsEngine(apkFileProvider, BSConst.KnownFiles.AssetsRootPath);
                     if (!args.NoPatch)
                     {
                         Log.LogMsg($"Applying patches...");
-                        if (!q.ApplyPatchSettingsFile(apkFileProvider))
+                        if (!q.ApplyPatchSettingsFile())
                         {
                             Log.LogErr("Failed to apply patches.  Cannot continue.");
                             return -1;
@@ -154,13 +155,10 @@ namespace BeatmapAssetMaker
 
 
                     Log.LogMsg("Applying new configuration...");
-                    q.UpdateConfig(config, apkFileProvider, BSConst.KnownFiles.AssetsRootPath);
+                    q.UpdateConfig(config);
                     Log.LogMsg("Configuration updated");
-                }
-                using (var apkFileProvider = new ApkAssetsFileProvider(args.ApkFile, FileCacheMode.Memory, false))
-                {
                     Log.LogMsg("Signing APK...");
-                    q.SignAPK(apkFileProvider);
+                    q.SignAPK();
                     Log.LogMsg("APK signed.");
                 }
                 
@@ -186,10 +184,10 @@ namespace BeatmapAssetMaker
                 Log.LogMsg($"Opening APK at '{args.ApkFile}'");
                 using (var apkFileProvider = new ApkAssetsFileProvider(args.ApkFile, FileCacheMode.Memory, false))
                 {
-                    QuestomAssetsEngine q = new QuestomAssetsEngine(true);
+                    QuestomAssetsEngine q = new QuestomAssetsEngine(apkFileProvider, BSConst.KnownFiles.AssetsRootPath);
 
                     Log.LogMsg($"Loading configuration...");
-                    var cfg = q.GetCurrentConfig(apkFileProvider, BSConst.KnownFiles.AssetsRootPath, args.NoImages);
+                    var cfg = q.GetCurrentConfig(args.NoImages);
                     Log.LogMsg($"Configuration loaded");
 
                     TextWriter outWriter = null;
@@ -257,7 +255,7 @@ namespace BeatmapAssetMaker
                 Log.LogMsg($"Opening APK at '{args.ApkFile}'");
                 using (var apkFileProvider = new ApkAssetsFileProvider(args.ApkFile, FileCacheMode.Memory, false))
                 {
-                    QuestomAssetsEngine q = new QuestomAssetsEngine();
+                    QuestomAssetsEngine q = new QuestomAssetsEngine(apkFileProvider,BSConst.KnownFiles.AssetsRootPath);
 
                     //Log.LogMsg($"Loading configuration...");
                     //var cfg = q.GetCurrentConfig(apkFileProvider, BSConst.KnownFiles.AssetsRootPath, true);
@@ -311,7 +309,7 @@ namespace BeatmapAssetMaker
                     Log.LogMsg("Configuration updated");
 
                     Log.LogMsg("Signing APK...");
-                    q.SignAPK(apkFileProvider);
+                    q.SignAPK();
                     Log.LogMsg("APK signed");
                     return 0;
                 }

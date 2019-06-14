@@ -42,7 +42,7 @@ namespace QuestomAssets.AssetsChanger
             writer.Write(UnparsedData2);
         }
 
-        public override void Write(AssetsWriter writer)
+        protected override void WriteObject(AssetsWriter writer)
         {
             WriteBase(writer);
         }

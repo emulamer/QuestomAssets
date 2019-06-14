@@ -66,9 +66,9 @@ namespace QuestomAssets
 
             foreach (var rawPath in Directory.EnumerateFiles(_rootFolder, "*", SearchOption.AllDirectories))
             {
-                string filename = rawPath.Substring(_rootFolder.Length);
-                if (filename.StartsWith(Path.DirectorySeparatorChar.ToString()))
-                    filename = filename.Substring(1);
+                string filename = rawPath;
+                //if (filename.StartsWith(Path.DirectorySeparatorChar.ToString()))
+                //    filename = filename.Substring(1);
                 filename = FSToFwd(filename);
                 if (FilePatternMatch(filename, pattern))
                 {
@@ -111,10 +111,10 @@ namespace QuestomAssets
         public void WriteFile(string sourceFilename, string targetFilename, bool overwrite = true, bool compressData = true)
         {
             CheckRO();
-            if (!overwrite && FileExists(targetFilename))
+            if (!overwrite && FileExists(Path.Combine(_rootFolder, FwdToFS(targetFilename))))
                 throw new Exception("Target file already exists and overwrite is set to false.");
 
-            File.Copy(sourceFilename, Path.Combine(_rootFolder, FwdToFS(targetFilename)));            
+            File.Copy(sourceFilename, Path.Combine(_rootFolder, FwdToFS(targetFilename)), overwrite);            
         }
 
         private string FwdToFS(string path)
@@ -125,6 +125,10 @@ namespace QuestomAssets
         {
             return path.Replace(Path.DirectorySeparatorChar, '/');
         }
+        public string BasePath
+        { get => _rootFolder; }
+
+
 
         #region IDisposable Support
         private bool disposedValue = false; // To detect redundant calls

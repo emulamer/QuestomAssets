@@ -12,7 +12,7 @@ namespace QuestomAssets.Utils
     {
         private static void ClonePropsInObj(object curObj, AssetsObject parentObj, Dictionary<AssetsObject, AssetsObject> clonedObjects, AssetsFile toFile, List<AssetsObject> addedObjects, List<CloneExclusion> exclusions)
         {
-            var file = parentObj.ObjectInfo.ParentFile.AssetsFileName;
+            var file = parentObj.ObjectInfo.ParentFile.AssetsFilename;
             var updateProps = curObj.GetType().GetProperties().ToList();
 
             //remove any array properties that are a string or a value type

@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Linq;
 using QuestomAssets.Utils;
+using System.Reflection;
 
 namespace QuestomAssets.BeatSaber
 {
@@ -265,7 +266,14 @@ namespace QuestomAssets.BeatSaber
 
         private static void SetFallbackCoverTexture(Texture2DObject texture)
         {
-            byte[] imageBytes = File.ReadAllBytes(Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "CustomSongsCover.ETC_RGB4"));
+            byte[] imageBytes;
+            var assembly = Assembly.GetExecutingAssembly();
+            var resourceStream = assembly.GetManifestResourceStream("QuestomAssets.CustomSongsCover.ETC_RGB4");
+            using (var reader = new BinaryReader(resourceStream, Encoding.UTF8))
+            {
+                imageBytes = reader.ReadBytes((int)resourceStream.Length);
+            }
+              //Resource File.ReadAllBytes(Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "CustomSongsCover.ETC_RGB4"));
             int mips = 11;
 
             texture.ForcedFallbackFormat = 4;

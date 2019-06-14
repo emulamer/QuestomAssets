@@ -28,7 +28,7 @@ namespace QuestomAssets.BeatSaber
             color = new Color(reader);
         }
 
-        public override void Write(AssetsWriter writer)
+        protected override void WriteObject(AssetsWriter writer)
         {
             WriteBase(writer);
             color.Write(writer);
