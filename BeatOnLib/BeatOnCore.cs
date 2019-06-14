@@ -27,9 +27,6 @@ namespace BeatOnLib
         {
             _logger = new StringLogger();
             Log.SetLogSink(_logger);
-            _rootAssetsFolder = rootAssetsFolder;
-            _fileProvider = new FolderFileProvider(rootAssetsFolder, false);
-            ImageUtils.Instance = new ImageUtilsDroid();
         }
 
         private StringLogger _logger;
@@ -48,6 +45,13 @@ namespace BeatOnLib
         
         private void InitEngine()
         {
+            if (_fileProvider == null)
+                _fileProvider = new FolderFileProvider(_rootAssetsFolder, false);
+
+            if (ImageUtils.Instance == null)
+                ImageUtils.Instance = new ImageUtilsDroid();
+
+
             _engine = new QuestomAssetsEngine(_fileProvider, _rootAssetsFolder, false);
         }
 

@@ -89,6 +89,8 @@
     <Compile Include="StringLogger.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="EDITME-RegistryPossiblyNeededForEmbeddinator.reg" />
+    <None Include="Embeddinator-4000.targets" />
     <None Include="app.config" />
     <None Include="Jars\AboutJars.txt" />
     <None Include="Additions\AboutAdditions.txt" />
@@ -105,6 +107,18 @@
       <Name>QuestomAssets</Name>
     </ProjectReference>
   </ItemGroup>
+  <UsingTask TaskName="SetEnvironmentVariableTask" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <Name ParameterType="System.String" Required="true" />
+      <Value ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System" />
+      <Code Type="Fragment" Language="cs"><![CDATA[
+        Environment.SetEnvironmentVariable(Name, Value);
+      ]]></Code>
+    </Task>
+  </UsingTask>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.Bindings.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
@@ -113,4 +127,5 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+  <Import Project="Embeddinator-4000.targets" />
 </Project>

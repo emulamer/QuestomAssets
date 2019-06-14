@@ -13,10 +13,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.beaton.dummy.DummyContent;
 
 import java.util.List;
+
+import beatonlib.beatonlib.BeatOnCore;
+
+//import beatonlib.beatonlib.BeatOnCore;
 
 /**
  * An activity representing a list of Items. This activity
@@ -34,11 +39,21 @@ public class ItemListActivity extends AppCompatActivity {
      */
     private boolean mTwoPane;
 
+
+    private void loadBSData()
+    {
+        Toast toast = Toast.makeText(getApplicationContext(), "Loading Beat Saber Data...", Toast.LENGTH_SHORT);
+        toast.show();
+        BeatOnCore core = new BeatOnCore("/sdcard/Android/data/com.beatgames.beatsaber/files/assets/");
+        String s = core.getLog();
+        //String cfgJson = core.getConfigJson();
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_item_list);
 
+        loadBSData();
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         toolbar.setTitle(getTitle());
