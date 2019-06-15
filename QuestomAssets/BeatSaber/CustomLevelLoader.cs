@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Linq;
 using QuestomAssets.Utils;
+using System.Reflection;
 
 namespace QuestomAssets.BeatSaber
 {
@@ -208,14 +209,13 @@ namespace QuestomAssets.BeatSaber
                 try
                 {
                     string coverFile = Path.Combine(songPath, levelData.CoverImageFilename);
-                    Bitmap coverImage = (Bitmap)Bitmap.FromFile(coverFile);
 
                     var coverAsset = new Texture2DObject(_assetsFile)
                     {
                         Name = levelData.LevelID + "Cover"
                     };
-
-                    ImageUtils.AssignImageToTexture(coverImage, coverAsset, 256, 256);
+                    byte[] imageBytes = File.ReadAllBytes(coverFile);
+                    ImageUtils.Instance.AssignImageToTexture(imageBytes, coverAsset, 256, 256);
                     return coverAsset;
                 }
                 catch (Exception ex)
@@ -226,10 +226,10 @@ namespace QuestomAssets.BeatSaber
             return null;
         }
 
-        public SpriteObject LoadPackCover(string assetName, Bitmap coverImage)
+        public SpriteObject LoadPackCover(string assetName, byte[] coverImageBytes)
         {
             Texture2DObject packCover = null;
-            if (coverImage != null)
+            if (coverImageBytes != null)
             {
                 try
                 {
@@ -237,7 +237,7 @@ namespace QuestomAssets.BeatSaber
                     {
                         Name = assetName
                     };
-                    ImageUtils.AssignImageToTexture(coverImage, loadedCover, 1024, 1024);
+                    ImageUtils.Instance.AssignImageToTexture(coverImageBytes, loadedCover, 1024, 1024);
                     packCover = loadedCover;
                 }
                 catch (Exception ex)
@@ -266,7 +266,14 @@ namespace QuestomAssets.BeatSaber
 
         private static void SetFallbackCoverTexture(Texture2DObject texture)
         {
-            byte[] imageBytes = File.ReadAllBytes(Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "CustomSongsCover.ETC_RGB4"));
+            byte[] imageBytes;
+            var assembly = Assembly.GetExecutingAssembly();
+            var resourceStream = assembly.GetManifestResourceStream("QuestomAssets.CustomSongsCover.ETC_RGB4");
+            using (var reader = new BinaryReader(resourceStream, Encoding.UTF8))
+            {
+                imageBytes = reader.ReadBytes((int)resourceStream.Length);
+            }
+              //Resource File.ReadAllBytes(Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "CustomSongsCover.ETC_RGB4"));
             int mips = 11;
 
             texture.ForcedFallbackFormat = 4;

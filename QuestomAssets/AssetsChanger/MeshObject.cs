@@ -50,7 +50,7 @@ namespace QuestomAssets.AssetsChanger
             int readLen = ObjectInfo.DataSize - (reader.Position - startPosition);
             MeshData = reader.ReadBytes(readLen);
         }
-        public override void Write(AssetsWriter writer)
+        protected override void WriteObject(AssetsWriter writer)
         {
             base.WriteBase(writer);
             writer.Write(Name);

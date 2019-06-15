@@ -5,22 +5,91 @@ using System.Text;
 using System.IO;
 using System.Reflection;
 using System.Collections;
+using QuestomAssets.BeatSaber;
 
 namespace QuestomAssets.AssetsChanger
 {
-    public class AssetsFile
+    public class AssetsFile : IDisposable
     {
         public AssetsManager Manager { get; private set; }
-        public string AssetsFileName { get; private set; }
+        public string AssetsFilename { get; private set; }
+        public string AssetsRootPath { get; private set; }
+        public IAssetsFileProvider FileProvider { get; private set; }
+
+        public AssetsFile(AssetsManager manager, IAssetsFileProvider fileProvider, string assetsRootPath, string assetsFileName, bool loadData = true)
+        {
+            Manager = manager;
+            FileProvider = fileProvider;
+            AssetsRootPath = assetsRootPath;
+            AssetsFilename = assetsFileName;
+
+            OpenBaseStream();
+            
+            BaseStream.Seek(0, SeekOrigin.Begin);
+            using (AssetsReader reader = new AssetsReader(BaseStream, false))
+            {
+                Header = new AssetsFileHeader(reader);
+            }
+
+            if (Header.MetadataSize > Header.FileSize || Header.ObjectDataOffset < Header.MetadataSize || Header.Version != 17)
+                throw new NotSupportedException($"{AssetsFilename} doesn't appear to be a valid assets file, or {Header.Version} is unsupported!");
+
+            if (loadData)
+                LoadData();
+        }
+
+        private void OpenBaseStream()
+        {
+            var assetsFileStream = FileProvider.ReadCombinedAssets(AssetsRootPath + AssetsFilename);
+            if (!assetsFileStream.CanSeek)
+                throw new NotSupportedException("Stream must support seeking!");
+            BaseStream = assetsFileStream;
+        }
+
+        private void CloseBaseStream()
+        {
+            BaseStream.Close();
+            BaseStream.Dispose();
+            BaseStream = null;
+        }
+
+        public void LoadData()
+        {
+            BaseStream.Seek(Header.HeaderSize, SeekOrigin.Begin);
+            using (AssetsReader reader = new AssetsReader(BaseStream, false))
+            {
+                Metadata = new AssetsMetadata(this);
+                Metadata.Parse(reader);
+            }
+            BaseStream.Seek(Header.ObjectDataOffset, SeekOrigin.Begin);
+
+            if (Manager.ForceLoadAllFiles)
+            {
+                foreach (var ext in Metadata.ExternalFiles)
+                {
+                    Manager.GetAssetsFile(ext.FileName);
+                }
+            }
+            if (!Manager.LazyLoad)
+            {
+                foreach (var oi in Metadata.ObjectInfos)
+                {
+                    var o = oi.Object;
+                }
+                BaseStream.Close();
+                BaseStream.Dispose();
+                BaseStream = null;
+            }
+        }
 
         public int GetOrAddExternalFileIDRef(AssetsFile targetFile)
         {
-            ExternalFile file = Metadata.ExternalFiles.FirstOrDefault(x => x.FileName == targetFile.AssetsFileName);
+            ExternalFile file = Metadata.ExternalFiles.FirstOrDefault(x => x.FileName == targetFile.AssetsFilename);
             if (file == null)
             {
                 file = new ExternalFile()
                 {
-                    AssetName = targetFile.AssetsFileName
+                    AssetName = targetFile.AssetsFilename
                 };
                 Metadata.ExternalFiles.Add(file);
             }
@@ -92,70 +161,21 @@ namespace QuestomAssets.AssetsChanger
 
         public Stream BaseStream { get; private set; }
 
-        
-        public AssetsFile(AssetsManager manager, string assetsFileName, Stream assetsFileStream, bool loadData = true)
-        {
-            Manager = manager;
-            if (!assetsFileStream.CanSeek)
-                throw new NotSupportedException("Stream must support seeking!");
-            BaseStream = assetsFileStream;
-            AssetsFileName = assetsFileName;
-            BaseStream.Seek(0, SeekOrigin.Begin);
-            using (AssetsReader reader = new AssetsReader(BaseStream, false))
-            {
-                Header = new AssetsFileHeader(reader);
-            }
-
-            if (Header.MetadataSize > Header.FileSize || Header.ObjectDataOffset < Header.MetadataSize || Header.Version != 17)
-                throw new NotSupportedException($"{AssetsFileName} doesn't appear to be a valid assets file, or {Header.Version} is unsupported!");
-
-            if (loadData)
-                LoadData();
-        }
-        public void LoadData()
-        {
-            BaseStream.Seek(Header.HeaderSize, SeekOrigin.Begin);
-            using (AssetsReader reader = new AssetsReader(BaseStream, false))
-            {
-                Metadata = new AssetsMetadata(this);
-                Metadata.Parse(reader);
-            }
-            BaseStream.Seek(Header.ObjectDataOffset, SeekOrigin.Begin);
-
-            if (Manager.ForceLoadAllFiles)
-            {
-                foreach (var ext in Metadata.ExternalFiles)
-                {
-                    Manager.GetAssetsFile(ext.FileName);
-                }
-            }
-            if (!Manager.LazyLoad)
-            {
-                foreach (var oi in Metadata.ObjectInfos)
-                {
-                    var o = oi.Object;
-                }
-                BaseStream.Close();
-                BaseStream.Dispose();
-                BaseStream = null;
-            }
-        }
-
-        public void Write(Stream outputStream)
+        public void Write()
         {
             MemoryStream objectsMS = new MemoryStream();
             MemoryStream metaMS = new MemoryStream();
             using (AssetsWriter writer = new AssetsWriter(objectsMS))
             {
                 int ctr = 0;
-                foreach (var obj in Metadata.ObjectInfos.Select(x => x.Object))
+                foreach (var obj in Metadata.ObjectInfos)
                 {
                     ctr++;
-                    obj.ObjectInfo.DataOffset = (int)objectsMS.Position;
-                    obj.Write(writer);
+                    obj.DataOffset = (int)objectsMS.Position;
+                    obj.GetObjectForWrite().Write(writer);
                     writer.Flush();
-                    var origSize = obj.ObjectInfo.DataSize;
-                    obj.ObjectInfo.DataSize = (int)(objectsMS.Position - obj.ObjectInfo.DataOffset);
+                    var origSize = obj.DataSize;
+                    obj.DataSize = (int)(objectsMS.Position - obj.DataOffset);
                     writer.AlignTo(8);
                 }
             }
@@ -167,7 +187,7 @@ namespace QuestomAssets.AssetsChanger
             Header.FileSize = Header.HeaderSize + (int)objectsMS.Length + (int)metaMS.Length;
             Header.ObjectDataOffset = Header.HeaderSize + (int)metaMS.Length;
 
-            int diff = 0;
+            int diff;
             int alignment = 16; //or 32, I don't know which
             //data has to be at least 4096 inward from the start of the file
             if (Header.ObjectDataOffset < 4096)
@@ -181,7 +201,6 @@ namespace QuestomAssets.AssetsChanger
                     diff = 0;
             }
 
-
             if (diff > 0)
             {
                 Header.ObjectDataOffset += diff;
@@ -191,23 +210,40 @@ namespace QuestomAssets.AssetsChanger
             Header.MetadataSize = (int)metaMS.Length;
             objectsMS.Seek(0, SeekOrigin.Begin);
             metaMS.Seek(0, SeekOrigin.Begin);
-
-
-
-            using (AssetsWriter writer = new AssetsWriter(outputStream))
+            try
             {
-                Header.Write(writer);
+                CloseBaseStream();
+
+                FileProvider.DeleteFiles(AssetsRootPath + AssetsFilename + ".split*");
+
+                using (MemoryStream outputStream = new MemoryStream())
+                {
+                    using (AssetsWriter writer = new AssetsWriter(outputStream))
+                    {
+                        Header.Write(writer);
+                    }
+                    metaMS.CopyTo(outputStream);
+
+
+                    if (diff > 0)
+                    {
+                        outputStream.Write(new byte[diff], 0, diff);
+                    }
+
+                    objectsMS.CopyTo(outputStream);
+
+                    outputStream.Seek(0, SeekOrigin.Begin);
+                    FileProvider.Write(AssetsRootPath + AssetsFilename, outputStream.ToArray(), true, true);
+                }
+
+                _hasChanges = false;
+                FileProvider.Save();
+                OpenBaseStream();                
             }
-            metaMS.CopyTo(outputStream);
-
-
-            if (diff > 0)
+            catch (Exception ex)
             {
-                outputStream.Write(new byte[diff], 0, diff);
+                throw new Exception("CRITICAL: writing and reopening the file failed, the file is possibly destroyed and this object is in an unknown state.", ex);
             }
-
-            objectsMS.CopyTo(outputStream);
-            _hasChanges = false;
         }
 
         public long GetNextObjectID()
@@ -244,7 +280,7 @@ namespace QuestomAssets.AssetsChanger
 
         public int GetFileIDForFile(AssetsFile file)
         {
-            return GetFileIDForFilename(file.AssetsFileName);
+            return GetFileIDForFilename(file.AssetsFilename);
         }
 
         public int GetFileIDForFilename(string filename)
@@ -277,7 +313,7 @@ namespace QuestomAssets.AssetsChanger
                 var objInfo = Metadata.ObjectInfos.FirstOrDefault(x => x.ObjectID == pathID);
                 if (objInfo == null)
                 {
-                    Log.LogErr($"Object info could not be found for path id {pathID} in file {AssetsFileName}!!!!");
+                    Log.LogErr($"Object info could not be found for path id {pathID} in file {AssetsFilename}!!!!");
                     return null;
                     //throw new Exception($"Object info could not be found for path id {pathID} in file {AssetsFileName}");
                 }
@@ -341,9 +377,51 @@ namespace QuestomAssets.AssetsChanger
             CleanupPtrs(assetsObject.ObjectInfo);
         }
 
-       
+        #region IDisposable Support
+        private bool disposedValue = false; // To detect redundant calls
 
-        
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    if (BaseStream != null)
+                    {
+                        BaseStream.Close();
+                        BaseStream.Dispose();
+                        BaseStream = null;
+                    }
+                    // TODO: dispose managed state (managed objects).
+                }
+
+                // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
+                // TODO: set large fields to null.
+
+                disposedValue = true;
+            }
+        }
+
+        // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
+        // ~AssetsFile()
+        // {
+        //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+        //   Dispose(false);
+        // }
+
+        // This code added to correctly implement the disposable pattern.
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(true);
+            // TODO: uncomment the following line if the finalizer is overridden above.
+            // GC.SuppressFinalize(this);
+        }
+        #endregion
+
+
+
+
 
     }
 }

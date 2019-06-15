@@ -26,12 +26,16 @@ namespace QuestomAssets
         }
 
         private ZipFile _zipFile;
-        public ApkAssetsFileProvider(string apkFilename, FileCacheMode cacheMode, bool readOnly = false)
+        string _tempFolder = null;
+        public ApkAssetsFileProvider(string apkFilename, FileCacheMode cacheMode, bool readOnly = false, string tempFolder = null)
         {
             _zipFile = new ZipFile(apkFilename);
             ApkFilename = apkFilename;
             ReadOnly = readOnly;
             CacheMode = cacheMode;
+            _tempFolder = tempFolder;
+            if (tempFolder != null)
+                _zipFile.TempFileFolder = tempFolder;
         }
 
         private void CheckRO()
@@ -148,6 +152,22 @@ namespace QuestomAssets
             _zipFile.CompressionLevel = compressData ? Ionic.Zlib.CompressionLevel.Default : Ionic.Zlib.CompressionLevel.None;
         }
 
+        /// <summary>
+        /// Queues a stream to be written to a file.  Stream will not actually be read until .Save() is called
+        /// </summary>
+        public void QueueWriteStream(string filename, Stream streamToWrite, bool overwrite = true, bool compressData = true)
+        {
+            CheckRO();
+            var entry = _zipFile.Entries.FirstOrDefault(x => x.FileName == filename);
+            if (entry != null && !overwrite)
+                throw new Exception($"An entry named {filename} already exists and overwrite is false");
+            if (entry != null)
+                _zipFile.RemoveEntry(entry);
+
+            _zipFile.AddEntry(filename, streamToWrite);
+            _zipFile.CompressionLevel = compressData ? Ionic.Zlib.CompressionLevel.Default : Ionic.Zlib.CompressionLevel.None;
+        }
+
         public void Delete(string filename)
         {
             CheckRO();
@@ -177,10 +197,13 @@ namespace QuestomAssets
             return entry.UncompressedSize;
         }
 
-        public void Save()
+        public void Save(string toFile = null)
         {
             CheckRO();
-            _zipFile.Save();
+            if (toFile != null)
+                _zipFile.Save(toFile);
+            else
+                _zipFile.Save();
             _streamsToClose.ForEach(x => x.Dispose());
             _streamsToClose.Clear();
         }

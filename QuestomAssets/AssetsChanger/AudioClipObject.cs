@@ -67,7 +67,7 @@ namespace QuestomAssets.AssetsChanger
             Resource = new StreamedResource(reader);
             CompressionFormat = reader.ReadInt32();
         }
-        public override void Write(AssetsWriter writer)
+        protected override void WriteObject(AssetsWriter writer)
         {
             base.WriteBase(writer);
             writer.Write(Name);

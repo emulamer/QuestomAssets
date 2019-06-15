@@ -1,17 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.28922.388
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.645
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BeatmapAssetMaker", "BeatMapAssetMaker\BeatmapAssetMaker.csproj", "{9FCD4D5E-8E64-49C5-A90A-0D17DD98C8A3}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Assembly-CSharp", "Assembly-CSharp\Assembly-CSharp.csproj", "{0DAD5D23-076F-465D-9736-2CF0D28B6D47}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StbSharp.NETStandard", "StbSharp\StbSharp\StbSharp.NETStandard.csproj", "{99B9057C-3827-444A-8302-959F4CCA277B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuestomAssets", "QuestomAssets\QuestomAssets.csproj", "{DDA3F1E8-AD66-4ECD-920D-38A2D619E1C9}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "etcpack", "ETCPACK\vc9\etcpack.vcxproj", "{8800817E-EB9A-4ECC-9FE5-90526AF8644A}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuestomAssets.Tests", "QuestomAssets.Tests\QuestomAssets.Tests.csproj", "{E2E55309-D20E-430A-B388-7989F975BC11}"
 EndProject
@@ -39,18 +35,6 @@ Global
 		{9FCD4D5E-8E64-49C5-A90A-0D17DD98C8A3}.Release|x64.Build.0 = Release|Any CPU
 		{9FCD4D5E-8E64-49C5-A90A-0D17DD98C8A3}.Release|x86.ActiveCfg = Release|Any CPU
 		{9FCD4D5E-8E64-49C5-A90A-0D17DD98C8A3}.Release|x86.Build.0 = Release|Any CPU
-		{0DAD5D23-076F-465D-9736-2CF0D28B6D47}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0DAD5D23-076F-465D-9736-2CF0D28B6D47}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0DAD5D23-076F-465D-9736-2CF0D28B6D47}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{0DAD5D23-076F-465D-9736-2CF0D28B6D47}.Debug|x64.Build.0 = Debug|Any CPU
-		{0DAD5D23-076F-465D-9736-2CF0D28B6D47}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{0DAD5D23-076F-465D-9736-2CF0D28B6D47}.Debug|x86.Build.0 = Debug|Any CPU
-		{0DAD5D23-076F-465D-9736-2CF0D28B6D47}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0DAD5D23-076F-465D-9736-2CF0D28B6D47}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0DAD5D23-076F-465D-9736-2CF0D28B6D47}.Release|x64.ActiveCfg = Release|Any CPU
-		{0DAD5D23-076F-465D-9736-2CF0D28B6D47}.Release|x64.Build.0 = Release|Any CPU
-		{0DAD5D23-076F-465D-9736-2CF0D28B6D47}.Release|x86.ActiveCfg = Release|Any CPU
-		{0DAD5D23-076F-465D-9736-2CF0D28B6D47}.Release|x86.Build.0 = Release|Any CPU
 		{99B9057C-3827-444A-8302-959F4CCA277B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{99B9057C-3827-444A-8302-959F4CCA277B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{99B9057C-3827-444A-8302-959F4CCA277B}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -75,16 +59,6 @@ Global
 		{DDA3F1E8-AD66-4ECD-920D-38A2D619E1C9}.Release|x64.Build.0 = Release|Any CPU
 		{DDA3F1E8-AD66-4ECD-920D-38A2D619E1C9}.Release|x86.ActiveCfg = Release|Any CPU
 		{DDA3F1E8-AD66-4ECD-920D-38A2D619E1C9}.Release|x86.Build.0 = Release|Any CPU
-		{8800817E-EB9A-4ECC-9FE5-90526AF8644A}.Debug|Any CPU.ActiveCfg = Release|Win32
-		{8800817E-EB9A-4ECC-9FE5-90526AF8644A}.Debug|Any CPU.Build.0 = Release|Win32
-		{8800817E-EB9A-4ECC-9FE5-90526AF8644A}.Debug|x64.ActiveCfg = Debug|Win32
-		{8800817E-EB9A-4ECC-9FE5-90526AF8644A}.Debug|x64.Build.0 = Debug|Win32
-		{8800817E-EB9A-4ECC-9FE5-90526AF8644A}.Debug|x86.ActiveCfg = Debug|Win32
-		{8800817E-EB9A-4ECC-9FE5-90526AF8644A}.Debug|x86.Build.0 = Debug|Win32
-		{8800817E-EB9A-4ECC-9FE5-90526AF8644A}.Release|Any CPU.ActiveCfg = Release|Win32
-		{8800817E-EB9A-4ECC-9FE5-90526AF8644A}.Release|x64.ActiveCfg = Release|Win32
-		{8800817E-EB9A-4ECC-9FE5-90526AF8644A}.Release|x86.ActiveCfg = Release|Win32
-		{8800817E-EB9A-4ECC-9FE5-90526AF8644A}.Release|x86.Build.0 = Release|Win32
 		{E2E55309-D20E-430A-B388-7989F975BC11}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E2E55309-D20E-430A-B388-7989F975BC11}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E2E55309-D20E-430A-B388-7989F975BC11}.Debug|x64.ActiveCfg = Debug|Any CPU

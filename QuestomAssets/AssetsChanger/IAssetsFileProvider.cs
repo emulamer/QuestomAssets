@@ -17,6 +17,6 @@ namespace QuestomAssets.AssetsChanger
         bool FileExists(string filename);
         //void WriteFromStream(string filename, Stream data, bool overwrite = true, bool compressData = true);
         long GetFileSize(string filename);
-        void Save();
+        void Save(string toFile = null);
     }
 }

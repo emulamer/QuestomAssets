@@ -75,7 +75,7 @@ namespace QuestomAssets
             throw new NotImplementedException();
         }
 
-        public void Save()
+        public void Save(string toFile = null)
         {
             throw new NotImplementedException();
         }

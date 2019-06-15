@@ -20,7 +20,7 @@ namespace QuestomAssets
         internal string SourceOgg { get; set; }
 
         [JsonIgnore]
-        public Bitmap CoverArt { get; set; }
+        public byte[] CoverArtBytes { get; set; }
 
         public string SongID { get; set; }
 

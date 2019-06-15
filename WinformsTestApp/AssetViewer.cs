@@ -137,7 +137,7 @@ namespace WinformsTestApp
                     try
                     {
                         _fileProvider = new BundleFileProvider(ofd.FileName,true);
-                        _manager = new AssetsManager(_fileProvider, BSConst.KnownFiles.AssetsRootPath, BSConst.GetAssetTypeMap());
+                        _manager = new AssetsManager(_fileProvider, "", BSConst.GetAssetTypeMap());
                         _manager.FindAndLoadAllAssets();
                         FillAssetsFiles();
                         this.Text = "Asset Viewer - " + Path.GetFileName(ofd.FileName);
@@ -191,9 +191,9 @@ namespace WinformsTestApp
             cbAssetsFile.Items.Clear();
             cbAssetsFile.Items.Add("* All *");
             
-            foreach (var openFile in _manager.OpenFiles.OrderBy(x => x.AssetsFileName))
+            foreach (var openFile in _manager.OpenFiles.OrderBy(x => x.AssetsFilename))
             {
-                cbAssetsFile.Items.Add(openFile.AssetsFileName);
+                cbAssetsFile.Items.Add(openFile.AssetsFilename);
             }
             
             cbAssetsFile.SelectedIndex = 0;

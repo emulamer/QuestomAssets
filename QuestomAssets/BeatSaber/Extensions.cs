@@ -63,18 +63,7 @@ namespace QuestomAssets.BeatSaber
 
             throw new ArgumentException("The file doesn't exist in the APK with any name!");
         }
-        public static void WriteCombinedAssets(this IAssetsFileProvider fp, AssetsFile assetsFile, string assetsFilePath)
-        {
-            if (assetsFilePath.EndsWith("split0"))
-                throw new ArgumentException("Don't pass in filenames with split0, pass in the original.");
-            fp.DeleteFiles(assetsFilePath + ".split*");
-            using (var ms = new MemoryStream())
-            {
-                assetsFile.Write(ms);
-                ms.Seek(0, SeekOrigin.Begin);
-                fp.Write(assetsFilePath, ms.ToArray(), true, true);
-            }
-        }
+
 
         public static Stream ReadCombinedAssets(this IAssetsFileProvider fp, string assetsFilePath)
         {

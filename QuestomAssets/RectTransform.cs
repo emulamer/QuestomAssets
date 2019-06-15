@@ -27,7 +27,7 @@ namespace QuestomAssets.AssetsChanger
             Pivot = new Vector2F(reader);
         }
 
-        public override void Write(AssetsWriter writer)
+        protected override void WriteObject(AssetsWriter writer)
         {
             base.WriteBase(writer);
             AnchorMin.Write(writer);

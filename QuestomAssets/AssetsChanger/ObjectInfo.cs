@@ -22,6 +22,8 @@ namespace QuestomAssets.AssetsChanger
         AssetsType Type { get; }
         bool IsNew { get; }
         T Clone(AssetsFile toFile = null);
+        bool IsLoaded { get; }
+        AssetsObject GetObjectForWrite();
     }
     public class ObjectInfo<T> : IObjectInfo<T> where T: AssetsObject
     {
@@ -29,6 +31,7 @@ namespace QuestomAssets.AssetsChanger
         public Int32 DataOffset { get; set; } = -1;
         public Int32 DataSize { get; set; } = -1;
         public Int32 TypeIndex { get; private set; } = -1;
+
         public bool IsNew
         {
             get
@@ -212,13 +215,27 @@ namespace QuestomAssets.AssetsChanger
             writer.Write(TypeIndex);
         }
 
-        //public PPtr LocalPtrTo
-        //{
-        //    get
-        //    {
-        //        return new PPtr(0, ObjectID);
-        //    }
-        //}
+        public bool IsLoaded
+        {
+            get
+            {
+                return _object != null;
+            }
+        }
+        
+        /// <summary>
+        /// If the object has already been loaded, it returns the typed, parsed object.  If the object has not yet been loaded, it returns a base AssetsObject with unparsed data so that it's faster to write and doesn't pull in all the pointer refs
+        /// </summary>
+        public AssetsObject GetObjectForWrite()
+        {
+            if (_object != null)
+                return _object;
+
+            using (var reader = ParentFile.GetReaderAtDataOffset())
+            {
+                return new AssetsObject(this, reader);
+            }
+        }
 
         private void LoadObject()
         {

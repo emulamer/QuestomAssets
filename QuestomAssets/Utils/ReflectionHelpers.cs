@@ -95,8 +95,8 @@ namespace QuestomAssets.Utils
 
         public static ISmartPtr<AssetsObject> MakeTypedPointer(AssetsObject owner, AssetsObject target)
         {
-            var fname = owner.ObjectInfo.ParentFile.AssetsFileName;
-                var fname2 = owner.ObjectInfo.ParentFile.AssetsFileName;
+            var fname = owner.ObjectInfo.ParentFile.AssetsFilename;
+                var fname2 = owner.ObjectInfo.ParentFile.AssetsFilename;
             var genericInfoType = typeof(SmartPtr<>).MakeGenericType(target.GetType());
             var constructor = genericInfoType.GetConstructor(BindingFlags.Public | BindingFlags.Instance, null, new Type[] { typeof(AssetsObject), target.GetType() }, null);
 

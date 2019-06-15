@@ -57,7 +57,12 @@ namespace QuestomAssets.AssetsChanger
 
         }
 
-        public virtual void Write(AssetsWriter writer)
+        public void Write(AssetsWriter writer)
+        {
+            this.WriteObject(writer);
+        }
+
+        protected virtual void WriteObject(AssetsWriter writer)
         {
             writer.Write(Data);
         }
@@ -68,7 +73,7 @@ namespace QuestomAssets.AssetsChanger
             {
                 using (AssetsWriter writer = new AssetsWriter(ms))
                 {
-                    Write(writer);
+                    WriteObject(writer);
                 }
                 return (int)ms.Length;
             }

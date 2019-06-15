@@ -97,7 +97,7 @@ namespace QuestomAssets.AssetsChanger
             writer.Write(Name);      
         }
 
-        public override void Write(AssetsWriter writer)
+        protected override void WriteObject(AssetsWriter writer)
         {
             WriteBase(writer);
             writer.Write(ScriptParametersData);

@@ -23,7 +23,7 @@ namespace QuestomAssets.BeatSaber
             AlwaysOwnedBeatmapLevels = reader.ReadArrayOf<ISmartPtr<BeatmapLevelDataObject>>(x => SmartPtr<BeatmapLevelDataObject>.Read(ObjectInfo.ParentFile, this, reader));
         }
 
-        public override void Write(AssetsWriter writer)
+        protected override void WriteObject(AssetsWriter writer)
         {
             base.WriteBase(writer);
             writer.WriteArrayOf(AlwaysOwnedPacks, (x, y) => x.Write(y));

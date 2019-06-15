@@ -38,7 +38,7 @@ namespace QuestomAssets.BeatSaber
             reader.AlignTo(4);
         }
 
-        public override void Write(AssetsWriter writer)
+        protected override void WriteObject(AssetsWriter writer)
         {
             base.WriteBase(writer);
             writer.Write(JsonData);

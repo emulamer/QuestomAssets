@@ -17,7 +17,7 @@ namespace QuestomAssets
         internal SpriteObject CoverArtSprite { get; set; }
 
         [JsonIgnore]
-        public Bitmap CoverArt { get; set; }
+        public byte[] CoverArtBytes { get; set; }
 
         public string PlaylistID { get; set; }
 
