@@ -21,13 +21,13 @@
     <android.support.v7.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
         android:id="@+id/item_list"
-        android:name="com.example.beaton.ItemListFragment"
+        android:name="com.emulamer.beaton.ItemListFragment"
         android:layout_width="@dimen/item_width"
         android:layout_height="match_parent"
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"
         app:layoutManager="LinearLayoutManager"
-        tools:context="com.example.beaton.ItemListActivity"
+        tools:context="com.emulamer.beaton.ItemListActivity"
         tools:listitem="@layout/item_list_content" />
 
     <FrameLayout

@@ -179,11 +179,23 @@ namespace BeatOnLib
         {
             try
             {
+                Log.LogMsg("Save called, converting from b64");
                 byte[] fileData = Convert.FromBase64String(base64FileData);
+                Log.LogMsg("opening fp");
                 using (var fp = new ApkAssetsFileProvider(apkFile, FileCacheMode.Memory))
                 {
+                    Log.LogMsg("seeing if it exists");
+                    if (fp.FileExists(filenameToSave))
+                    {
+                        Log.LogMsg("it does exist, deleting it");
+                        fp.Delete(filenameToSave);
+                    }
+                    Log.LogMsg("writing file");
                     fp.Write(filenameToSave, fileData, true, true);
+                    Log.LogMsg("file wrote");
                     fp.Save();
+                    Log.LogMsg("saved file");
+
                     return true;
                 }
             }

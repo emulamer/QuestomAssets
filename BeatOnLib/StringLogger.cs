@@ -20,6 +20,10 @@ namespace BeatOnLib
         public void LogErr(string message, Exception ex)
         {
             builder.Append($"{message}: {ex.Message} {ex.StackTrace}");
+            if (ex.InnerException != null)
+            {
+                LogErr("\tInner exception", ex.InnerException);
+            }
             builder.Append("\r\n");
         }
 

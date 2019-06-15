@@ -1,0 +1,2 @@
+configurations.maybeCreate("default")
+artifacts.add("default", file('dexlib2-2.2.7.jar'))
