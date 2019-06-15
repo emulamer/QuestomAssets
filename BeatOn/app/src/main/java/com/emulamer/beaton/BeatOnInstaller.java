@@ -1,68 +1,51 @@
 package com.emulamer.beaton;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.net.Uri;
 import android.util.Base64;
-
-import com.google.common.collect.ImmutableList;
-
+import com.google.common.io.Files;
 import org.jf.dexlib2.Opcode;
-import org.jf.dexlib2.base.reference.BaseTypeReference;
 import org.jf.dexlib2.iface.*;
-import org.jf.dexlib2.iface.instruction.Instruction;
 import org.jf.dexlib2.immutable.ImmutableMethod;
 import org.jf.dexlib2.immutable.ImmutableMethodImplementation;
 import org.jf.dexlib2.immutable.ImmutableMethodParameter;
-import org.jf.dexlib2.immutable.ImmutableTryBlock;
-import org.jf.dexlib2.immutable.debug.ImmutableDebugItem;
 import org.jf.dexlib2.immutable.instruction.ImmutableInstruction;
 import org.jf.dexlib2.immutable.instruction.ImmutableInstruction21c;
 import org.jf.dexlib2.immutable.instruction.ImmutableInstruction35c;
 import org.jf.dexlib2.immutable.reference.*;
-import org.jf.dexlib2.iface.reference.*;
 import org.jf.dexlib2.dexbacked.DexBackedClassDef;
 import org.jf.dexlib2.dexbacked.DexBackedDexFile;
 import org.jf.dexlib2.dexbacked.DexBackedMethod;
 import org.jf.dexlib2.rewriter.DexRewriter;
 import org.jf.dexlib2.rewriter.RewriterModule;
-
 import beatonlib.beatonlib.BeatOnCore;
-import dalvik.bytecode.Opcodes;
-import questomassets.questomassets.Log;
-
 import org.jf.dexlib2.rewriter.*;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.PrintStream;
-import java.io.RandomAccessFile;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
-import java.util.Set;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
-import org.jf.dexlib2.dexbacked.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import org.jf.dexlib2.writer.builder.BuilderAnnotationSet;
-import org.jf.dexlib2.writer.builder.BuilderMethod;
-import org.jf.dexlib2.writer.builder.BuilderMethodParameter;
-import org.jf.dexlib2.writer.builder.BuilderMethodReference;
 import org.jf.dexlib2.writer.io.MemoryDataStore;
 import org.jf.dexlib2.writer.pool.DexPool;
-
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+
 
 public class BeatOnInstaller {
 
     private PackageManager _packageManager;
-    private Activity _context;
-    public BeatOnInstaller(Activity context)
+    private Context _context;
+    private File _tempApk;
+    public BeatOnInstaller(Context context)
     {
         _context = context;
         _packageManager = context.getPackageManager();
@@ -189,21 +172,112 @@ public class BeatOnInstaller {
         }
     }
 
-    public String FindBeatSaberApk() throws Exception
+    public boolean modAndInstallBeatSaberApk() throws Exception
     {
-        byte[] dexBytes = getApkClassesDexBytes("/sdcard/Android/data/base.apk");
-        byte[] injectedBytes = injectDex(dexBytes);
-
-        if (injectedBytes != null)
+        if (_tempApk == null)
         {
-            writeApkClassesDexBytes("/sdcard/Android/data/base.apk", injectedBytes);
+            //todo: inform/log they didn't do the first part
+            return false;
+        }
+        //todo: wait for somebody to say ok to uninstall it
+        if (findBeatSaberApk() != null)
+        {
+            //todo: inform/log that they didn't uninstall it!
+           // return false;
         }
 
+        String targetAssetsPath = "/sdcard/Android/data/com.beatgames.beatsaber/files/assets/";
+        byte[] dexBytes = getApkClassesDexBytes(_tempApk.getAbsolutePath());
+        byte[] injectedBytes = injectDex(dexBytes);
+
+        if (injectedBytes != null) {
+            writeApkClassesDexBytes(_tempApk.getAbsolutePath(), injectedBytes);
+        } else {
+            //todo: log the APK was probably already modified
+        }
+
+        //move asset files
+        FileInputStream tempApkStream = new FileInputStream(_tempApk);
+        ZipInputStream zipIs = new ZipInputStream(tempApkStream);
+        ZipEntry ze = null;
+
+        while ((ze = zipIs.getNextEntry()) != null) {
+
+            FileOutputStream fout = new FileOutputStream(targetAssetsPath + ze.getName(),false);
+
+            byte[] buffer = new byte[1024];
+            int length = 0;
+
+            while ((length = zipIs.read(buffer))>0) {
+                fout.write(buffer, 0, length);
+            }
+            zipIs.closeEntry();
+            fout.close();
+        }
+        zipIs.close();
+        tempApkStream.close();
+        BeatOnCore core = new BeatOnCore(_tempApk.getAbsolutePath());
+        try {
+
+            InputStream inp =_context.getResources().openRawResource(R.raw.libmodloader);
+            byte[] data = new byte[inp.available()];
+            inp.read(data);
+            inp.close();
+            core.saveFileToApk(_tempApk.getAbsolutePath(), "lib/armeabi-v7a/libmodloader.so", Base64.encodeToString(data,0));
+        }
+        catch (Exception ex)
+        {
+            //todo log error somehow
+            throw new Exception(core.getLog());
+        }
+
+        InputStream inp2 =_context.getResources().openRawResource(R.raw.libassetredirect);
+        byte[] data2 = new byte[inp2.available()];
+        inp2.read(data2);
+        inp2.close();
+        FileOutputStream outp = new FileOutputStream("/sdcard/Android/data/com.beatgames.beatsaber/files/mods/libassetredirect.so",false);
+        outp.write(data2);
+        outp.close();
+
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setDataAndType(Uri.fromFile(_tempApk), "application/vnd.android.package-archive");
+        _context.startActivity(intent);
+        return true;
+    }
+
+    public boolean prepAndDeleteOriginalBeatSaberApk() throws Exception
+    {
+
+        String bsApkPath = findBeatSaberApk();
+        if (bsApkPath == null) {
+            //TODO: figure out how to log stuff in android
+            return false;
+        }
+        _tempApk = new File(_context.getCacheDir(), "beatsabermod.apk");
+        try {
+            Files.copy(new File(bsApkPath), _tempApk);
+            PackageManager pkgMgr = _context.getPackageManager();
+
+            Intent intent = new Intent(Intent.ACTION_DELETE, Uri.fromParts("package",
+                    pkgMgr.getPackageArchiveInfo(bsApkPath, 0).packageName,null));
+            _context.startActivity(intent);
+
+            return true;
+        } catch (Exception ex)
+        {
+            _tempApk.delete();
+            //TODO: how to log?
+            throw ex;
+        }
+    }
+    public String findBeatSaberApk() throws Exception
+    {
         Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
+        mainIntent.addCategory(Intent.CATEGORY_INFO);
         List pkgAppsList = _packageManager.queryIntentActivities(mainIntent, 0);
         for (Object object : pkgAppsList) {
             ResolveInfo info = (ResolveInfo) object;
-            if (info.activityInfo.packageName == "com.beatgames.beatsaber")
+            if (info.activityInfo.packageName.equals("com.beatgames.beatsaber"))
             {
                 //found beat saber
                 return info.activityInfo.applicationInfo.publicSourceDir;

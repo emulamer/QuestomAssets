@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import android.view.View;
+
+import com.emulamer.beaton.BeatOnInstaller;
 
 /**
  * Helper class for providing sample content for user interfaces created by
@@ -27,9 +30,8 @@ public class DummyContent {
 
     static {
         // Add some sample items.
-        for (int i = 1; i <= COUNT; i++) {
-            addItem(createDummyItem(i));
-        }
+        addItem(createDummyItem("Step 1", 1));
+        addItem(createDummyItem("Step 2", 2));
     }
 
     private static void addItem(DummyItem item) {
@@ -37,16 +39,25 @@ public class DummyContent {
         ITEM_MAP.put(item.id, item);
     }
 
-    private static DummyItem createDummyItem(int position) {
-        return new DummyItem(String.valueOf(position), "Item " + position, makeDetails(position));
+    private static DummyItem createDummyItem(String text, int step) {
+        return new DummyItem(text, text, makeDetails(text), step);
     }
 
-    private static String makeDetails(int position) {
+    private static String makeDetails(String position) {
         StringBuilder builder = new StringBuilder();
-        builder.append("Details about Item: ").append(position);
-        for (int i = 0; i < position; i++) {
-            builder.append("\nMore details information here.");
+        if (position.equals("Step 1")) {
+            builder.append("Prepare and uninstall Beat Saber");
+            builder.append("Assumes you have Beat Saber (unmodded?) already installed.\n");
+            builder.append("Will grab the installed apk, copy it to the sdcard then trigger it to be uninstalled.\n");
+            builder.append("Make sure to say yes to uninstall it");
         }
+        else if (position.equals("Step 2")) {
+            builder.append("Mod Beat Saber APK and Reinstall It");
+            builder.append("Applies the preperatory mod to the Beat Saber APK and extracs the resources to the sdcard");
+            builder.append("Takes the modded APK and and triggers it to be installed.");
+            builder.append("Say yes to install it.");
+        }
+
         return builder.toString();
     }
 
@@ -57,11 +68,13 @@ public class DummyContent {
         public final String id;
         public final String content;
         public final String details;
+        public int step;
 
-        public DummyItem(String id, String content, String details) {
+        public DummyItem(String id, String content, String details, int step) {
             this.id = id;
             this.content = content;
             this.details = details;
+            this.step = step;
         }
 
         @Override
@@ -69,4 +82,6 @@ public class DummyContent {
             return content;
         }
     }
+
+
 }

@@ -51,4 +51,11 @@
         app:layout_anchorGravity="top|end"
         app:srcCompat="@android:drawable/stat_notify_chat" />
 
+    <Button
+        android:id="@+id/button3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="DoIt"
+        android:text="Do It" />
+
 </android.support.design.widget.CoordinatorLayout>

@@ -37,6 +37,7 @@ public class ItemListActivity extends AppCompatActivity {
      */
     private boolean mTwoPane;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -62,12 +63,12 @@ public class ItemListActivity extends AppCompatActivity {
             }
         });
 
-        BeatOnInstaller inst = new BeatOnInstaller(this);
+       //  = new BeatOnInstaller(this);
         try {
-           inst.FindBeatSaberApk();
+         //  inst.FindBeatSaberApk();
         }
         catch (Exception ex) {
-String ms = ex.getMessage();
+            String ms = ex.getMessage();
         }
         if (findViewById(R.id.item_detail_container) != null) {
             // The detail container view will be present only in the
@@ -85,6 +86,7 @@ String ms = ex.getMessage();
     private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
         recyclerView.setAdapter(new SimpleItemRecyclerViewAdapter(this, DummyContent.ITEMS, mTwoPane));
     }
+
 
     public static class SimpleItemRecyclerViewAdapter
             extends RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder> {

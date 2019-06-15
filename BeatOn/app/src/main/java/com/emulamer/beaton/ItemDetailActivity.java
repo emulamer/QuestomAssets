@@ -9,6 +9,7 @@ import android.view.View;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.ActionBar;
 import android.view.MenuItem;
+import android.view.View;
 
 /**
  * An activity representing a single Item detail screen. This
@@ -62,6 +63,10 @@ public class ItemDetailActivity extends AppCompatActivity {
                     .commit();
         }
     }
+
+
+
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
