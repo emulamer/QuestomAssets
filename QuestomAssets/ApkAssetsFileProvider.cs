@@ -152,6 +152,22 @@ namespace QuestomAssets
             _zipFile.CompressionLevel = compressData ? Ionic.Zlib.CompressionLevel.Default : Ionic.Zlib.CompressionLevel.None;
         }
 
+        /// <summary>
+        /// Queues a stream to be written to a file.  Stream will not actually be read until .Save() is called
+        /// </summary>
+        public void QueueWriteStream(string filename, Stream streamToWrite, bool overwrite = true, bool compressData = true)
+        {
+            CheckRO();
+            var entry = _zipFile.Entries.FirstOrDefault(x => x.FileName == filename);
+            if (entry != null && !overwrite)
+                throw new Exception($"An entry named {filename} already exists and overwrite is false");
+            if (entry != null)
+                _zipFile.RemoveEntry(entry);
+
+            _zipFile.AddEntry(filename, streamToWrite);
+            _zipFile.CompressionLevel = compressData ? Ionic.Zlib.CompressionLevel.Default : Ionic.Zlib.CompressionLevel.None;
+        }
+
         public void Delete(string filename)
         {
             CheckRO();

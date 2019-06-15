@@ -1,6 +1,3 @@
 [submodule "StbSharp"]
 	path = StbSharp
 	url = https://github.com/emulamer/StbSharp.git
-[submodule "beatsaber-hook"]
-	path = beatsaber-hook
-	url = https://github.com/emulamer/beatsaber-hook

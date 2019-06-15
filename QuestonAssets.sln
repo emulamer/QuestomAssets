@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.28922.388
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.645
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BeatmapAssetMaker", "BeatMapAssetMaker\BeatmapAssetMaker.csproj", "{9FCD4D5E-8E64-49C5-A90A-0D17DD98C8A3}"
 EndProject
@@ -12,8 +12,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuestomAssets.Tests", "QuestomAssets.Tests\QuestomAssets.Tests.csproj", "{E2E55309-D20E-430A-B388-7989F975BC11}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinformsTestApp", "WinformsTestApp\WinformsTestApp.csproj", "{97BB1A0F-E383-4AE6-9AAC-8CA2F24C577F}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BeatOnLib", "BeatOnLib\BeatOnLib.csproj", "{7EE63411-CFF7-44B8-A168-9BDF486F4496}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -85,18 +83,6 @@ Global
 		{97BB1A0F-E383-4AE6-9AAC-8CA2F24C577F}.Release|x64.Build.0 = Release|Any CPU
 		{97BB1A0F-E383-4AE6-9AAC-8CA2F24C577F}.Release|x86.ActiveCfg = Release|Any CPU
 		{97BB1A0F-E383-4AE6-9AAC-8CA2F24C577F}.Release|x86.Build.0 = Release|Any CPU
-		{7EE63411-CFF7-44B8-A168-9BDF486F4496}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7EE63411-CFF7-44B8-A168-9BDF486F4496}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7EE63411-CFF7-44B8-A168-9BDF486F4496}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{7EE63411-CFF7-44B8-A168-9BDF486F4496}.Debug|x64.Build.0 = Debug|Any CPU
-		{7EE63411-CFF7-44B8-A168-9BDF486F4496}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{7EE63411-CFF7-44B8-A168-9BDF486F4496}.Debug|x86.Build.0 = Debug|Any CPU
-		{7EE63411-CFF7-44B8-A168-9BDF486F4496}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7EE63411-CFF7-44B8-A168-9BDF486F4496}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7EE63411-CFF7-44B8-A168-9BDF486F4496}.Release|x64.ActiveCfg = Release|Any CPU
-		{7EE63411-CFF7-44B8-A168-9BDF486F4496}.Release|x64.Build.0 = Release|Any CPU
-		{7EE63411-CFF7-44B8-A168-9BDF486F4496}.Release|x86.ActiveCfg = Release|Any CPU
-		{7EE63411-CFF7-44B8-A168-9BDF486F4496}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

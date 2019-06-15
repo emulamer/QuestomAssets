@@ -1,4 +1,0 @@
-
-include ':app', ':BeatOnLib', ':dexlib2-2.2.7'
-
-
