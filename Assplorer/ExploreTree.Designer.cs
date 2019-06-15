@@ -1,4 +1,4 @@
-﻿namespace WinformsTestApp
+﻿namespace Assplorer
 {
     partial class ExploreTree
     {

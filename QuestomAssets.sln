@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuestomAssets", "QuestomAss
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuestomAssets.Tests", "QuestomAssets.Tests\QuestomAssets.Tests.csproj", "{E2E55309-D20E-430A-B388-7989F975BC11}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinformsTestApp", "WinformsTestApp\WinformsTestApp.csproj", "{97BB1A0F-E383-4AE6-9AAC-8CA2F24C577F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assplorer", "Assplorer\Assplorer.csproj", "{97BB1A0F-E383-4AE6-9AAC-8CA2F24C577F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

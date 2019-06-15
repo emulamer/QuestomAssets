@@ -50,6 +50,16 @@ namespace QuestomAssets.BeatSaber
             var correctName = FindFirstOfSplit(fp, assetsFile);
             if (correctName != null)
                 return correctName;
+
+            //some of the files in ExternalFiles have library/ on them, but they're actually in Resources/
+            if ( assetsFile.Contains("library/"))
+            {
+                string whyUnity = assetsFile.Replace("library/", "Resources/");
+                correctName = FindFirstOfSplit(fp, whyUnity);
+                if (correctName != null)
+                    return correctName;
+            }
+
             //some of the files in ExternalFiles have library/ on them, but they're actually in the root path
             var splitPath = assetsFile.Split('/').ToList();
             if (splitPath.Count() > 1)
@@ -60,6 +70,9 @@ namespace QuestomAssets.BeatSaber
                 if (correctName != null)
                     return correctName;
             }
+
+            
+
 
             throw new ArgumentException("The file doesn't exist in the APK with any name!");
         }

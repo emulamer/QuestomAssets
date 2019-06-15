@@ -16,7 +16,7 @@ using QuestomAssets.Utils;
 using System.IO;
 using System.Text.RegularExpressions;
 
-namespace WinformsTestApp
+namespace Assplorer
 {
     public partial class AssetViewer : Form
     {
@@ -75,7 +75,7 @@ namespace WinformsTestApp
                             _manager.GetAssetsFile("globalgamemanagers.assets");
                         _manager.FindAndLoadAllAssets();
                         FillAssetsFiles();
-                        this.Text = "Asset Viewer - " + Path.GetFileName(ofd.FileName);
+                        this.Text = "Assets Explorer - " + Path.GetFileName(ofd.FileName);
                     }
                     catch (Exception ex)
                     {
@@ -102,14 +102,14 @@ namespace WinformsTestApp
                     try
                     {
                         _fileProvider = new FolderFileProvider(fbd.SelectedPath, false);
-                        _manager = new AssetsManager(_fileProvider, BSConst.KnownFiles.AssetsRootPath, BSConst.GetAssetTypeMap());
+                        _manager = new AssetsManager(_fileProvider, "", BSConst.GetAssetTypeMap());
                         if (_fileProvider.FindFiles("globalgamemanagers").Count > 0)
                             _manager.GetAssetsFile("globalgamemanagers.assets");
                         if (_fileProvider.FindFiles("globalgamemanagers.assets*").Count > 0)
                             _manager.GetAssetsFile("globalgamemanagers.assets");
                         _manager.FindAndLoadAllAssets();
                         FillAssetsFiles();
-                        this.Text = "Asset Viewer - " + Path.GetFileName(fbd.SelectedPath);
+                        this.Text = "Assets Explorer - " + Path.GetFileName(fbd.SelectedPath);
                     }
                     catch (Exception ex)
                     {
@@ -140,7 +140,7 @@ namespace WinformsTestApp
                         _manager = new AssetsManager(_fileProvider, "", BSConst.GetAssetTypeMap());
                         _manager.FindAndLoadAllAssets();
                         FillAssetsFiles();
-                        this.Text = "Asset Viewer - " + Path.GetFileName(ofd.FileName);
+                        this.Text = "Assets Explorer - " + Path.GetFileName(ofd.FileName);
                     }
                     catch (Exception ex)
                     {

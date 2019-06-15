@@ -1,6 +1,6 @@
 ﻿using System.Windows.Forms;
 
-namespace WinformsTestApp
+namespace Assplorer
 {
     partial class AssetViewer
     {
@@ -32,22 +32,22 @@ namespace WinformsTestApp
         {
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tbExplore = new System.Windows.Forms.TabPage();
+            this.btnSave = new System.Windows.Forms.Button();
             this.btnNewWindow = new System.Windows.Forms.Button();
             this.cbAssetsFile = new System.Windows.Forms.ComboBox();
             this.label2 = new System.Windows.Forms.Label();
-            this.etMain = new WinformsTestApp.ExploreTree();
+            this.etMain = new Assplorer.ExploreTree();
             this.btnLoad = new System.Windows.Forms.Button();
             this.tpCompare = new System.Windows.Forms.TabPage();
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
-            this.etLeft = new WinformsTestApp.ExploreTree();
-            this.etRight = new WinformsTestApp.ExploreTree();
+            this.etLeft = new Assplorer.ExploreTree();
+            this.etRight = new Assplorer.ExploreTree();
             this.tpLog = new System.Windows.Forms.TabPage();
             this.btnClearLog = new System.Windows.Forms.Button();
             this.tbLog = new System.Windows.Forms.TextBox();
-            this.btnSave = new System.Windows.Forms.Button();
             this.tabControl1.SuspendLayout();
             this.tbExplore.SuspendLayout();
             this.tpCompare.SuspendLayout();
@@ -88,6 +88,16 @@ namespace WinformsTestApp
             this.tbExplore.TabIndex = 0;
             this.tbExplore.Text = "Explore";
             this.tbExplore.UseVisualStyleBackColor = true;
+            // 
+            // btnSave
+            // 
+            this.btnSave.Location = new System.Drawing.Point(219, 4);
+            this.btnSave.Name = "btnSave";
+            this.btnSave.Size = new System.Drawing.Size(61, 41);
+            this.btnSave.TabIndex = 6;
+            this.btnSave.Text = "Save";
+            this.btnSave.UseVisualStyleBackColor = true;
+            this.btnSave.Click += new System.EventHandler(this.BtnSave_Click);
             // 
             // btnNewWindow
             // 
@@ -137,7 +147,6 @@ namespace WinformsTestApp
             // 
             // btnLoad
             // 
-            this.btnLoad.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnLoad.Location = new System.Drawing.Point(8, 4);
             this.btnLoad.Name = "btnLoad";
             this.btnLoad.Size = new System.Drawing.Size(165, 41);
@@ -273,16 +282,6 @@ namespace WinformsTestApp
             this.tbLog.Size = new System.Drawing.Size(912, 454);
             this.tbLog.TabIndex = 0;
             // 
-            // btnSave
-            // 
-            this.btnSave.Location = new System.Drawing.Point(219, 4);
-            this.btnSave.Name = "btnSave";
-            this.btnSave.Size = new System.Drawing.Size(61, 41);
-            this.btnSave.TabIndex = 6;
-            this.btnSave.Text = "Save";
-            this.btnSave.UseVisualStyleBackColor = true;
-            this.btnSave.Click += new System.EventHandler(this.BtnSave_Click);
-            // 
             // AssetViewer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
@@ -290,7 +289,7 @@ namespace WinformsTestApp
             this.ClientSize = new System.Drawing.Size(923, 539);
             this.Controls.Add(this.tabControl1);
             this.Name = "AssetViewer";
-            this.Text = "Asset Viewer";
+            this.Text = "Assets Explorer";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.tabControl1.ResumeLayout(false);
             this.tbExplore.ResumeLayout(false);

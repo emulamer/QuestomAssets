@@ -6,49 +6,46 @@ namespace QuestomAssets
 {
     public static class Log
     {
-        private static ILog _logSink = null;
+        private static List<ILog> _logSinks = new List<ILog>();
+
+        public static void ClearLogSinks()
+        {
+            _logSinks.Clear();
+        }
+
         public static void SetLogSink(ILog logSink)
         {
-            _logSink = logSink;
+            _logSinks.Add(logSink);
         }
 
         public static void LogMsg(string message, params object[] args)
         {
-            if (_logSink != null)
+            _logSinks.ForEach(x =>
             {
                 try
-                {
-                    _logSink.LogMsg(message, args);
-                }
-                catch
-                { }
-            }
+                { x.LogMsg(message, args); }
+                catch { }
+            });
         }
 
         public static void LogErr(string message, Exception ex)
         {
-            if (_logSink != null)
+            _logSinks.ForEach(x =>
             {
                 try
-                {
-                    _logSink.LogErr(message, ex);
-                }
-                catch
-                { }
-            }
+                { x.LogErr(message, ex); }
+                catch { }
+            });
         }
 
         public static void LogErr(string message)
         {
-            if (_logSink != null)
+            _logSinks.ForEach(x =>
             {
                 try
-                {
-                    _logSink.LogErr(message);
-                }
-                catch
-                { }
-            }
+                { x.LogErr(message); }
+                catch { }
+            });
         }
     }
 
