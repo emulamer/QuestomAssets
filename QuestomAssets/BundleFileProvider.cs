@@ -65,6 +65,11 @@ namespace QuestomAssets
 
         #region "Not implemented things"
 
+        public void MkDir(string path)
+        {
+            throw new NotImplementedException();
+        }
+
         public void Delete(string filename)
         {
             throw new NotImplementedException();

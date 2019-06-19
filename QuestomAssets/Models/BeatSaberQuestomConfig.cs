@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using QuestomAssets.BeatSaber;
 
-namespace QuestomAssets
+namespace QuestomAssets.Models
 {
     //NOTE: stuff will probably break if you use the same name for a song and a playlist, or duplicate any built in ones
     /// <summary>
@@ -12,8 +12,6 @@ namespace QuestomAssets
     /// </summary>
     public class BeatSaberQuestomConfig
     {
-
-
         /// <summary>
         /// The list of playlists (i.e.. level packs) that will show up in Beat Saber
         /// </summary>
@@ -25,11 +23,14 @@ namespace QuestomAssets
         public SaberModel Saber { get; set; }
 
         /// <summary>
-        /// The Colors to use, must always be an array of size 2 [Right, Left].
-        /// Providing null to either or both is supported.
-        /// Providing two nulls will reset the color to the default.
+        /// The color to use for the left saber/blocks.  Set to null to revert to default
         /// </summary>
-        public SimpleColorSO[] Colors { get; set; } = new SimpleColorSO[2];
+        public BeatSaberColor LeftColor { get; set; }
+
+        /// <summary>
+        /// The color to use for the right saber/blocks.  Set to null to revert to default
+        /// </summary>
+        public BeatSaberColor RightColor { get; set; }
 
         /// <summary>
         /// The texts to change. Provide a key and a value for each text to change.

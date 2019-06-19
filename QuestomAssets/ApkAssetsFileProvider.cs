@@ -10,7 +10,6 @@ namespace QuestomAssets
 {
     public class ApkAssetsFileProvider : IAssetsFileProvider
     {
-
         private Dictionary<string, string> _tempFiles = new Dictionary<string, string>();
         public bool ReadOnly { get; private set; }
         public string ApkFilename { get; private set; }
@@ -29,7 +28,7 @@ namespace QuestomAssets
         string _tempFolder = null;
         public ApkAssetsFileProvider(string apkFilename, FileCacheMode cacheMode, bool readOnly = false, string tempFolder = null)
         {
-            _zipFile = new ZipFile(apkFilename);
+            _zipFile = new ZipFile(apkFilename, System.Text.Encoding.UTF8);
             ApkFilename = apkFilename;
             ReadOnly = readOnly;
             CacheMode = cacheMode;
@@ -49,7 +48,11 @@ namespace QuestomAssets
             return mask.IsMatch(filename);            
         }
 
-        
+        public void MkDir(string path)
+        {
+            //not really relevant for a zip file
+        }
+
         public void DeleteFiles(string pattern)
         {
             CheckRO();
@@ -203,7 +206,20 @@ namespace QuestomAssets
             if (toFile != null)
                 _zipFile.Save(toFile);
             else
-                _zipFile.Save();
+            {
+                //this is a workaround for something screwy with mono and/or the android filesystem where some race condition
+                //  is causing the normal Save() to fail internally
+                // I am NOT changing zip libraries AGAIN
+                try
+                {
+                    _zipFile.Save();
+                }
+                catch (NullReferenceException nre)
+                {
+                    var st = nre.StackTrace;
+
+                }
+            }
             _streamsToClose.ForEach(x => x.Dispose());
             _streamsToClose.Clear();
         }
@@ -238,6 +254,8 @@ namespace QuestomAssets
                         _zipFile = null;
                     }
                     CleanupTempFiles();
+                    //Xamarin seems to be lazy about cleaning up open files.  This seems to fix it
+                    GC.Collect();
                 }
                 disposedValue = true;
             }

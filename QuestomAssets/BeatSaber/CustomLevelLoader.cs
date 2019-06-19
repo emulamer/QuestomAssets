@@ -9,16 +9,19 @@ using System.Text;
 using System.Linq;
 using QuestomAssets.Utils;
 using System.Reflection;
+using Newtonsoft.Json.Linq;
 
 namespace QuestomAssets.BeatSaber
 {
     public class CustomLevelLoader
     {
-        public CustomLevelLoader(AssetsFile assetsFile)
+        public CustomLevelLoader(AssetsFile assetsFile, QaeConfig config)
         {
             _assetsFile = assetsFile;
+            _config = config;
         }
 
+        private QaeConfig _config;
         private AssetsFile _assetsFile;
 
         private Dictionary<string, MonoBehaviourObject> _characteristicCache = new Dictionary<string, MonoBehaviourObject>();
@@ -35,7 +38,8 @@ namespace QuestomAssets.BeatSaber
                 string infoFile = Path.Combine(songPath, "Info.dat");
 
                 BeatmapLevelDataObject bml = null;
-                using (var sr = new StreamReader(infoFile))
+                
+                using (var sr = new StreamReader(_config.SongFileProvider.GetReadStream(infoFile)))
                 {
                     bml = JsonConvert.DeserializeObject<BeatmapLevelDataObject>(sr.ReadToEnd(), jsonSettings);
                 }
@@ -53,9 +57,8 @@ namespace QuestomAssets.BeatSaber
             }
         }
 
-        public BeatmapLevelDataObject LoadSongToAsset(BeatmapLevelDataObject beatmapLevel, string songPath, out string oggFileName, bool includeCovers = true)
+        public BeatmapLevelDataObject LoadSongToAsset(BeatmapLevelDataObject beatmapLevel, string songPath, bool includeCovers = true)
         {
-            oggFileName = null;
             try
             {
                 beatmapLevel.Name = $"{beatmapLevel.LevelID}Level";
@@ -74,7 +77,6 @@ namespace QuestomAssets.BeatSaber
                     Log.LogErr($"failed to get audio for song at path {songPath}");
                     return null;
                 }
-                oggFileName = Path.Combine(songPath, beatmapLevel.SongFilename); ;
                 
                 foreach (var difficultySet in beatmapLevel.DifficultyBeatmapSets)
                 {
@@ -82,18 +84,14 @@ namespace QuestomAssets.BeatSaber
                     List<DifficultyBeatmap> toRemove = new List<DifficultyBeatmap>();
                     foreach (var difficultyBeatmap in difficultySet.DifficultyBeatmaps)
                     {
-                        var dataFile = Path.Combine(songPath, $"{difficultyBeatmap.Difficulty.ToString()}.dat");
-                        if (!File.Exists(dataFile))
+                        var dataFile = songPath.CombineFwdSlash($"{difficultyBeatmap.Difficulty.ToString()}.dat");
+                        if (!_config.SongFileProvider.FileExists(dataFile))
                         {
                             Log.LogErr(dataFile + " is missing, skipping this difficulty");
                             toRemove.Add(difficultyBeatmap);
                             continue;
                         }
-                        string jsonData;
-                        using (var sr = new StreamReader(dataFile))
-                        {
-                            jsonData = sr.ReadToEnd();
-                        }
+                        string jsonData = _config.SongFileProvider.ReadToString(dataFile);
                         if (_assetsFile != null)
                         {
                             difficultyBeatmap.BeatmapData = new BeatmapDataObject(_assetsFile);
@@ -151,12 +149,12 @@ namespace QuestomAssets.BeatSaber
 
         public AudioClipObject LoadSongAudioAsset(string songPath, BeatmapLevelDataObject levelData)
         {
-            string audioClipFile = Path.Combine(songPath, levelData.SongFilename);
-            string outputFileName = levelData.LevelID + ".ogg";
+            string audioClipFile = songPath.CombineFwdSlash(levelData.SongFilename);
+            //string outputFileName = levelData.LevelID + ".ogg";
             int channels;
             int frequency;
             Single length;
-            byte[] oggBytes = File.ReadAllBytes(audioClipFile);
+            byte[] oggBytes = _config.SongFileProvider.Read(audioClipFile);
             unsafe
             {
 
@@ -197,24 +195,24 @@ namespace QuestomAssets.BeatSaber
                 Channels = channels,
                 Frequency = frequency,
                 Length = (Single)length,
-                Resource = new StreamedResource(outputFileName, 0, Convert.ToUInt64(new FileInfo(audioClipFile).Length))
+                Resource = new StreamedResource(audioClipFile, 0, Convert.ToUInt64(_config.SongFileProvider.GetFileSize(audioClipFile)))
             };
             return audioClip;
         }
 
         public Texture2DObject LoadSongCover(string songPath, BeatmapLevelDataObject levelData)
         {
-            if (!string.IsNullOrWhiteSpace(levelData.CoverImageFilename) && File.Exists(Path.Combine(songPath, levelData.CoverImageFilename)))
+            if (!string.IsNullOrWhiteSpace(levelData.CoverImageFilename) && _config.SongFileProvider.FileExists(_config.SongsPath.CombineFwdSlash(songPath).CombineFwdSlash(levelData.CoverImageFilename)))
             {
                 try
                 {
-                    string coverFile = Path.Combine(songPath, levelData.CoverImageFilename);
+                    string coverFile = songPath.CombineFwdSlash(levelData.CoverImageFilename);
 
                     var coverAsset = new Texture2DObject(_assetsFile)
                     {
                         Name = levelData.LevelID + "Cover"
                     };
-                    byte[] imageBytes = File.ReadAllBytes(coverFile);
+                    byte[] imageBytes = _config.SongFileProvider.Read(coverFile);
                     ImageUtils.Instance.AssignImageToTexture(imageBytes, coverAsset, 256, 256);
                     return coverAsset;
                 }
@@ -226,10 +224,10 @@ namespace QuestomAssets.BeatSaber
             return null;
         }
 
-        public SpriteObject LoadPackCover(string assetName, byte[] coverImageBytes)
+        public SpriteObject LoadPackCover(string assetName, string packCoverImage)
         {
             Texture2DObject packCover = null;
-            if (coverImageBytes != null)
+            if (!string.IsNullOrWhiteSpace(packCoverImage))
             {
                 try
                 {
@@ -237,6 +235,7 @@ namespace QuestomAssets.BeatSaber
                     {
                         Name = assetName
                     };
+                    byte[] coverImageBytes = _config.SongFileProvider.Read(_config.PlaylistArtPath.CombineFwdSlash(packCoverImage));
                     ImageUtils.Instance.AssignImageToTexture(coverImageBytes, loadedCover, 1024, 1024);
                     packCover = loadedCover;
                 }
@@ -262,6 +261,59 @@ namespace QuestomAssets.BeatSaber
             coverAsset.Texture = packCover.PtrFrom(coverAsset);
             _assetsFile.AddObject(coverAsset, true);
             return coverAsset;
+        }
+
+        //todo: not sure if this is always safe to assume the folder where the ogg is has the info.dat, but I hope it is
+        public string GetCoverImageFilename(BeatmapLevelDataObject levelData)
+        {
+            var path = levelData?.AudioClip?.Object?.Resource?.Source;
+            if (path == null)
+            {
+                Log.LogErr("Trying to get the cover image file, audio clip resource object was null!");
+                return null;
+            }
+            if (!path.StartsWith(_config.SongsPath))
+            {
+                Log.LogErr($"The audio clip path for level ID {levelData.LevelID} of '{path}' doesn't match with the configured songs path of '{_config.SongsPath}'.  Can't get cover art image location!");
+                return null;
+            }
+
+            //path = path.Substring(_config.SongsPath.Length).TrimStart('/');
+            int idx = path.LastIndexOf("/");
+            path = path.Substring(0, idx);
+
+            var infodatfile = path.CombineFwdSlash("info.dat");
+            if (!_config.SongFileProvider.FileExists(infodatfile))
+            {
+                Log.LogErr($"Could not find {infodatfile} for level ID {levelData.LevelID}");
+                return null;
+            }
+
+            //I hope this is a faster way than deserializing the entire object and worth the double code paths for parsing the same serialized type
+            string imageFilename = null;
+            try
+            {
+                using (var jr = new JsonTextReader(new StreamReader(_config.SongFileProvider.GetReadStream(infodatfile))))
+                {
+                    while (jr.Read())
+                    {
+                        if (jr.TokenType == JsonToken.PropertyName && jr.Value?.ToString() == "_coverImageFilename")
+                        {
+                            if (jr.Read() && jr.TokenType == JsonToken.String)
+                            {
+                                imageFilename = jr.Value?.ToString();
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.LogErr($"Exception trying to read info.dat to get _coverImageFilename for level ID {levelData.LevelID} from '{infodatfile}'.", ex);
+                return null;
+            }
+            return imageFilename;
         }
 
         private static void SetFallbackCoverTexture(Texture2DObject texture)

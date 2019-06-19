@@ -74,7 +74,7 @@ namespace QuestomAssets.BeatSaber
             
 
 
-            throw new ArgumentException("The file doesn't exist in the APK with any name!");
+            throw new ArgumentException($"The assets file {assetsFile} doesn't exist in with any known name variations!");
         }
 
 

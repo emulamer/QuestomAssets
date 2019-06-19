@@ -40,7 +40,7 @@ namespace QuestomAssets.AssetsChanger
 
         private void OpenBaseStream()
         {
-            var assetsFileStream = FileProvider.ReadCombinedAssets(AssetsRootPath + AssetsFilename);
+            var assetsFileStream = FileProvider.ReadCombinedAssets(AssetsRootPath.CombineFwdSlash(AssetsFilename));
             if (!assetsFileStream.CanSeek)
                 throw new NotSupportedException("Stream must support seeking!");
             BaseStream = assetsFileStream;
@@ -214,7 +214,7 @@ namespace QuestomAssets.AssetsChanger
             {
                 CloseBaseStream();
 
-                FileProvider.DeleteFiles(AssetsRootPath + AssetsFilename + ".split*");
+                FileProvider.DeleteFiles(AssetsRootPath.CombineFwdSlash(AssetsFilename + ".split*"));
 
                 using (MemoryStream outputStream = new MemoryStream())
                 {
@@ -233,9 +233,8 @@ namespace QuestomAssets.AssetsChanger
                     objectsMS.CopyTo(outputStream);
 
                     outputStream.Seek(0, SeekOrigin.Begin);
-                    FileProvider.Write(AssetsRootPath + AssetsFilename, outputStream.ToArray(), true, true);
+                    FileProvider.Write(AssetsRootPath.CombineFwdSlash(AssetsFilename), outputStream.ToArray(), true, true);
                 }
-
                 _hasChanges = false;
                 FileProvider.Save();
                 OpenBaseStream();                

@@ -4,6 +4,7 @@ using QuestomAssets;
 using System.Collections.Generic;
 using System.Linq;
 using QuestomAssets.Utils;
+using QuestomAssets.Models;
 using BeatmapAssetMaker;
 
 namespace Tests
@@ -26,7 +27,8 @@ namespace Tests
             BeatSaberQuestomConfig config = null;
             using (var apk = new ApkAssetsFileProvider(_apkFile, FileCacheMode.Memory))
             {
-                QuestomAssetsEngine qae = new QuestomAssetsEngine(apk, "assets/bin/Data/");
+                var q = new QaeConfig() { AssetsPath = "assets/bin/Data/", SongsPath = "", FileProvider = apk, SongFileProvider = new FolderFileProvider(".\\", false) };
+                QuestomAssetsEngine qae = new QuestomAssetsEngine(q);
 
                 config = qae.GetCurrentConfig();
 
@@ -35,15 +37,15 @@ namespace Tests
                     var playlist = new BeatSaberPlaylist()
                     {
                         PlaylistID = string.Format(PlaylistIDFormat, p),
-                        PlaylistName = string.Format(PlaylistNameFormat, p),
-                        CoverArtBytes = File.ReadAllBytes(COVER_ART_FILE)
+                        PlaylistName = string.Format(PlaylistNameFormat, p)
+                       
                     };
                     for (int i = 0; i < songCount; i++)
                     {
                         var song = new BeatSaberSong()
                         {
                             SongID = string.Format(SongIDFormat, p, i),
-                            CustomSongFolder = TEST_SONG_FOLDER
+                             CustomSongPath = TEST_SONG_FOLDER
                         };
 
                         playlist.SongList.Add(song);
@@ -96,9 +98,10 @@ namespace Tests
             BeatSaberQuestomConfig config = null;
             using (var apk = new ApkAssetsFileProvider(_apkFile, FileCacheMode.Memory, true))
             {
-                QuestomAssetsEngine qae = new QuestomAssetsEngine(apk, "assets/bin/Data/", true);
+                var q = new QaeConfig() { AssetsPath = "assets/bin/Data/", SongsPath = "", FileProvider = apk, SongFileProvider = new FolderFileProvider(".\\", false) };
+                QuestomAssetsEngine qae = new QuestomAssetsEngine(q);
 
-                config = qae.GetCurrentConfig(false);
+                config = qae.GetCurrentConfig();
             }
             
             Assert.IsNotNull(config, "Didn't load current config");
@@ -112,13 +115,14 @@ namespace Tests
             BeatSaberQuestomConfig config = null;
             using (var apk = new ApkAssetsFileProvider(_apkFile, FileCacheMode.Memory, true))
             {
-                QuestomAssetsEngine qae = new QuestomAssetsEngine(apk, "assets/bin/Data/", true);
+                var q = new QaeConfig() { AssetsPath = "assets/bin/Data/", SongsPath = "", FileProvider = apk, SongFileProvider = new FolderFileProvider(".\\", false) };
+                QuestomAssetsEngine qae = new QuestomAssetsEngine(q);
 
                 config = qae.GetCurrentConfig();
 
                 Assert.IsNotNull(config, "Didn't load current config");
-                Assert.IsNotNull(config.Playlists[0].CoverArtBytes);
-                Assert.IsNotNull(config.Playlists[0].SongList[0].CoverArtBytes);
+               // Assert.IsNotNull(config.Playlists[0].CoverArtBytes);
+              //  Assert.IsNotNull(config.Playlists[0].SongList[0].CoverArtBytes);
 
                 //todo:
                 //Assert.AreEqual(1024, config.Playlists[0].CoverArt.Width);
@@ -137,14 +141,16 @@ namespace Tests
             SetupPlaylistsWithSongs(1, 1);
             using (var apk = new ApkAssetsFileProvider(_apkFile, FileCacheMode.Memory, false))
             {
-                QuestomAssetsEngine qae = new QuestomAssetsEngine(apk, "assets/bin/Data/", false);
 
-                var newConfig = qae.GetCurrentConfig(false);
+                var q = new QaeConfig() { AssetsPath = "assets/bin/Data/", SongsPath = "", FileProvider = apk, SongFileProvider = new FolderFileProvider(".\\", false)};
+                QuestomAssetsEngine qae = new QuestomAssetsEngine(q);
+
+                var newConfig = qae.GetCurrentConfig();
                 Assert.AreEqual(1, newConfig.Playlists.Count, "Playlist count should be 1!");
                 var playlist = newConfig.Playlists[0];
                 Assert.AreEqual(string.Format(PlaylistIDFormat, 0), playlist.PlaylistID);
                 Assert.AreEqual(string.Format(PlaylistNameFormat, 0), playlist.PlaylistName);
-                Assert.IsNotNull(playlist.CoverArtBytes, "Playlist cover art didn't reload!");
+              //  Assert.IsNotNull(playlist.CoverArtBytes, "Playlist cover art didn't reload!");
                 //Assert.AreEqual(1024, playlist.CoverArt.Width, "Playlist cover art is not 1024 width!");
                 //Assert.AreEqual(1024, playlist.CoverArt.Height, "Playlist cover art is not 1024 height!");
 
@@ -154,7 +160,7 @@ namespace Tests
                 Assert.AreEqual(TestSongName, song.SongName);
                 Assert.AreEqual(TestSongSubName, song.SongSubName);
                 Assert.AreEqual(TestSongAuthorName, song.SongAuthorName);
-                Assert.IsNotNull(song.CoverArtBytes, "Cover art didn't load!");
+             //   Assert.IsNotNull(song.CoverArtBytes, "Cover art didn't load!");
                 //Assert.AreEqual(256, song.CoverArt.Width, "Song cover art is not 256 width!");
                 //Assert.AreEqual(256, song.CoverArt.Height, "Song cover art is not 256 height!");
             }
@@ -168,9 +174,10 @@ namespace Tests
             BeatSaberQuestomConfig oldConfig = null;
             using (var apk = new ApkAssetsFileProvider(_apkFile, FileCacheMode.Memory, false))
             {
-                QuestomAssetsEngine qae = new QuestomAssetsEngine(apk, "assets/bin/Data/", false);
+                var q = new QaeConfig() { AssetsPath = "assets/bin/Data/", SongsPath = "", FileProvider = apk, SongFileProvider = new FolderFileProvider(".\\", false) };
+                QuestomAssetsEngine qae = new QuestomAssetsEngine(q);
 
-                oldConfig = qae.GetCurrentConfig(false);
+                oldConfig = qae.GetCurrentConfig();
                 var config = CopyIDs(oldConfig);
                 var song = config.Playlists[0].SongList[0];
                 config.Playlists[1].SongList.Add(song);
@@ -179,9 +186,10 @@ namespace Tests
             }
             using (var apk = new ApkAssetsFileProvider(_apkFile, FileCacheMode.Memory, true))
             {
-                QuestomAssetsEngine qae = new QuestomAssetsEngine(apk, "assets/bin/Data/", true);
+                var q = new QaeConfig() { AssetsPath = "assets/bin/Data/", SongsPath = "", FileProvider = apk, SongFileProvider = new FolderFileProvider(".\\", false) };
+                QuestomAssetsEngine qae = new QuestomAssetsEngine(q);
 
-                var testConfig = qae.GetCurrentConfig(false);
+                var testConfig = qae.GetCurrentConfig();
                 Assert.AreEqual(2, testConfig.Playlists.Count);
                 Assert.AreEqual(1, testConfig.Playlists[0].SongList.Count());
                 Assert.AreEqual(3, testConfig.Playlists[1].SongList.Count());
@@ -220,23 +228,25 @@ namespace Tests
             BeatSaberQuestomConfig oldConfig = null;
             using (var apk = new ApkAssetsFileProvider(_apkFile, FileCacheMode.Memory, false))
             {
-                QuestomAssetsEngine qae = new QuestomAssetsEngine(apk, "assets/bin/Data/", false);
+                var q = new QaeConfig() { AssetsPath = "assets/bin/Data/", SongsPath = "", FileProvider = apk, SongFileProvider = new FolderFileProvider(".\\", false) };
+                QuestomAssetsEngine qae = new QuestomAssetsEngine(q);
 
-                oldConfig = qae.GetCurrentConfig(false);
+                oldConfig = qae.GetCurrentConfig();
                 var config = CopyIDs(oldConfig);
                 var song = new BeatSaberSong()
                 {
                     SongID = config.Playlists[0].SongList[0].SongID,
-                    CustomSongFolder = TEST_SONG_FOLDER
+                     CustomSongPath = TEST_SONG_FOLDER
                 };
                 oldConfig.Playlists[0].SongList.Add(song);
                 qae.UpdateConfig(config);
             }
             using (var apk = new ApkAssetsFileProvider(_apkFile, FileCacheMode.Memory, true))
             {
-                QuestomAssetsEngine qae = new QuestomAssetsEngine(apk, "assets/bin/Data/", true);
+                var q = new QaeConfig() { AssetsPath = "assets/bin/Data/", SongsPath = "", FileProvider = apk, SongFileProvider = new FolderFileProvider(".\\", false) };
+                QuestomAssetsEngine qae = new QuestomAssetsEngine(q);
 
-                var testConfig = qae.GetCurrentConfig(false);
+                var testConfig = qae.GetCurrentConfig();
                 Assert.AreEqual(2, testConfig.Playlists[0].SongList.Count());
                 Assert.AreEqual(2, testConfig.Playlists[1].SongList.Count());
             }

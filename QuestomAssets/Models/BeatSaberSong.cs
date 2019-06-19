@@ -6,7 +6,7 @@ using QuestomAssets.AssetsChanger;
 using QuestomAssets.BeatSaber;
 using Newtonsoft.Json;
 
-namespace QuestomAssets
+namespace QuestomAssets.Models
 {
     public class BeatSaberSong
     {
@@ -16,17 +16,11 @@ namespace QuestomAssets
         [JsonIgnore]
         internal BeatmapLevelDataObject LevelData { get; set; }
 
-        [JsonIgnore]
-        internal string SourceOgg { get; set; }
-
-        [JsonIgnore]
-        public byte[] CoverArtBytes { get; set; }
-
         public string SongID { get; set; }
 
         public string SongName { get; internal set; }
 
-        public string CoverArtBase64PNG { get; internal set; }
+        public string CoverArtFilename { get; internal set; }
 
         public string SongSubName { get; internal set; }
                 
@@ -34,6 +28,10 @@ namespace QuestomAssets
                 
         public string LevelAuthorName { get; internal set; }
 
-        public string CustomSongFolder { get;  set; }
+        /// <summary>
+        /// The path on the device to the folder where the custom song lives, e.g. setting this value to "TheBestSong" would map to something like "/sdcard/BeatOnData/CustomSongs/TheBestSong/"
+        /// </summary>
+        public string CustomSongPath { get; set; }
+
     }
 }

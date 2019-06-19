@@ -10,12 +10,24 @@ namespace QuestomAssets
 {
     public static class Extensions
     {
+        public static string CombineFwdSlash(this string path1, string path2)
+        {
+            if (path1.EndsWith("/") && path1.Length > 1)
+                path1 = path1.TrimEnd('/');
 
+            path2 = path2.TrimStart('/');
+            return path1 + "/" + path2;
+        }
         public static T DeepClone<T>(this IObjectInfo<T> source, AssetsFile toFile = null, List<CloneExclusion> exclusions = null, List<AssetsObject> addedObjects = null) where T : AssetsObject
         {
             return Cloner.DeepClone<T>((T)source.Object, toFile, addedObjects, null, exclusions);
         }
 
+        public static string ReadToString(this IAssetsFileProvider provider, string filename)
+        {
+            var data = provider.Read(filename);
+            return System.Text.Encoding.UTF8.GetString(data);
+        }
 
         public static byte[] ToPngBytes(this Texture2DObject texture)
         {

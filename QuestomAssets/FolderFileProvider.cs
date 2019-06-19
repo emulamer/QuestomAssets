@@ -16,8 +16,8 @@ namespace QuestomAssets
         
         public FolderFileProvider(string rootFolder, bool readOnly)
         {
-            if (!Directory.Exists(rootFolder))
-                throw new FileNotFoundException($"Root folder '{rootFolder}' does not exist!");
+            //if (!Directory.Exists(rootFolder))
+            //    throw new FileNotFoundException($"Root folder '{rootFolder}' does not exist!");
             _originalRoot = rootFolder;
             _rootFolder = rootFolder;
             _readonly = readOnly;
@@ -57,7 +57,12 @@ namespace QuestomAssets
 
         public bool FileExists(string filename)
         {
-            return File.Exists(Path.Combine(_rootFolder, FwdToFS(filename)));
+            return File.Exists(Path.Combine(_rootFolder, FwdToFS(filename))) || Directory.Exists(Path.Combine(_rootFolder, FwdToFS(filename)));
+        }
+
+        public void MkDir(string path)
+        {
+            Directory.CreateDirectory(Path.Combine(_rootFolder, FwdToFS(path)));
         }
 
         public List<string> FindFiles(string pattern)
@@ -103,6 +108,8 @@ namespace QuestomAssets
             CheckRO();
             if (!overwrite && FileExists(filename))
                 throw new Exception("File already exists and overwrite is set to false.");
+            else if (FileExists(filename))
+                Delete(filename);
 
             using (var fs = File.Open(Path.Combine(_rootFolder, FwdToFS(filename)), FileMode.Create, FileAccess.ReadWrite))
                 fs.Write(data, 0, data.Length);
@@ -113,8 +120,18 @@ namespace QuestomAssets
             CheckRO();
             if (!overwrite && FileExists(Path.Combine(_rootFolder, FwdToFS(targetFilename))))
                 throw new Exception("Target file already exists and overwrite is set to false.");
+            else if (FileExists(targetFilename))
+                Delete(targetFilename);
 
             File.Copy(sourceFilename, Path.Combine(_rootFolder, FwdToFS(targetFilename)), overwrite);            
+        }
+        public Stream GetWriteStream(string filename)
+        {
+            CheckRO();
+            if (FileExists(filename))
+                Delete(filename);
+
+            return File.Open(Path.Combine(_rootFolder, FwdToFS(filename)), FileMode.Create, FileAccess.ReadWrite);
         }
 
         private string FwdToFS(string path)
