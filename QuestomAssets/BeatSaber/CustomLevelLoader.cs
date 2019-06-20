@@ -202,7 +202,7 @@ namespace QuestomAssets.BeatSaber
 
         public Texture2DObject LoadSongCover(string songPath, BeatmapLevelDataObject levelData)
         {
-            if (!string.IsNullOrWhiteSpace(levelData.CoverImageFilename) && _config.SongFileProvider.FileExists(_config.SongsPath.CombineFwdSlash(songPath).CombineFwdSlash(levelData.CoverImageFilename)))
+            if (!string.IsNullOrWhiteSpace(levelData.CoverImageFilename) && _config.SongFileProvider.FileExists(songPath.CombineFwdSlash(levelData.CoverImageFilename)))
             {
                 try
                 {
