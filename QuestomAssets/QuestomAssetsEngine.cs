@@ -26,7 +26,7 @@ namespace QuestomAssets
 
         //public string AssetsRootPath { get; private set; }
 
-        public bool HideOriginalPlaylists { get; private set; } = false;
+        public bool HideOriginalPlaylists { get; private set; } = true;
         private QaeConfig _config;
 
         /// <summary>
@@ -234,6 +234,8 @@ namespace QuestomAssets
                         continue;
                     }
                 }
+                else
+                    throw new Exception($"Failed to load song {song.SongName}");
 
                 playlist.SongList.Remove(song);
             }
