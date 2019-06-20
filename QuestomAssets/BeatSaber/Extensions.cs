@@ -78,7 +78,7 @@ namespace QuestomAssets.BeatSaber
         }
 
 
-        public static Stream ReadCombinedAssets(this IAssetsFileProvider fp, string assetsFilePath)
+        public static Stream ReadCombinedAssets(this IAssetsFileProvider fp, string assetsFilePath, out bool wasCombined)
         {
             string actualName = fp.CorrectAssetFilename(assetsFilePath);
 
@@ -90,6 +90,7 @@ namespace QuestomAssets.BeatSaber
             }
             else
             {
+                wasCombined = false;
                 return fp.GetReadStream(actualName);
             }
             MemoryStream msFullFile = new MemoryStream();
@@ -98,7 +99,7 @@ namespace QuestomAssets.BeatSaber
                 byte[] fileBytes = fp.Read(assetsFile);
                 msFullFile.Write(fileBytes, 0, fileBytes.Length);
             }
-
+            wasCombined = true;
             return msFullFile;
         }
 

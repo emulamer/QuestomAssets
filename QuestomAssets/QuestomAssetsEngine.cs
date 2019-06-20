@@ -26,7 +26,7 @@ namespace QuestomAssets
 
         //public string AssetsRootPath { get; private set; }
 
-        public bool HideOriginalPlaylists { get; private set; } = true;
+        public bool HideOriginalPlaylists { get; private set; } = false;
         private QaeConfig _config;
 
         /// <summary>
@@ -60,12 +60,12 @@ namespace QuestomAssets
             //clear out any of the internal refs that were used so the GC can clean things up
             foreach (var p in config.Playlists)
             {
-               // p.CoverArtSprite = null;
-              //  p.LevelPackObject = null;
-               // foreach (var song in p.SongList)
-             //   {
-              //      song.LevelData = null;
-               // }
+                // p.CoverArtSprite = null;
+                //  p.LevelPackObject = null;
+                // foreach (var song in p.SongList)
+                //   {
+                //      song.LevelData = null;
+                // }
             }
             //config.Saber = new SaberModel()
             //{
@@ -941,7 +941,7 @@ namespace QuestomAssets
             return textAssets.Object;
         }
 
-        
+
 
         private List<string> GetAssetsLoadOrderFile()
         {

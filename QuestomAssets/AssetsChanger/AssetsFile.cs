@@ -15,6 +15,7 @@ namespace QuestomAssets.AssetsChanger
         public string AssetsFilename { get; private set; }
         public string AssetsRootPath { get; private set; }
         public IAssetsFileProvider FileProvider { get; private set; }
+        public bool FileWasSplit { get; private set; }
 
         public AssetsFile(AssetsManager manager, IAssetsFileProvider fileProvider, string assetsRootPath, string assetsFileName, bool loadData = true)
         {
@@ -40,9 +41,11 @@ namespace QuestomAssets.AssetsChanger
 
         private void OpenBaseStream()
         {
-            var assetsFileStream = FileProvider.ReadCombinedAssets(AssetsRootPath.CombineFwdSlash(AssetsFilename));
+            bool wasCombined;
+            var assetsFileStream = FileProvider.ReadCombinedAssets(AssetsRootPath.CombineFwdSlash(AssetsFilename), out wasCombined);
             if (!assetsFileStream.CanSeek)
                 throw new NotSupportedException("Stream must support seeking!");
+            FileWasSplit = wasCombined;
             BaseStream = assetsFileStream;
         }
 
@@ -214,7 +217,8 @@ namespace QuestomAssets.AssetsChanger
             {
                 CloseBaseStream();
 
-                FileProvider.DeleteFiles(AssetsRootPath.CombineFwdSlash(AssetsFilename + ".split*"));
+
+                FileProvider.DeleteFiles(AssetsRootPath.CombineFwdSlash( AssetsFilename + ".split*"));
 
                 using (MemoryStream outputStream = new MemoryStream())
                 {
@@ -232,9 +236,35 @@ namespace QuestomAssets.AssetsChanger
 
                     objectsMS.CopyTo(outputStream);
 
+                    var outArray = outputStream.ToArray();
+
                     outputStream.Seek(0, SeekOrigin.Begin);
-                    FileProvider.Write(AssetsRootPath.CombineFwdSlash(AssetsFilename), outputStream.ToArray(), true, true);
+                    if (FileWasSplit)
+                    {
+                        int splitCtr = 0;
+                        byte[] buffer = new byte[1024 * 1024];
+                        do
+                        {
+                            Stream outFile = FileProvider.GetWriteStream($"{AssetsRootPath.CombineFwdSlash(AssetsFilename)}.split{splitCtr}");
+                            var readLen = (int)(outputStream.Length - outputStream.Position);
+                            if (readLen < buffer.Length)
+                            {
+                                outputStream.Read(buffer, 0, readLen);
+                                outFile.Write(buffer, 0, readLen);
+                                break;
+                            }
+                            outputStream.Read(buffer, 0, buffer.Length);
+                            outFile.Write(buffer, 0, buffer.Length);
+                            splitCtr++;
+                        } while (true);
+                        
+                    }
+                    else
+                    {
+                        FileProvider.Write(AssetsRootPath.CombineFwdSlash(AssetsFilename), outArray, true, true);
+                    }
                 }
+
                 _hasChanges = false;
                 FileProvider.Save();
                 OpenBaseStream();                

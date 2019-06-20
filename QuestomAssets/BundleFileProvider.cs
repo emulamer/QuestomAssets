@@ -95,6 +95,11 @@ namespace QuestomAssets
             throw new NotImplementedException();
         }
 
+        public Stream GetWriteStream(string filename)
+        {
+            throw new NotImplementedException();
+        }
+
         #endregion
 
         #region IDisposable Support

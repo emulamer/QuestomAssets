@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using QuestomAssets.AssetsChanger;
@@ -13,7 +14,8 @@ namespace QuestomAssets
         private string _rootFolder;
         private string _originalRoot;
         private bool _readonly;
-        
+        private List<Stream> _streamsToClose = new List<Stream>();
+
         public FolderFileProvider(string rootFolder, bool readOnly)
         {
             //if (!Directory.Exists(rootFolder))
@@ -100,7 +102,18 @@ namespace QuestomAssets
 
         public void Save(string toFile = null)
         {
-            //save is instant!
+            //save is instant!  but we'll clean up the streams we made
+            foreach (Stream s in _streamsToClose.ToList())
+            {
+                try
+                {
+                    s.Close();
+                    s.Dispose();
+                }
+                catch
+                { }
+                _streamsToClose.Remove(s);
+            }
         }
 
         public void Write(string filename, byte[] data, bool overwrite = true, bool compressData = true)
@@ -123,7 +136,7 @@ namespace QuestomAssets
             else if (FileExists(targetFilename))
                 Delete(targetFilename);
 
-            File.Copy(sourceFilename, Path.Combine(_rootFolder, FwdToFS(targetFilename)), overwrite);            
+            File.Copy(sourceFilename, Path.Combine(_rootFolder, FwdToFS(targetFilename)), overwrite);
         }
         public Stream GetWriteStream(string filename)
         {
@@ -131,7 +144,9 @@ namespace QuestomAssets
             if (FileExists(filename))
                 Delete(filename);
 
-            return File.Open(Path.Combine(_rootFolder, FwdToFS(filename)), FileMode.Create, FileAccess.ReadWrite);
+            var stream = File.Open(Path.Combine(_rootFolder, FwdToFS(filename)), FileMode.Create, FileAccess.ReadWrite);
+            _streamsToClose.Add(stream);
+            return stream;
         }
 
         private string FwdToFS(string path)
@@ -161,7 +176,7 @@ namespace QuestomAssets
                 disposedValue = true;
             }
         }
-        
+
         // This code added to correctly implement the disposable pattern.
         void IDisposable.Dispose()
         {

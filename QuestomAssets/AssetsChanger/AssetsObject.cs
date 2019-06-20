@@ -9,10 +9,6 @@ namespace QuestomAssets.AssetsChanger
 {
     public class AssetsObject
     {
-        //todo: maybe add this to help with some sort of scripting
-        //[JsonIgnore]
-        //public Guid QAEID { get; } = Guid.NewGuid();
-
         [JsonIgnore]
         public virtual byte[] Data { get; set; }
 

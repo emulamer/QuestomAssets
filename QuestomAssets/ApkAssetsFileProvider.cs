@@ -14,7 +14,7 @@ namespace QuestomAssets
         public bool ReadOnly { get; private set; }
         public string ApkFilename { get; private set; }
         public FileCacheMode CacheMode { get; set; }
-        private List<FileStream> _streamsToClose = new List<FileStream>();
+        private List<Stream> _streamsToClose = new List<Stream>();
 
         public bool IsOpen
         {
@@ -45,7 +45,7 @@ namespace QuestomAssets
         private static bool FilePatternMatch(string filename, string pattern)
         {
             Regex mask = new Regex(pattern.Replace(".", "[.]").Replace("*", ".*").Replace("?", "."));
-            return mask.IsMatch(filename);            
+            return mask.IsMatch(filename);
         }
 
         public void MkDir(string path)
@@ -81,7 +81,7 @@ namespace QuestomAssets
             }
             return found;
         }
-        
+
         private Stream GetCacheStream(string filename, Stream stream)
         {
             Stream outStream = null;
@@ -171,6 +171,20 @@ namespace QuestomAssets
             _zipFile.CompressionLevel = compressData ? Ionic.Zlib.CompressionLevel.Default : Ionic.Zlib.CompressionLevel.None;
         }
 
+        //todo: untested if this will work right
+        public Stream GetWriteStream(string filename)
+        {
+            CheckRO();
+            var entry = _zipFile.Entries.FirstOrDefault(x => x.FileName == filename);
+            if (entry != null)
+                _zipFile.RemoveEntry(entry);
+            var stream = new MemoryStream();
+            _zipFile.AddEntry(filename, stream);
+            _zipFile.CompressionLevel =Ionic.Zlib.CompressionLevel.Default;
+            _streamsToClose.Add(stream);            
+            return stream;
+        }
+
         public void Delete(string filename)
         {
             CheckRO();
@@ -203,6 +217,11 @@ namespace QuestomAssets
         public void Save(string toFile = null)
         {
             CheckRO();
+            foreach (var stream in _streamsToClose)
+            {
+                stream.Seek(0, SeekOrigin.Begin);
+                
+            }
             if (toFile != null)
                 _zipFile.Save(toFile);
             else
