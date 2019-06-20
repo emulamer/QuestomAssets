@@ -16,6 +16,7 @@ namespace QuestomAssets.AssetsChanger
         public string AssetsRootPath { get; private set; }
         public IAssetsFileProvider FileProvider { get; private set; }
         public bool FileWasSplit { get; private set; }
+        public Stream BaseStream { get; private set; }
 
         public AssetsFile(AssetsManager manager, IAssetsFileProvider fileProvider, string assetsRootPath, string assetsFileName, bool loadData = true)
         {
@@ -161,8 +162,7 @@ namespace QuestomAssets.AssetsChanger
             }
             return Metadata.Types.IndexOf(toFileType);
         }
-
-        public Stream BaseStream { get; private set; }
+               
 
         public void Write()
         {
@@ -174,9 +174,10 @@ namespace QuestomAssets.AssetsChanger
                 foreach (var obj in Metadata.ObjectInfos)
                 {
                     ctr++;
-                    obj.DataOffset = (int)objectsMS.Position;
+                    var offset = (int)objectsMS.Position;
                     obj.GetObjectForWrite().Write(writer);
                     writer.Flush();
+                    obj.DataOffset = offset;
                     var origSize = obj.DataSize;
                     obj.DataSize = (int)(objectsMS.Position - obj.DataOffset);
                     writer.AlignTo(8);
@@ -213,65 +214,68 @@ namespace QuestomAssets.AssetsChanger
             Header.MetadataSize = (int)metaMS.Length;
             objectsMS.Seek(0, SeekOrigin.Begin);
             metaMS.Seek(0, SeekOrigin.Begin);
-            try
+            lock (this)
             {
-                CloseBaseStream();
-
-
-                FileProvider.DeleteFiles(AssetsRootPath.CombineFwdSlash( AssetsFilename + ".split*"));
-
-                using (MemoryStream outputStream = new MemoryStream())
+                try
                 {
-                    using (AssetsWriter writer = new AssetsWriter(outputStream))
+                    CloseBaseStream();
+
+
+                    FileProvider.DeleteFiles(AssetsRootPath.CombineFwdSlash(AssetsFilename + ".split*"));
+
+                    using (MemoryStream outputStream = new MemoryStream())
                     {
-                        Header.Write(writer);
-                    }
-                    metaMS.CopyTo(outputStream);
-
-
-                    if (diff > 0)
-                    {
-                        outputStream.Write(new byte[diff], 0, diff);
-                    }
-
-                    objectsMS.CopyTo(outputStream);
-
-                    var outArray = outputStream.ToArray();
-
-                    outputStream.Seek(0, SeekOrigin.Begin);
-                    if (FileWasSplit)
-                    {
-                        int splitCtr = 0;
-                        byte[] buffer = new byte[1024 * 1024];
-                        do
+                        using (AssetsWriter writer = new AssetsWriter(outputStream))
                         {
-                            Stream outFile = FileProvider.GetWriteStream($"{AssetsRootPath.CombineFwdSlash(AssetsFilename)}.split{splitCtr}");
-                            var readLen = (int)(outputStream.Length - outputStream.Position);
-                            if (readLen < buffer.Length)
-                            {
-                                outputStream.Read(buffer, 0, readLen);
-                                outFile.Write(buffer, 0, readLen);
-                                break;
-                            }
-                            outputStream.Read(buffer, 0, buffer.Length);
-                            outFile.Write(buffer, 0, buffer.Length);
-                            splitCtr++;
-                        } while (true);
-                        
-                    }
-                    else
-                    {
-                        FileProvider.Write(AssetsRootPath.CombineFwdSlash(AssetsFilename), outArray, true, true);
-                    }
-                }
+                            Header.Write(writer);
+                        }
+                        metaMS.CopyTo(outputStream);
 
-                _hasChanges = false;
-                FileProvider.Save();
-                OpenBaseStream();                
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("CRITICAL: writing and reopening the file failed, the file is possibly destroyed and this object is in an unknown state.", ex);
+
+                        if (diff > 0)
+                        {
+                            outputStream.Write(new byte[diff], 0, diff);
+                        }
+
+                        objectsMS.CopyTo(outputStream);
+
+                        var outArray = outputStream.ToArray();
+
+                        outputStream.Seek(0, SeekOrigin.Begin);
+                        if (FileWasSplit)
+                        {
+                            int splitCtr = 0;
+                            byte[] buffer = new byte[1024 * 1024];
+                            do
+                            {
+                                Stream outFile = FileProvider.GetWriteStream($"{AssetsRootPath.CombineFwdSlash(AssetsFilename)}.split{splitCtr}");
+                                var readLen = (int)(outputStream.Length - outputStream.Position);
+                                if (readLen < buffer.Length)
+                                {
+                                    outputStream.Read(buffer, 0, readLen);
+                                    outFile.Write(buffer, 0, readLen);
+                                    break;
+                                }
+                                outputStream.Read(buffer, 0, buffer.Length);
+                                outFile.Write(buffer, 0, buffer.Length);
+                                splitCtr++;
+                            } while (true);
+
+                        }
+                        else
+                        {
+                            FileProvider.Write(AssetsRootPath.CombineFwdSlash(AssetsFilename), outArray, true, true);
+                        }
+                    }
+
+                    _hasChanges = false;
+                    FileProvider.Save();
+                    OpenBaseStream();
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("CRITICAL: writing and reopening the file failed, the file is possibly destroyed and this object is in an unknown state.", ex);
+                }
             }
         }
 

@@ -20,6 +20,7 @@ namespace QuestomAssets.AssetsChanger
         long GetFileSize(string filename);
         void Save(string toFile = null);
         Stream GetWriteStream(string filename);
+        bool UseCombinedStream { get; }
 
     }
 }

@@ -14,15 +14,18 @@ namespace QuestomAssets
         private string _rootFolder;
         private string _originalRoot;
         private bool _readonly;
-        private List<Stream> _streamsToClose = new List<Stream>();
+        private List<Stream> _writeStreamsToClose = new List<Stream>();
+        private List<Stream> _readStreamsToClose = new List<Stream>();
+        public bool UseCombinedStream { get; private set; }
 
-        public FolderFileProvider(string rootFolder, bool readOnly)
+        public FolderFileProvider(string rootFolder, bool readOnly, bool useCombinedStream = true)
         {
             //if (!Directory.Exists(rootFolder))
             //    throw new FileNotFoundException($"Root folder '{rootFolder}' does not exist!");
             _originalRoot = rootFolder;
             _rootFolder = rootFolder;
             _readonly = readOnly;
+            UseCombinedStream = useCombinedStream;
         }
 
         private void CheckRO()
@@ -74,6 +77,9 @@ namespace QuestomAssets
             foreach (var rawPath in Directory.EnumerateFiles(_rootFolder, "*", SearchOption.AllDirectories))
             {
                 string filename = rawPath;
+                if (!filename.StartsWith(_rootFolder))
+                    throw new Exception("Not sure why the found folder doesn't start with root path, check it out.");
+                filename = filename.Substring(_rootFolder.Length);
                 //if (filename.StartsWith(Path.DirectorySeparatorChar.ToString()))
                 //    filename = filename.Substring(1);
                 filename = FSToFwd(filename);
@@ -92,7 +98,9 @@ namespace QuestomAssets
 
         public Stream GetReadStream(string filename, bool bypassCache = false)
         {
-            return File.OpenRead(Path.Combine(_rootFolder, FwdToFS(filename)));
+            var readStream = File.OpenRead(Path.Combine(_rootFolder, FwdToFS(filename)));
+            _readStreamsToClose.Add(readStream);
+            return readStream;
         }
 
         public byte[] Read(string filename)
@@ -103,7 +111,12 @@ namespace QuestomAssets
         public void Save(string toFile = null)
         {
             //save is instant!  but we'll clean up the streams we made
-            foreach (Stream s in _streamsToClose.ToList())
+            CloseWriteStreams();
+        }
+
+        private void CloseWriteStreams()
+        {
+            foreach (Stream s in _writeStreamsToClose.ToList())
             {
                 try
                 {
@@ -112,7 +125,22 @@ namespace QuestomAssets
                 }
                 catch
                 { }
-                _streamsToClose.Remove(s);
+                _writeStreamsToClose.Remove(s);
+            }
+        }
+
+        private void CloseReadStreams()
+        {
+            foreach (Stream s in _readStreamsToClose.ToList())
+            {
+                try
+                {
+                    s.Close();
+                    s.Dispose();
+                }
+                catch
+                { }
+                _readStreamsToClose.Remove(s);
             }
         }
 
@@ -145,7 +173,7 @@ namespace QuestomAssets
                 Delete(filename);
 
             var stream = File.Open(Path.Combine(_rootFolder, FwdToFS(filename)), FileMode.Create, FileAccess.ReadWrite);
-            _streamsToClose.Add(stream);
+            _writeStreamsToClose.Add(stream);
             return stream;
         }
 
@@ -171,6 +199,8 @@ namespace QuestomAssets
             {
                 if (disposing)
                 {
+                    CloseReadStreams();
+                    CloseWriteStreams();
                 }
 
                 disposedValue = true;

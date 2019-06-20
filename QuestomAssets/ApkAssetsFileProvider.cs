@@ -23,12 +23,13 @@ namespace QuestomAssets
                 return _zipFile != null;
             }
         }
-
+        public bool UseCombinedStream { get; private set; }
         private ZipFile _zipFile;
         string _tempFolder = null;
-        public ApkAssetsFileProvider(string apkFilename, FileCacheMode cacheMode, bool readOnly = false, string tempFolder = null)
+        public ApkAssetsFileProvider(string apkFilename, FileCacheMode cacheMode, bool readOnly = false, string tempFolder = null, bool useCombinedStream = false)
         {
             _zipFile = new ZipFile(apkFilename, System.Text.Encoding.UTF8);
+            UseCombinedStream = useCombinedStream;
             ApkFilename = apkFilename;
             ReadOnly = readOnly;
             CacheMode = cacheMode;

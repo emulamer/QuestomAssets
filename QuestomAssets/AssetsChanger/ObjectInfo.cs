@@ -231,17 +231,23 @@ namespace QuestomAssets.AssetsChanger
             if (_object != null)
                 return _object;
 
-            using (var reader = ParentFile.GetReaderAtDataOffset())
+            lock (ParentFile)
             {
-                return new AssetsObject(this, reader);
+                using (var reader = ParentFile.GetReaderAtDataOffset())
+                {
+                    return new AssetsObject(this, reader);
+                }
             }
         }
 
         private void LoadObject()
         {
-            using (var reader = ParentFile.GetReaderAtDataOffset())
+            lock (ParentFile)
             {
-                _object = (T) Activator.CreateInstance(typeof(T), this, reader);
+                using (var reader = ParentFile.GetReaderAtDataOffset())
+                {
+                    _object = (T)Activator.CreateInstance(typeof(T), this, reader);
+                }
             }
         }
 

@@ -11,11 +11,13 @@ namespace QuestomAssets
     {
         private FileStream _fileStream;
         private BundleFile _bundleFile;
+        public bool UseCombinedStream { get; private set; }
 
-        public BundleFileProvider(string bundleFile, bool readOnly = true)
+        public BundleFileProvider(string bundleFile, bool readOnly = true, bool useCombinedStream = false)
         {
             _fileStream = File.Open(bundleFile, FileMode.Open, readOnly ? FileAccess.Read : FileAccess.ReadWrite);
             _bundleFile = new BundleFile(_fileStream);
+            UseCombinedStream = useCombinedStream;
         }
 
         private static bool FilePatternMatch(string filename, string pattern)

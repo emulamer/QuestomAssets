@@ -16,6 +16,13 @@ namespace QuestomAssets
                 path1 = path1.TrimEnd('/');
 
             path2 = path2.TrimStart('/');
+
+            if (string.IsNullOrWhiteSpace(path1))
+                return path2;
+
+            if (string.IsNullOrWhiteSpace(path2))
+                throw new ArgumentException("Path 2 is required!");
+
             return path1 + "/" + path2;
         }
         public static T DeepClone<T>(this IObjectInfo<T> source, AssetsFile toFile = null, List<CloneExclusion> exclusions = null, List<AssetsObject> addedObjects = null) where T : AssetsObject

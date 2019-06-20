@@ -11,7 +11,7 @@ using QuestomAssets.Models;
 namespace QuestomAssets
 {
 
-    public class QuestomAssetsEngine
+    public class QuestomAssetsEngine : IDisposable
     {
         private List<string> _assetsLoadOrder = new List<string>();
         private AssetsManager _manager;
@@ -76,46 +76,47 @@ namespace QuestomAssets
 
         public void UpdateConfig(BeatSaberQuestomConfig config)
         {
-            //todo: basic validation of the config
-
-            PreloadFiles();
-            //
-            //get existing playlists and their songs
-            //compare with new ones
-            //generate a diff
-            //etc.
-
-            //TODO; fix
-            //UpdateColorConfig(config.Colors);
-
-            //TODO: something broke
-            //UpdateTextConfig(manager, config.TextChanges);
-
-            //if (!UpdateSaberConfig(manager, config.Saber))
-            //{
-            //    Log.LogErr("Saber failed to update.  Aborting all changes.");
-            //}
-
-            if (config.Playlists != null)
+            lock (this)
             {
-                UpdateMusicConfig(config);
+                //todo: basic validation of the config
+
+                PreloadFiles();
+                //
+                //get existing playlists and their songs
+                //compare with new ones
+                //generate a diff
+                //etc.
+
+                //TODO; fix
+                //UpdateColorConfig(config.Colors);
+
+                //TODO: something broke
+                //UpdateTextConfig(manager, config.TextChanges);
+
+                //if (!UpdateSaberConfig(manager, config.Saber))
+                //{
+                //    Log.LogErr("Saber failed to update.  Aborting all changes.");
+                //}
+
+                if (config.Playlists != null)
+                {
+                    UpdateMusicConfig(config);
+                }
+                else
+                {
+                    Log.LogMsg("Playlists is null, song configuration will not be changed.");
+                }
+
+                Log.LogMsg("Serializing all assets...");
+                _manager.WriteAllOpenAssets();
+
+                FileProvider.Save();
             }
-            else
-            {
-                Log.LogMsg("Playlists is null, song configuration will not be changed.");
-            }
-
-            Log.LogMsg("Serializing all assets...");
-            _manager.WriteAllOpenAssets();
-
-            FileProvider.Save();
-
         }
 
         private MainLevelPackCollectionObject GetMainLevelPack()
         {
             var mainLevelPack = _manager.MassFirstOrDefaultAsset<MainLevelPackCollectionObject>(x => true)?.Object;
-            var ct = _manager.MassFindAssets<MainLevelPackCollectionObject>(x => true).ToList();
             if (mainLevelPack == null)
                 throw new Exception("Unable to find the main level pack collection object!");
             return mainLevelPack;
@@ -234,8 +235,6 @@ namespace QuestomAssets
                         continue;
                     }
                 }
-                else
-                    throw new Exception($"Failed to load song {song.SongName}");
 
                 playlist.SongList.Remove(song);
             }
@@ -247,7 +246,7 @@ namespace QuestomAssets
             BeatmapLevelDataObject level = null;
             if (!string.IsNullOrWhiteSpace(song.SongID))
             {
-                var levels = songsAssetFile.FindAssets<BeatmapLevelDataObject>(x => x.Object.LevelID == song.SongID).Select(x => x.Object).ToList();
+                var levels = _manager.MassFindAssets<BeatmapLevelDataObject>(x => x.Object.LevelID == song.SongID, false).Select(x => x.Object).ToList();
                 if (levels.Count() > 0)
                 {
                     if (levels.Count() > 1)
@@ -650,36 +649,39 @@ namespace QuestomAssets
 
         private BeatSaberQuestomConfig GetConfig()
         {
-            BeatSaberQuestomConfig config = new BeatSaberQuestomConfig();
-            var mainPack = GetMainLevelPack();
-            CustomLevelLoader loader = new CustomLevelLoader(GetSongsAssetsFile(), _config);
-            foreach (var packPtr in mainPack.BeatmapLevelPacks)
+            lock (this)
             {
-                var pack = packPtr.Target.Object;
-                if (HideOriginalPlaylists && BSConst.KnownLevelPackIDs.Contains(pack.PackID))
-                    continue;
-
-                var packModel = new BeatSaberPlaylist() { PlaylistName = pack.PackName, PlaylistID = pack.PackID, LevelPackObject = pack };
-                var collection = pack.BeatmapLevelCollection.Object;
-
-                foreach (var songPtr in collection.BeatmapLevels)
+                BeatSaberQuestomConfig config = new BeatSaberQuestomConfig();
+                var mainPack = GetMainLevelPack();
+                CustomLevelLoader loader = new CustomLevelLoader(GetSongsAssetsFile(), _config);
+                foreach (var packPtr in mainPack.BeatmapLevelPacks)
                 {
-                    var songObj = songPtr.Object;
-                    var songModel = new BeatSaberSong()
+                    var pack = packPtr.Target.Object;
+                    if (HideOriginalPlaylists && BSConst.KnownLevelPackIDs.Contains(pack.PackID))
+                        continue;
+
+                    var packModel = new BeatSaberPlaylist() { PlaylistName = pack.PackName, PlaylistID = pack.PackID, LevelPackObject = pack };
+                    var collection = pack.BeatmapLevelCollection.Object;
+
+                    foreach (var songPtr in collection.BeatmapLevels)
                     {
-                        LevelAuthorName = songObj.LevelAuthorName,
-                        SongID = songObj.LevelID,
-                        SongAuthorName = songObj.SongAuthorName,
-                        SongName = songObj.SongName,
-                        SongSubName = songObj.SongSubName,
-                        LevelData = songObj
-                    };
-                    songModel.CoverArtFilename = loader.GetCoverImageFilename(songObj);
-                    packModel.SongList.Add(songModel);
+                        var songObj = songPtr.Object;
+                        var songModel = new BeatSaberSong()
+                        {
+                            LevelAuthorName = songObj.LevelAuthorName,
+                            SongID = songObj.LevelID,
+                            SongAuthorName = songObj.SongAuthorName,
+                            SongName = songObj.SongName,
+                            SongSubName = songObj.SongSubName,
+                            LevelData = songObj
+                        };
+                        songModel.CoverArtFilename = loader.GetCoverImageFilename(songObj);
+                        packModel.SongList.Add(songModel);
+                    }
+                    config.Playlists.Add(packModel);
                 }
-                config.Playlists.Add(packModel);
+                return config;
             }
-            return config;
         }
 
         private void PreloadFiles()
@@ -969,6 +971,34 @@ namespace QuestomAssets
 
             return loadOrder;
         }
+
+        #region IDisposable Support
+        private bool disposedValue = false; // To detect redundant calls
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    _manager.Dispose();
+                    _manager = null;
+                }
+
+
+
+                disposedValue = true;
+            }
+        }
+
+        // This code added to correctly implement the disposable pattern.
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(true);
+
+        }
+        #endregion
 
 
     }
