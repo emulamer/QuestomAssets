@@ -33,5 +33,20 @@ namespace QuestomAssets.Models
         /// </summary>
         public string CustomSongPath { get; set; }
 
+        public byte[] TryGetCoverPngBytes()
+        {
+            if (LevelData == null)
+                return null;
+            try
+            {
+                return QuestomAssets.Utils.ImageUtils.Instance.TextureToPngBytes(LevelData.CoverImageTexture2D?.Object);
+            }
+            catch (Exception ex)
+            {
+                Log.LogErr("Unable to get cover PNG bytes", ex);
+                return null;
+            }
+        }
+
     }
 }
