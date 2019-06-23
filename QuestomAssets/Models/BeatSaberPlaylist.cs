@@ -48,17 +48,17 @@ namespace QuestomAssets.Models
         [JsonIgnore]
         internal SpriteObject CoverArtSprite { get; set; }
 
-        private string _coverArtFilename;
-        public string CoverArtFilename
-        {
-            get => _coverArtFilename;
-            set
-            {
-                if (_coverArtFilename != value)
-                    PropChanged(nameof(CoverArtFilename));
-                _coverArtFilename = value;
-            }
-        }
+        //private string _coverArtFilename;
+        //public string CoverArtFilename
+        //{
+        //    get => _coverArtFilename;
+        //    set
+        //    {
+        //        if (_coverArtFilename != value)
+        //            PropChanged(nameof(CoverArtFilename));
+        //        _coverArtFilename = value;
+        //    }
+        //}
 
         private string _playlistID;
         public string PlaylistID
@@ -82,7 +82,9 @@ namespace QuestomAssets.Models
             }
         }
         
-        public ObservableCollection<BeatSaberSong> SongList { get; private set; } 
+        public ObservableCollection<BeatSaberSong> SongList { get; private set; }
+
+        public byte[] CoverImageBytes { get; set; }
 
         public byte[] TryGetCoverPngBytes()
         {

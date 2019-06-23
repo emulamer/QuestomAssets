@@ -20,7 +20,7 @@ namespace QuestomAssets.BeatSaber
         public Single NoteJumpMovementSpeed { get; set; }
 
         [JsonProperty("_noteJumpStartBeatOffset")]
-        public int NoteJumpStartBeatOffset { get; set; }
+        public Single NoteJumpStartBeatOffset { get; set; }
 
         [JsonProperty("_beatmapData")]
         public BeatmapDataObject BeatmapData { get; set; }

@@ -58,7 +58,12 @@ namespace QuestomAssets.Models
                 return null;
             try
             {
-                return QuestomAssets.Utils.ImageUtils.Instance.TextureToPngBytes(LevelData.CoverImageTexture2D?.Object);
+                bool texLoaded = LevelData.CoverImageTexture2D.Target.IsLoaded;
+                var png = QuestomAssets.Utils.ImageUtils.Instance.TextureToPngBytes(LevelData.CoverImageTexture2D?.Object);
+                if (!texLoaded)
+                    LevelData.CoverImageTexture2D.Target.FreeObject();
+
+                return png;
             }
             catch (Exception ex)
             {

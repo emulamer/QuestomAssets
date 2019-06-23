@@ -5,6 +5,7 @@ using System.Text;
 using QuestomAssets.BeatSaber;
 using System.ComponentModel;
 using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace QuestomAssets.Models
 {
@@ -43,6 +44,53 @@ namespace QuestomAssets.Models
         private void Playlists_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             PropChanged(nameof(Playlists));
+        }
+
+        public bool Matches(BeatSaberQuestomConfig config)
+        {
+            if (this.Playlists.Count != config.Playlists.Count)
+                return false;
+
+            for (int p = 0; p < Playlists.Count; p++)
+            {
+                var thisOne = Playlists[p];
+                var thatOne = config.Playlists[p];
+                if (thisOne.PlaylistID != thatOne.PlaylistID)
+                    return false;
+                if (thisOne.PlaylistName != thatOne.PlaylistName)
+                    return false;
+                if (thisOne.SongList.Count != thatOne.SongList.Count)
+                    return false;
+
+                for (int s = 0; s < thisOne.SongList.Count; s++)
+                {
+                    var thisSong = thisOne.SongList[s];
+                    var thatSong = thatOne.SongList[s];
+                    if (thisSong.SongID != thatSong.SongID)
+                        return false;
+                }
+            }
+
+            if (this.Saber?.SaberID != config.Saber?.SaberID)
+                return false;
+
+            //lazy copy/paste.  Make a proper comparer
+            if (this.LeftColor?.A != config?.LeftColor?.A || this.LeftColor?.R != config?.LeftColor?.R || this.LeftColor?.G != config?.LeftColor?.G || this.LeftColor?.B != config?.LeftColor?.B)
+                return false;
+            if (this.RightColor?.A != config?.RightColor?.A || this.RightColor?.R != config?.RightColor?.R || this.RightColor?.G != config?.RightColor?.G || this.RightColor?.B != config?.RightColor?.B)
+                return false;
+            if (this.TextChanges == null && config.TextChanges != null || this.TextChanges != null && config.TextChanges == null)
+                return false;
+            if (this.TextChanges != null)
+            {
+                if (this.TextChanges.Count != config.TextChanges.Count)
+                {
+                    //I think this is right...
+                    if (TextChanges.Any(x => !config.TextChanges.Any(y => y.Item1 == x.Item1 && y.Item2 == x.Item2)))
+                        return false;
+                }
+            }
+            return true;
         }
 
         /// <summary>

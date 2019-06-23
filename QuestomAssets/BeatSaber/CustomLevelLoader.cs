@@ -224,26 +224,24 @@ namespace QuestomAssets.BeatSaber
             return null;
         }
 
-        public SpriteObject LoadPackCover(string assetName, string packCoverImage)
+        public SpriteObject LoadPackCover(string assetName, byte[] coverImageBytes)
         {
             Texture2DObject packCover = null;
-            if (!string.IsNullOrWhiteSpace(packCoverImage))
+
+            try
             {
-                try
+                var loadedCover = new Texture2DObject(_assetsFile)
                 {
-                    var loadedCover = new Texture2DObject(_assetsFile)
-                    {
-                        Name = assetName
-                    };
-                    byte[] coverImageBytes = _config.SongFileProvider.Read(_config.PlaylistArtPath.CombineFwdSlash(packCoverImage));
-                    ImageUtils.Instance.AssignImageToTexture(coverImageBytes, loadedCover, 1024, 1024);
-                    packCover = loadedCover;
-                }
-                catch (Exception ex)
-                {
-                    Log.LogErr($"Failed to convert to texture, falling back to default cover image", ex);
-                }
+                    Name = assetName
+                };
+                ImageUtils.Instance.AssignImageToTexture(coverImageBytes, loadedCover, 1024, 1024);
+                packCover = loadedCover;
             }
+            catch (Exception ex)
+            {
+                Log.LogErr($"Failed to convert to texture, falling back to default cover image", ex);
+            }
+
             if (packCover == null)
             {
                 packCover = new Texture2DObject(_assetsFile)

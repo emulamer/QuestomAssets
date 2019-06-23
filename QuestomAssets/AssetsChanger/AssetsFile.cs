@@ -162,120 +162,161 @@ namespace QuestomAssets.AssetsChanger
             }
             return Metadata.Types.IndexOf(toFileType);
         }
-               
 
-        public void Write()
+        //not enough ram on the quest... have to do it to the filesystem.  this should probably be an option to use memory
+        //      assuming this lib keeps working on pc
+        private bool UseFileCache = true;
+        private List<string> tempFiles = new List<string>();
+
+        private Stream GetTempStream()
         {
-            MemoryStream objectsMS = new MemoryStream();
-            MemoryStream metaMS = new MemoryStream();
-            using (AssetsWriter writer = new AssetsWriter(objectsMS))
+            if (UseFileCache)
             {
-                int ctr = 0;
-                foreach (var obj in Metadata.ObjectInfos)
-                {
-                    ctr++;
-                    var offset = (int)objectsMS.Position;
-                    obj.GetObjectForWrite().Write(writer);
-                    writer.Flush();
-                    obj.DataOffset = offset;
-                    var origSize = obj.DataSize;
-                    obj.DataSize = (int)(objectsMS.Position - obj.DataOffset);
-                    writer.AlignTo(8);
-                }
-            }
-            using (AssetsWriter writer = new AssetsWriter(metaMS))
-            {
-                Metadata.Write(writer);
-            }
-
-            Header.FileSize = Header.HeaderSize + (int)objectsMS.Length + (int)metaMS.Length;
-            Header.ObjectDataOffset = Header.HeaderSize + (int)metaMS.Length;
-
-            int diff;
-            int alignment = 16; //or 32, I don't know which
-            //data has to be at least 4096 inward from the start of the file
-            if (Header.ObjectDataOffset < 4096)
-            {
-                diff = 4096 - Header.ObjectDataOffset;
+                string tempFile = Path.GetTempFileName();
+                tempFiles.Add(tempFile);
+                return File.Open(tempFile, FileMode.Create, FileAccess.ReadWrite);
             }
             else
             {
-                diff = alignment - (Header.ObjectDataOffset % alignment);
-                if (diff == alignment)
-                    diff = 0;
+                return new MemoryStream();
             }
-
-            if (diff > 0)
-            {
-                Header.ObjectDataOffset += diff;
-                Header.FileSize += diff;
-            }
-
-            Header.MetadataSize = (int)metaMS.Length;
-            objectsMS.Seek(0, SeekOrigin.Begin);
-            metaMS.Seek(0, SeekOrigin.Begin);
-            lock (this)
+        }
+        private void CleanupTempFiles()
+        {
+            foreach (string temp in tempFiles.ToList())
             {
                 try
                 {
-                    CloseBaseStream();
+                    File.Delete(temp);
+                    tempFiles.Remove(temp);
+                }
+                catch (Exception ex)
+                { Log.LogErr("Unable to delete temp file created during asset save!", ex); }
+            }
+        }
 
-
-                    FileProvider.DeleteFiles(AssetsRootPath.CombineFwdSlash(AssetsFilename + ".split*"));
-
-                    using (MemoryStream outputStream = new MemoryStream())
+        public void Write()
+        {
+            try
+            {
+                using (Stream objectsMS = GetTempStream())
+                {
+                    using (Stream metaMS = GetTempStream())
                     {
-                        using (AssetsWriter writer = new AssetsWriter(outputStream))
+                        using (AssetsWriter writer = new AssetsWriter(objectsMS))
                         {
-                            Header.Write(writer);
-                        }
-                        metaMS.CopyTo(outputStream);
-
-
-                        if (diff > 0)
-                        {
-                            outputStream.Write(new byte[diff], 0, diff);
-                        }
-
-                        objectsMS.CopyTo(outputStream);
-
-                        var outArray = outputStream.ToArray();
-
-                        outputStream.Seek(0, SeekOrigin.Begin);
-                        if (FileWasSplit)
-                        {
-                            int splitCtr = 0;
-                            byte[] buffer = new byte[1024 * 1024];
-                            do
+                            int ctr = 0;
+                            foreach (var obj in Metadata.ObjectInfos)
                             {
-                                Stream outFile = FileProvider.GetWriteStream($"{AssetsRootPath.CombineFwdSlash(AssetsFilename)}.split{splitCtr}");
-                                var readLen = (int)(outputStream.Length - outputStream.Position);
-                                if (readLen < buffer.Length)
-                                {
-                                    outputStream.Read(buffer, 0, readLen);
-                                    outFile.Write(buffer, 0, readLen);
-                                    break;
-                                }
-                                outputStream.Read(buffer, 0, buffer.Length);
-                                outFile.Write(buffer, 0, buffer.Length);
-                                splitCtr++;
-                            } while (true);
+                                ctr++;
+                                var offset = (int)objectsMS.Position;
+                                obj.GetObjectForWrite().Write(writer);
+                                writer.Flush();
+                                obj.DataOffset = offset;
+                                var origSize = obj.DataSize;
+                                obj.DataSize = (int)(objectsMS.Position - obj.DataOffset);
+                                writer.AlignTo(8);
+                            }
+                        }
+                        using (AssetsWriter writer = new AssetsWriter(metaMS))
+                        {
+                            Metadata.Write(writer);
+                        }
 
+                        Header.FileSize = Header.HeaderSize + (int)objectsMS.Length + (int)metaMS.Length;
+                        Header.ObjectDataOffset = Header.HeaderSize + (int)metaMS.Length;
+
+                        int diff;
+                        int alignment = 16; //or 32, I don't know which
+                                            //data has to be at least 4096 inward from the start of the file
+                        if (Header.ObjectDataOffset < 4096)
+                        {
+                            diff = 4096 - Header.ObjectDataOffset;
                         }
                         else
                         {
-                            FileProvider.Write(AssetsRootPath.CombineFwdSlash(AssetsFilename), outArray, true, true);
+                            diff = alignment - (Header.ObjectDataOffset % alignment);
+                            if (diff == alignment)
+                                diff = 0;
+                        }
+
+                        if (diff > 0)
+                        {
+                            Header.ObjectDataOffset += diff;
+                            Header.FileSize += diff;
+                        }
+
+                        Header.MetadataSize = (int)metaMS.Length;
+                        objectsMS.Seek(0, SeekOrigin.Begin);
+                        metaMS.Seek(0, SeekOrigin.Begin);
+                        lock (this)
+                        {
+                            try
+                            {
+                                CloseBaseStream();
+
+
+                                FileProvider.DeleteFiles(AssetsRootPath.CombineFwdSlash(AssetsFilename + ".split*"));
+
+                                using (Stream outputStream = GetTempStream())
+                                {
+                                    using (AssetsWriter writer = new AssetsWriter(outputStream))
+                                    {
+                                        Header.Write(writer);
+                                    }
+                                    metaMS.CopyTo(outputStream);
+
+
+                                    if (diff > 0)
+                                    {
+                                        outputStream.Write(new byte[diff], 0, diff);
+                                    }
+
+                                    objectsMS.CopyTo(outputStream);
+
+                                    outputStream.Seek(0, SeekOrigin.Begin);
+                                    if (FileWasSplit)
+                                    {
+                                        int splitCtr = 0;
+                                        byte[] buffer = new byte[1024 * 1024];
+                                        do
+                                        {
+                                            Stream outFile = FileProvider.GetWriteStream($"{AssetsRootPath.CombineFwdSlash(AssetsFilename)}.split{splitCtr}");
+                                            var readLen = (int)(outputStream.Length - outputStream.Position);
+                                            if (readLen < buffer.Length)
+                                            {
+                                                outputStream.Read(buffer, 0, readLen);
+                                                outFile.Write(buffer, 0, readLen);
+                                                break;
+                                            }
+                                            outputStream.Read(buffer, 0, buffer.Length);
+                                            outFile.Write(buffer, 0, buffer.Length);
+                                            splitCtr++;
+                                        } while (true);
+
+                                    }
+                                    else
+                                    {
+                                        Stream writeStream = FileProvider.GetWriteStream(AssetsRootPath.CombineFwdSlash(AssetsFilename));
+                                        outputStream.CopyTo(writeStream);
+                                    }
+                                }
+
+                                _hasChanges = false;
+                                FileProvider.Save();
+                                OpenBaseStream();
+                            }
+                            catch (Exception ex)
+                            {
+                                throw new Exception("CRITICAL: writing and reopening the file failed, the file is possibly destroyed and this object is in an unknown state.", ex);
+                            }
                         }
                     }
-
-                    _hasChanges = false;
-                    FileProvider.Save();
-                    OpenBaseStream();
                 }
-                catch (Exception ex)
-                {
-                    throw new Exception("CRITICAL: writing and reopening the file failed, the file is possibly destroyed and this object is in an unknown state.", ex);
-                }
+            }
+            finally
+            {
+                CleanupTempFiles();
             }
         }
 

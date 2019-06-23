@@ -18,6 +18,12 @@ namespace QuestomAssets
             _logSinks.Add(logSink);
         }
 
+        public static void RemoveLogSink(ILog logSink)
+        {
+            if (_logSinks.Contains(logSink))
+                _logSinks.Remove(logSink);
+        }
+
         public static void LogMsg(string message, params object[] args)
         {
             _logSinks.ForEach(x =>

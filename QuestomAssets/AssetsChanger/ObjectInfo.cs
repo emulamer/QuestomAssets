@@ -24,6 +24,7 @@ namespace QuestomAssets.AssetsChanger
         T Clone(AssetsFile toFile = null);
         bool IsLoaded { get; }
         AssetsObject GetObjectForWrite();
+        void FreeObject();
     }
     public class ObjectInfo<T> : IObjectInfo<T> where T: AssetsObject
     {
@@ -221,6 +222,11 @@ namespace QuestomAssets.AssetsChanger
             {
                 return _object != null;
             }
+        }
+
+        public void FreeObject()
+        {
+            _object = null;
         }
         
         /// <summary>
