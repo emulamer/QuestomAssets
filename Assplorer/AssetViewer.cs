@@ -102,7 +102,7 @@ namespace Assplorer
                     try
                     {
                         _fileProvider = new FolderFileProvider(fbd.SelectedPath, false);
-                        _manager = new AssetsManager(_fileProvider, "", BSConst.GetAssetTypeMap());
+                        _manager = new AssetsManager(_fileProvider,"", BSConst.GetAssetTypeMap());
                         if (_fileProvider.FindFiles("globalgamemanagers").Count > 0)
                             _manager.GetAssetsFile("globalgamemanagers.assets");
                         if (_fileProvider.FindFiles("globalgamemanagers.assets*").Count > 0)

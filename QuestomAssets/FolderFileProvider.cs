@@ -22,10 +22,18 @@ namespace QuestomAssets
         {
             //if (!Directory.Exists(rootFolder))
             //    throw new FileNotFoundException($"Root folder '{rootFolder}' does not exist!");
-            _originalRoot = rootFolder;
-            _rootFolder = rootFolder;
+            _originalRoot = AddTrailSlash(rootFolder);
+            _rootFolder = _originalRoot;
             _readonly = readOnly;
             UseCombinedStream = useCombinedStream;
+        }
+
+        private string AddTrailSlash(string path)
+        {
+            if (path.Length > 0 && !path.EndsWith(Path.DirectorySeparatorChar.ToString()))
+                return path + Path.DirectorySeparatorChar;
+            else
+                return path;
         }
 
         private void CheckRO()
@@ -73,6 +81,7 @@ namespace QuestomAssets
         public List<string> FindFiles(string pattern)
         {
             List<string> fnames = new List<string>();
+            pattern = FSToFwd(pattern);
 
             foreach (var rawPath in Directory.EnumerateFiles(_rootFolder, "*", SearchOption.AllDirectories))
             {

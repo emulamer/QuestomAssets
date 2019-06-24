@@ -9,6 +9,7 @@ using System.Drawing;
 using CommandLine;
 using Newtonsoft.Json;
 using static QuestomAssets.Utils.Patcher;
+using Newtonsoft.Json.Linq;
 
 namespace BeatmapAssetMaker
 {
@@ -85,242 +86,276 @@ namespace BeatmapAssetMaker
     class Program
     {
 
+        public static void FindMyFavs()
+        {
+
+            string playlist = @"C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\Playlists\SongBrowserPluginFavorites.json";
+            string customSongsFolder2 = @"C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\CustomLevels";
+            string copyToFolder = @"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\dist\ToConvert";
+            dynamic favs = JObject.Parse(File.ReadAllText(playlist));
+
+            JArray songs = favs["songs"] as JArray;
+            var songsToCopy = (from x in songs select x["key"].Value<string>()).ToList();
+            foreach (var key in songsToCopy)
+            {
+                if (string.IsNullOrWhiteSpace(key))
+                    continue;
+                string songPath = Path.Combine(customSongsFolder2, key) + "\\";
+                string findDir = Directory.EnumerateDirectories(customSongsFolder2).FirstOrDefault(x => Path.GetFileName(x).StartsWith(key));
+                if (findDir == null)
+                {
+                    Console.WriteLine($"Missing custom song: {songPath}");
+                    continue;
+                }
+                try
+                {
+                    new Microsoft.VisualBasic.Devices.Computer().FileSystem.CopyDirectory(findDir + "\\", Path.Combine(copyToFolder, Path.GetFileName(findDir)));
+                }
+                catch
+                {
+                    Console.WriteLine($"Error copying {findDir}");
+                }
+            }
+            return ;
+        }
+
         static int Main(string[] args)
         {
-            QuestomAssets.Utils.ImageUtils.Instance = new ImageUtilsWin();
-            return CommandLine.Parser.Default.ParseArguments<OutputConfig, UpdateConfig, FolderMode>(args)
-              .MapResult(
-                (OutputConfig opts) => OutputConfig(opts),
-                (UpdateConfig opts) => UpdateConfig(opts),
-                (FolderMode opts) => FolderMode(opts),
-                errs => 1);
+            return -1;
+            //QuestomAssets.Utils.ImageUtils.Instance = new ImageUtilsWin();
+            //return CommandLine.Parser.Default.ParseArguments<OutputConfig, UpdateConfig, FolderMode>(args)
+            //  .MapResult(
+            //    (OutputConfig opts) => OutputConfig(opts),
+            //    (UpdateConfig opts) => UpdateConfig(opts),
+            //    (FolderMode opts) => FolderMode(opts),
+            //    errs => 1);
         }
 
-        static int UpdateConfig(UpdateConfig args)
-        {
+        //static int UpdateConfig(UpdateConfig args)
+        //{
 
-            QuestomAssets.Log.SetLogSink(new ConsoleSink());
+        //    QuestomAssets.Log.SetLogSink(new ConsoleSink());
 
-            try
-            {
-                Log.LogMsg($"Opening APK at '{args.ApkFile}'");
+        //    try
+        //    {
+        //        Log.LogMsg($"Opening APK at '{args.ApkFile}'");
                 
-                using (var apkFileProvider = new ApkAssetsFileProvider(args.ApkFile, FileCacheMode.Memory, false))
-                {
-                    QuestomAssetsEngine q = new QuestomAssetsEngine(apkFileProvider, BSConst.KnownFiles.AssetsRootPath);
-                    if (!args.NoPatch)
-                    {
-                        Log.LogMsg($"Applying patches...");
-                        if (!q.ApplyPatchSettingsFile())
-                        {
-                            Log.LogErr("Failed to apply patches.  Cannot continue.");
-                            return -1;
-                        }
-                        Log.LogMsg("Patches complete");
-                    }
-                    else
-                    {
-                        Log.LogMsg("Skipping patches.");
-                    }
+        //        using (var apkFileProvider = new ApkAssetsFileProvider(args.ApkFile, FileCacheMode.Memory, false))
+        //        {
+        //            QuestomAssetsEngine q = new QuestomAssetsEngine(apkFileProvider, BSConst.KnownFiles.AssetsRootPath);
+        //            if (!args.NoPatch)
+        //            {
+        //                Log.LogMsg($"Applying patches...");
+        //                if (!q.ApplyPatchSettingsFile())
+        //                {
+        //                    Log.LogErr("Failed to apply patches.  Cannot continue.");
+        //                    return -1;
+        //                }
+        //                Log.LogMsg("Patches complete");
+        //            }
+        //            else
+        //            {
+        //                Log.LogMsg("Skipping patches.");
+        //            }
 
-                    BeatSaberQuestomConfig config = null;
-                    TextReader inReader = null;
-                    string from = string.IsNullOrWhiteSpace(args.InputFile) ? "stdin" : args.InputFile;
-                    Log.LogMsg($"Reading configuration from {from}...");
-                    try
-                    {
-                        if (string.IsNullOrWhiteSpace(args.InputFile))
-                        {
-                            inReader = Console.In;
-                        }
-                        else
-                        {
-                            inReader = new StreamReader(args.InputFile);
-                        }
-                        using (var jReader = new JsonTextReader(inReader))
-                            config = new JsonSerializer().Deserialize<BeatSaberQuestomConfig>(jReader);
-                    }
-                    finally
-                    {
-                        if (inReader != null)
-                        {
-                            inReader.Dispose();
-                            inReader = null;
-                        }
-                    }
-
-
-                    Log.LogMsg($"Config parsed");
+        //            BeatSaberQuestomConfig config = null;
+        //            TextReader inReader = null;
+        //            string from = string.IsNullOrWhiteSpace(args.InputFile) ? "stdin" : args.InputFile;
+        //            Log.LogMsg($"Reading configuration from {from}...");
+        //            try
+        //            {
+        //                if (string.IsNullOrWhiteSpace(args.InputFile))
+        //                {
+        //                    inReader = Console.In;
+        //                }
+        //                else
+        //                {
+        //                    inReader = new StreamReader(args.InputFile);
+        //                }
+        //                using (var jReader = new JsonTextReader(inReader))
+        //                    config = new JsonSerializer().Deserialize<BeatSaberQuestomConfig>(jReader);
+        //            }
+        //            finally
+        //            {
+        //                if (inReader != null)
+        //                {
+        //                    inReader.Dispose();
+        //                    inReader = null;
+        //                }
+        //            }
 
 
+        //            Log.LogMsg($"Config parsed");
 
-                    Log.LogMsg("Applying new configuration...");
-                    q.UpdateConfig(config);
-                    Log.LogMsg("Configuration updated");
-                    Log.LogMsg("Signing APK...");
-                    q.SignAPK();
-                    Log.LogMsg("APK signed.");
-                }
+
+
+        //            Log.LogMsg("Applying new configuration...");
+        //            q.UpdateConfig(config);
+        //            Log.LogMsg("Configuration updated");
+        //            Log.LogMsg("Signing APK...");
+        //            q.SignAPK();
+        //            Log.LogMsg("APK signed.");
+        //        }
                 
-                return 0;
-            }
-            catch (Exception ex)
-            {
-                Log.LogErr("Something went horribly wrong", ex);
-                return -1;
-            }
-        }
+        //        return 0;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Log.LogErr("Something went horribly wrong", ex);
+        //        return -1;
+        //    }
+        //}
 
-        static int OutputConfig(OutputConfig args)
-        {
-            if (!string.IsNullOrWhiteSpace(args.OutputFile) || args.ForceLog)
-            {
-                Log.SetLogSink(new ConsoleSink());
-            }
+        //static int OutputConfig(OutputConfig args)
+        //{
+        //    if (!string.IsNullOrWhiteSpace(args.OutputFile) || args.ForceLog)
+        //    {
+        //        Log.SetLogSink(new ConsoleSink());
+        //    }
 
-            try
-            {
+        //    try
+        //    {
 
-                Log.LogMsg($"Opening APK at '{args.ApkFile}'");
-                using (var apkFileProvider = new ApkAssetsFileProvider(args.ApkFile, FileCacheMode.Memory, false))
-                {
-                    QuestomAssetsEngine q = new QuestomAssetsEngine(apkFileProvider, BSConst.KnownFiles.AssetsRootPath);
+        //        Log.LogMsg($"Opening APK at '{args.ApkFile}'");
+        //        using (var apkFileProvider = new ApkAssetsFileProvider(args.ApkFile, FileCacheMode.Memory, false))
+        //        {
+        //            QuestomAssetsEngine q = new QuestomAssetsEngine(apkFileProvider, BSConst.KnownFiles.AssetsRootPath);
 
-                    Log.LogMsg($"Loading configuration...");
-                    var cfg = q.GetCurrentConfig(args.NoImages);
-                    Log.LogMsg($"Configuration loaded");
+        //            Log.LogMsg($"Loading configuration...");
+        //            var cfg = q.GetCurrentConfig(args.NoImages);
+        //            Log.LogMsg($"Configuration loaded");
 
-                    TextWriter outWriter = null;
-                    try
-                    {
-                        string toPlace = string.IsNullOrWhiteSpace(args.OutputFile) ? "stdout" : args.OutputFile;
-                        Log.LogMsg($"Writing configuration to {toPlace}...");
-                        if (string.IsNullOrWhiteSpace(args.OutputFile))
-                        {
-                            //write to stdout
-                            outWriter = Console.Out;
-                            outWriter.WriteLine("/* JSON START */");
-                        }
-                        else
-                        {
-                            //write to file
-                            outWriter = new StreamWriter(new FileStream(args.OutputFile, FileMode.Create));
-                        }
-                        var ser = new JsonSerializer();
-                        ser.Formatting = Formatting.Indented;
-                        ser.Serialize(outWriter, cfg);
+        //            TextWriter outWriter = null;
+        //            try
+        //            {
+        //                string toPlace = string.IsNullOrWhiteSpace(args.OutputFile) ? "stdout" : args.OutputFile;
+        //                Log.LogMsg($"Writing configuration to {toPlace}...");
+        //                if (string.IsNullOrWhiteSpace(args.OutputFile))
+        //                {
+        //                    //write to stdout
+        //                    outWriter = Console.Out;
+        //                    outWriter.WriteLine("/* JSON START */");
+        //                }
+        //                else
+        //                {
+        //                    //write to file
+        //                    outWriter = new StreamWriter(new FileStream(args.OutputFile, FileMode.Create));
+        //                }
+        //                var ser = new JsonSerializer();
+        //                ser.Formatting = Formatting.Indented;
+        //                ser.Serialize(outWriter, cfg);
 
-                        if (string.IsNullOrWhiteSpace(args.OutputFile))
-                        {
-                            outWriter.WriteLine("");
-                            outWriter.WriteLine("/* JSON END */");
-                        }
-                    }
-                    finally
-                    {
-                        if (outWriter != null)
-                        {
-                            outWriter.Dispose();
-                            outWriter = null;
-                        }
-                    }
+        //                if (string.IsNullOrWhiteSpace(args.OutputFile))
+        //                {
+        //                    outWriter.WriteLine("");
+        //                    outWriter.WriteLine("/* JSON END */");
+        //                }
+        //            }
+        //            finally
+        //            {
+        //                if (outWriter != null)
+        //                {
+        //                    outWriter.Dispose();
+        //                    outWriter = null;
+        //                }
+        //            }
 
-                    return 0;
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.LogErr("Something went horribly wrong", ex);
-                return -1;
-            }
-        }
+        //            return 0;
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Log.LogErr("Something went horribly wrong", ex);
+        //        return -1;
+        //    }
+        //}
 
-        static int FolderMode(FolderMode args)
-        {
-            QuestomAssets.Log.SetLogSink(new ConsoleSink());
+        //static int FolderMode(FolderMode args)
+        //{
+        //    QuestomAssets.Log.SetLogSink(new ConsoleSink());
 
-            if (!string.IsNullOrWhiteSpace(args.CoverArt) && !File.Exists(args.CoverArt))
-            {
-                Log.LogErr("Playlist cover art file doesn't exist!");
-                return -1;
-            }
-            var customSongsFolders = GetCustomSongsFromPath(args.CustomSongsFolder);
-            if (customSongsFolders.Count < 1)
-            {
-                Log.LogErr("No custom songs found!");
-                return -1;
-            }
-            try
-            {
-                Log.LogMsg($"Opening APK at '{args.ApkFile}'");
-                using (var apkFileProvider = new ApkAssetsFileProvider(args.ApkFile, FileCacheMode.Memory, false))
-                {
-                    QuestomAssetsEngine q = new QuestomAssetsEngine(apkFileProvider,BSConst.KnownFiles.AssetsRootPath);
+        //    if (!string.IsNullOrWhiteSpace(args.CoverArt) && !File.Exists(args.CoverArt))
+        //    {
+        //        Log.LogErr("Playlist cover art file doesn't exist!");
+        //        return -1;
+        //    }
+        //    var customSongsFolders = GetCustomSongsFromPath(args.CustomSongsFolder);
+        //    if (customSongsFolders.Count < 1)
+        //    {
+        //        Log.LogErr("No custom songs found!");
+        //        return -1;
+        //    }
+        //    try
+        //    {
+        //        Log.LogMsg($"Opening APK at '{args.ApkFile}'");
+        //        using (var apkFileProvider = new ApkAssetsFileProvider(args.ApkFile, FileCacheMode.Memory, false))
+        //        {
+        //            QuestomAssetsEngine q = new QuestomAssetsEngine(apkFileProvider,BSConst.KnownFiles.AssetsRootPath);
 
-                    //Log.LogMsg($"Loading configuration...");
-                    //var cfg = q.GetCurrentConfig(apkFileProvider, BSConst.KnownFiles.AssetsRootPath, true);
-                    //Log.LogMsg($"Configuration loaded");
+        //            //Log.LogMsg($"Loading configuration...");
+        //            //var cfg = q.GetCurrentConfig(apkFileProvider, BSConst.KnownFiles.AssetsRootPath, true);
+        //            //Log.LogMsg($"Configuration loaded");
 
-                    //if (!args.NoPatch)
-                    //{
-                    //    Log.LogMsg($"Applying patches...");
-                    //    if (!q.ApplyPatchSettingsFile(apkFileProvider))
-                    //    {
-                    //        Log.LogErr("Failed to apply patches.  Cannot continue.");
-                    //        return -1;
-                    //    }
-                    //}
+        //            //if (!args.NoPatch)
+        //            //{
+        //            //    Log.LogMsg($"Applying patches...");
+        //            //    if (!q.ApplyPatchSettingsFile(apkFileProvider))
+        //            //    {
+        //            //        Log.LogErr("Failed to apply patches.  Cannot continue.");
+        //            //        return -1;
+        //            //    }
+        //            //}
 
-                    //BeatSaberPlaylist playlist = cfg.Playlists.FirstOrDefault(x => x.PlaylistID == "CustomSongs");
-                    //if (playlist == null)
-                    //{
-                    //    Log.LogMsg("Playlist doesn't already exist, creating it");
-                    //    playlist = new BeatSaberPlaylist()
-                    //    {
-                    //        PlaylistID = "CustomSongs",
-                    //        PlaylistName = "Custom Songs"
-                    //    };
-                    //    cfg.Playlists.Add(playlist);
-                    //}
-                    //else if (args.DeleteSongs)
-                    //{
-                    //    Log.LogMsg("Deleting current songs from playlist before reloading");
-                    //    playlist.SongList.Clear();
-                    //}
-                    //try
-                    //{
-                    //    playlist.CoverArtBytes = string.IsNullOrWhiteSpace(args.CoverArt) ? null : File.ReadAllBytes(args.CoverArt);
-                    //}
-                    //catch (Exception ex)
-                    //{
-                    //    Log.LogErr($"Unable to load playlist cover art from {args.CoverArt}", ex);
-                    //    playlist.CoverArtBytes = null;
-                    //}
-                    //Log.LogMsg($"Attempting to load {customSongsFolders.Count} custom songs...");
-                    //foreach (var cs in customSongsFolders)
-                    //{
-                    //    playlist.SongList.Add(new BeatSaberSong()
-                    //    {
-                    //        CustomSongFolder = cs
-                    //    });
-                    //}
-                    Log.LogMsg("Applying new configuration...");
-                  //  q.UpdateConfig(cfg, apkFileProvider, BSConst.KnownFiles.AssetsRootPath);
-                    Log.LogMsg("Configuration updated");
+        //            //BeatSaberPlaylist playlist = cfg.Playlists.FirstOrDefault(x => x.PlaylistID == "CustomSongs");
+        //            //if (playlist == null)
+        //            //{
+        //            //    Log.LogMsg("Playlist doesn't already exist, creating it");
+        //            //    playlist = new BeatSaberPlaylist()
+        //            //    {
+        //            //        PlaylistID = "CustomSongs",
+        //            //        PlaylistName = "Custom Songs"
+        //            //    };
+        //            //    cfg.Playlists.Add(playlist);
+        //            //}
+        //            //else if (args.DeleteSongs)
+        //            //{
+        //            //    Log.LogMsg("Deleting current songs from playlist before reloading");
+        //            //    playlist.SongList.Clear();
+        //            //}
+        //            //try
+        //            //{
+        //            //    playlist.CoverArtBytes = string.IsNullOrWhiteSpace(args.CoverArt) ? null : File.ReadAllBytes(args.CoverArt);
+        //            //}
+        //            //catch (Exception ex)
+        //            //{
+        //            //    Log.LogErr($"Unable to load playlist cover art from {args.CoverArt}", ex);
+        //            //    playlist.CoverArtBytes = null;
+        //            //}
+        //            //Log.LogMsg($"Attempting to load {customSongsFolders.Count} custom songs...");
+        //            //foreach (var cs in customSongsFolders)
+        //            //{
+        //            //    playlist.SongList.Add(new BeatSaberSong()
+        //            //    {
+        //            //        CustomSongFolder = cs
+        //            //    });
+        //            //}
+        //            Log.LogMsg("Applying new configuration...");
+        //          //  q.UpdateConfig(cfg, apkFileProvider, BSConst.KnownFiles.AssetsRootPath);
+        //            Log.LogMsg("Configuration updated");
 
-                    Log.LogMsg("Signing APK...");
-                    q.SignAPK();
-                    Log.LogMsg("APK signed");
-                    return 0;
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.LogErr("Something went horribly wrong", ex);
-                return -1;
-            }
+        //            Log.LogMsg("Signing APK...");
+        //            q.SignAPK();
+        //            Log.LogMsg("APK signed");
+        //            return 0;
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Log.LogErr("Something went horribly wrong", ex);
+        //        return -1;
+        //    }
 
-        }
+        //}
 
         static List<string> GetCustomSongsFromPath(string path)
         {

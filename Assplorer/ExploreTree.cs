@@ -222,6 +222,25 @@ namespace Assplorer
             var n = e.Node.Tag as Node;
             if (n != null)
             {
+                cm.MenuItems.Add(new MenuItem("Copy Value", (o, ea) =>
+                {
+                    var s = n.Obj as string;
+                    var aso = n.Obj as AssetsObject;
+                    if (s != null)
+                    {
+                        Clipboard.SetText(s);
+                    }
+                    else if (aso != null)
+                    {
+                        Clipboard.SetText(n.Text);
+                    } else
+                    {
+                        Clipboard.SetText(Convert.ToString(n.Obj ?? ""));
+                    }
+
+
+                }));
+
                 var ao = n.Obj as AssetsObject;
                 if (ao != null)
                 {
