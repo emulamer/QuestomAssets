@@ -78,6 +78,11 @@ namespace QuestomAssets
             Directory.CreateDirectory(Path.Combine(_rootFolder, FwdToFS(path)));
         }
 
+        public void RmRfDir(string path)
+        {
+            Directory.Delete(Path.Combine(_rootFolder, FwdToFS(path)), true);
+        }
+
         public List<string> FindFiles(string pattern)
         {
             List<string> fnames = new List<string>();

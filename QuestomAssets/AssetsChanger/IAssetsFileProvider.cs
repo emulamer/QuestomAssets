@@ -16,6 +16,7 @@ namespace QuestomAssets.AssetsChanger
         void Delete(string filename);
         bool FileExists(string filename);
         void MkDir(string path);
+        void RmRfDir(string path);
         //void WriteFromStream(string filename, Stream data, bool overwrite = true, bool compressData = true);
         long GetFileSize(string filename);
         void Save(string toFile = null);

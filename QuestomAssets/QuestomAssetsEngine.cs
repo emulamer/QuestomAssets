@@ -8,15 +8,24 @@ using QuestomAssets.Utils;
 using Newtonsoft.Json;
 using QuestomAssets.Models;
 using System.Diagnostics;
+using System.Threading;
+using System.Collections.Concurrent;
+using System.Threading.Tasks;
+using QuestomAssets.AssetOps;
 
 namespace QuestomAssets
 {
 
     public class QuestomAssetsEngine : IDisposable
     {
+        private CustomLevelLoader _loader;
         private List<string> _assetsLoadOrder = new List<string>();
         private AssetsManager _manager;
-
+        internal AssetsManager Manager { get => _manager;  }
+        internal MusicConfigCache MusicCache { get => _musicCache; }
+        private MusicConfigCache _musicCache;
+        private AssetOpManager _opManager;
+        public AssetOpManager OpManager { get => _opManager; }
         public IAssetsFileProvider FileProvider
         {
             get
@@ -29,6 +38,7 @@ namespace QuestomAssets
 
         public bool HideOriginalPlaylists { get; private set; } = true;
         private QaeConfig _config;
+        internal QaeConfig Config { get => _config; }
 
         /// <summary>
         /// Create a new instance of the class and open the apk file
@@ -45,17 +55,27 @@ namespace QuestomAssets
                     "globalgamemanagers.assets",
                     "sharedassets1.assets",
                     "231368cb9c1d5dd43988f2a85226e7d7",
+                    "17c37b4ad5b2b5046be37e2524b67216",
+                    "92d85d84be1369e4ab3b35188d1ea8b6",
+                    "b79ca5d157a731a45a945697ad0820c8",
                     "sharedassets11.assets",
                     "sharedassets18.assets",
                     "sharedassets20.assets"
                 };
             }
+            Stopwatch sw = new Stopwatch();
             _manager = new AssetsManager(_config.FileProvider, _config.AssetsPath, BSConst.GetAssetTypeMap());
+            Log.LogMsg("Preloading files...");
+            sw.Start();
+            PreloadFiles();
+            sw.Stop();
+            Log.LogMsg($"Preload files took {sw.ElapsedMilliseconds}ms");
+            _musicCache = new MusicConfigCache(GetMainLevelPack());
+            _opManager = new AssetOpManager(new OpContext(this));
         }
 
         public BeatSaberQuestomConfig GetCurrentConfig()
         {
-            PreloadFiles();
             var config = GetConfig();
 
             //config.Saber = new SaberModel()
@@ -71,12 +91,7 @@ namespace QuestomAssets
             lock (this)
             {
                 //todo: basic validation of the config
-                Log.LogMsg("Preloading files...");
-                sw.Reset();
-                sw.Start();
-                PreloadFiles();
-                sw.Stop();
-                Log.LogMsg($"Preload files took {sw.ElapsedMilliseconds}ms");
+
 
                 //
                 //get existing playlists and their songs
@@ -111,18 +126,20 @@ namespace QuestomAssets
             }
         }
 
+        
+
         public void Save()
         {
             Stopwatch sw = new Stopwatch();
             try
             {
-                
+
                 Log.LogMsg("Serializing all assets...");
                 sw.Restart();
                 _manager.WriteAllOpenAssets();
                 sw.Stop();
                 Log.LogMsg($"Serialization of assets took {sw.ElapsedMilliseconds}ms");
-                
+
                 Log.LogMsg("Making sure everything is saved...");
                 sw.Restart();
                 FileProvider.Save();
@@ -136,28 +153,44 @@ namespace QuestomAssets
             }
         }
 
-        private MainLevelPackCollectionObject GetMainLevelPack()
+        private MainLevelPackCollectionObject _mainLevelPackCache;
+        internal MainLevelPackCollectionObject GetMainLevelPack()
         {
-            var mainLevelPack = _manager.MassFirstOrDefaultAsset<MainLevelPackCollectionObject>(x => true)?.Object;
-            if (mainLevelPack == null)
-                throw new Exception("Unable to find the main level pack collection object!");
-            return mainLevelPack;
+            if (_mainLevelPackCache == null)
+            {
+                var mainLevelPack = _manager.MassFirstOrDefaultAsset<MainLevelPackCollectionObject>(x => true, false)?.Object;
+                if (mainLevelPack == null)
+                    throw new Exception("Unable to find the main level pack collection object!");
+                _mainLevelPackCache = mainLevelPack;
+            }
+            return _mainLevelPackCache;
         }
 
-        private AssetsFile GetSongsAssetsFile()
+        private AssetsFile _songsAssetsFileCache;
+        internal AssetsFile GetSongsAssetsFile()
         {
-            var extrasPack = _manager.MassFirstOrDefaultAsset<BeatmapLevelPackObject>(x => x.Object.Name == "ExtrasLevelPack", true);
-            if (extrasPack == null)
-                throw new Exception("Unable to find the file that ExtrasLevelPack is in!");
-            return extrasPack.ParentFile;
+            if (_songsAssetsFileCache == null)
+            {
+                var extrasPack = _manager.MassFirstOrDefaultAsset<BeatmapLevelPackObject>(x => x.Object.Name == "ExtrasLevelPack", false);
+                if (extrasPack == null)
+                    throw new Exception("Unable to find the file that ExtrasLevelPack is in!");
+                _songsAssetsFileCache = extrasPack.ParentFile;
+            }
+            return _songsAssetsFileCache;
         }
 
-        private AlwaysOwnedContentModel GetAlwaysOwnedModel()
+        private AlwaysOwnedContentModel _aoModelCache;
+        internal AlwaysOwnedContentModel GetAlwaysOwnedModel()
         {
-            var aoModel = _manager.MassFirstOrDefaultAsset<AlwaysOwnedContentModel>(x => x.Object.Name == "DefaultAlwaysOwnedContentModel", true);
-            if (aoModel == null)
-                throw new Exception("Unable to find AlwaysOwnedContentModel!");
-            return aoModel.Object;
+            if (_aoModelCache == null)
+            {
+                var aoModel = _manager.MassFirstOrDefaultAsset<AlwaysOwnedContentModel>(x => x.Object.Name == "DefaultAlwaysOwnedContentModel", false);
+                if (aoModel == null)
+                    throw new Exception("Unable to find AlwaysOwnedContentModel!");
+                _aoModelCache = aoModel.Object;
+            }
+
+            return _aoModelCache;
         }
 
         private void UpdatePlaylistConfig(AssetsFile songsAssetFile, BeatSaberPlaylist playlist)
@@ -165,7 +198,7 @@ namespace QuestomAssets
             Log.LogMsg($"Processing playlist ID {playlist.PlaylistID}...");
             CustomLevelLoader loader = new CustomLevelLoader(songsAssetFile, _config);
             BeatmapLevelPackObject levelPack = songsAssetFile.FindAsset<BeatmapLevelPackObject>(x => x.Object.PackID == playlist.PlaylistID)?.Object;
-            //create a new level pack if one waasn't found
+            //create a new level pack if one wasn't found
             if (levelPack == null)
             {
                 Log.LogMsg($"Level pack for playlist '{playlist.PlaylistID}' was not found and will be created");
@@ -255,7 +288,8 @@ namespace QuestomAssets
                         levelCollection.BeatmapLevels.Add(song.LevelData.PtrFrom(levelCollection));
                         continue;
                     }
-                } else
+                }
+                else
                 {
                     Log.LogErr($"Song {song.SongID} failed to load!");
                 }
@@ -901,8 +935,8 @@ namespace QuestomAssets
             sw.Stop();
             Log.LogMsg($"Getting counts took {sw.ElapsedMilliseconds}ms");
             sw.Restart();
-//            List<string> audioFilesToDelete = new List<string>();
-//            removeSongs.ForEach(x => RemoveLevelAssets(x, audioFilesToDelete));
+            //            List<string> audioFilesToDelete = new List<string>();
+            //            removeSongs.ForEach(x => RemoveLevelAssets(x, audioFilesToDelete));
 
             packsToRemove.ForEach(x => RemoveLevelPackAssets(x));
             sw.Stop();
@@ -919,7 +953,7 @@ namespace QuestomAssets
             aoModel.AlwaysOwnedPacks.AddRange(addPacksOwned);
             sw.Stop();
             Log.LogMsg($"Updating always owned packs took {sw.ElapsedMilliseconds}ms");
-            
+
 
 
             Log.LogMsg("");
@@ -931,7 +965,7 @@ namespace QuestomAssets
             Log.LogMsg($"  Added:   {addedSongs.Count()}");
             Log.LogMsg($"  Removed: {removeSongs.Count()}");
             Log.LogMsg("");
-           
+
         }
 
         private void UpdateColorConfig(SimpleColorSO[] colors)
@@ -987,6 +1021,58 @@ namespace QuestomAssets
 
 
 
+        public class MusicConfigCache
+        {
+            //keyed on PlaylistID (aka PackID)
+            public Dictionary<string, PlaylistAndSongs> PlaylistCache { get; } = new Dictionary<string, PlaylistAndSongs>();
+
+            //keyed on SongID (aka LevelID)
+            public Dictionary<string, SongAndPlaylist> SongCache { get; } = new Dictionary<string, SongAndPlaylist>();
+
+            //we will see if this cache is enough of a performance boost to warrant the extra hassle of keeping it up to date
+            public MusicConfigCache(MainLevelPackCollectionObject mainPack)
+            {
+                Log.LogMsg("Building cache...");
+                Stopwatch sw = new Stopwatch();
+                try
+                {
+                    sw.Start();
+                    PlaylistCache.Clear();
+                    SongCache.Clear();
+                    mainPack.BeatmapLevelPacks.ForEach(x =>
+                    {
+                        var pns = new PlaylistAndSongs() { Playlist = x.Object };
+                        x.Object.BeatmapLevelCollection.Object.BeatmapLevels.ForEach(y =>
+                        {
+                            pns.Songs.Add(y.Object.LevelID, y.Object);
+                            SongCache.Add(y.Object.LevelID, new SongAndPlaylist() { Song = y.Object, Playlist = x.Object });
+                        });
+                        PlaylistCache.Add(x.Object.PackID, pns);
+                    });
+                    sw.Stop();
+                    Log.LogMsg($"Building cache took {sw.ElapsedMilliseconds}ms");
+                }
+                catch (Exception ex)
+                {
+                    Log.LogErr("Exception building cache!", ex);
+                    throw;
+                }
+            }
+
+            public class PlaylistAndSongs
+            {
+                public BeatmapLevelPackObject Playlist { get; set; }
+                public Dictionary<string, BeatmapLevelDataObject> Songs = new Dictionary<string, BeatmapLevelDataObject>();
+            }
+
+            public class SongAndPlaylist
+            {
+                public BeatmapLevelPackObject Playlist { get; set; }
+                public BeatmapLevelDataObject Song { get; set; }
+            }
+        }
+
+
         private List<string> GetAssetsLoadOrderFile()
         {
             string filename = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "assetsLoadOrder.json");
@@ -1039,7 +1125,5 @@ namespace QuestomAssets
 
         }
         #endregion
-
-
     }
 }

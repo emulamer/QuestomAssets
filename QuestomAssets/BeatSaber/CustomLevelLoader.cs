@@ -15,6 +15,9 @@ namespace QuestomAssets.BeatSaber
 {
     public class CustomLevelLoader
     {
+
+        //TODO: move the cache somewhere else or create an instance of this class and pass it around
+
         public CustomLevelLoader(AssetsFile assetsFile, QaeConfig config)
         {
             _assetsFile = assetsFile;
@@ -24,7 +27,7 @@ namespace QuestomAssets.BeatSaber
         private QaeConfig _config;
         private AssetsFile _assetsFile;
 
-        private Dictionary<string, MonoBehaviourObject> _characteristicCache = new Dictionary<string, MonoBehaviourObject>();
+        private Dictionary<string, BeatmapCharacteristicObject> _characteristicCache = new Dictionary<string, BeatmapCharacteristicObject>();
 
         public BeatmapLevelDataObject DeserializeFromJson(string songPath, string overrideLevelID)
         {
@@ -129,11 +132,13 @@ namespace QuestomAssets.BeatSaber
                 {
                     beatmapLevel.CoverImageTexture2D = coverImage.PtrFrom(beatmapLevel);
                 }
-                var environment = _assetsFile.Manager.MassFirstOrDefaultAsset<MonoBehaviourObject>(x => x.Object.Name == $"{beatmapLevel.EnvironmentName}SceneInfo");
+                var environment = GetEnvironment(beatmapLevel.EnvironmentName);
                 if (environment == null)
                 {
                     Log.LogMsg($"Unknown environment name '{beatmapLevel.EnvironmentName}' on '{beatmapLevel.SongName}', falling back to default.");
-                    environment = _assetsFile.Manager.MassFirstAsset<MonoBehaviourObject>(x => x.Object.Name == "DefaultEnvironmentSceneInfo");
+                    environment = GetEnvironment("DefaultEnvironment");
+                    if (environment == null)
+                        throw new Exception("Unable to find the default environment!");
                 }
 
                 beatmapLevel.EnvironmentSceneInfo = environment.PtrFrom(beatmapLevel);
@@ -145,6 +150,18 @@ namespace QuestomAssets.BeatSaber
                 Log.LogErr($"Error loading song from path {songPath}", ex);
                 return null;
             }
+        }
+        private Dictionary<string, EnvironmentSceneInfoObject> _environmentCache = new Dictionary<string, EnvironmentSceneInfoObject>();
+        private EnvironmentSceneInfoObject GetEnvironment(string name)
+        {
+            if (_environmentCache.ContainsKey(name))
+                return _environmentCache[name];
+
+            var environment = _assetsFile.Manager.MassFirstOrDefaultAsset<EnvironmentSceneInfoObject>(x => x.Object.Name == $"{name}SceneInfo")?.Object;
+            if (environment != null)
+                _environmentCache.Add(name, environment);
+
+            return environment;
         }
 
         public AudioClipObject LoadSongAudioAsset(string songPath, BeatmapLevelDataObject levelData)
@@ -228,22 +245,26 @@ namespace QuestomAssets.BeatSaber
         {
             Texture2DObject packCover = null;
 
-            try
+            if (coverImageBytes != null && coverImageBytes.Length > 0)
             {
-                var loadedCover = new Texture2DObject(_assetsFile)
+                try
                 {
-                    Name = assetName
-                };
-                ImageUtils.Instance.AssignImageToTexture(coverImageBytes, loadedCover, 1024, 1024);
-                packCover = loadedCover;
-            }
-            catch (Exception ex)
-            {
-                Log.LogErr($"Failed to convert to texture, falling back to default cover image", ex);
+                    var loadedCover = new Texture2DObject(_assetsFile)
+                    {
+                        Name = assetName
+                    };
+                    ImageUtils.Instance.AssignImageToTexture(coverImageBytes, loadedCover, 1024, 1024);
+                    packCover = loadedCover;
+                }
+                catch (Exception ex)
+                {
+                    Log.LogErr($"Failed to convert to texture, falling back to default cover image", ex);
+                }
             }
 
             if (packCover == null)
             {
+                Log.LogMsg($"Using default cover image for asset name {assetName}");
                 packCover = new Texture2DObject(_assetsFile)
                 {
                     Name = assetName
@@ -358,7 +379,7 @@ namespace QuestomAssets.BeatSaber
             };
         }
         
-        private MonoBehaviourObject GetCharacteristicAsset(Characteristic characteristic)
+        private BeatmapCharacteristicObject GetCharacteristicAsset(Characteristic characteristic)
         {
             string name = "StandardBeatmapCharacteristic";
             switch (characteristic)
@@ -373,10 +394,10 @@ namespace QuestomAssets.BeatSaber
                     name = "StandardBeatmapCharacteristic";
                     break;
             }
-            MonoBehaviourObject charObj = null;
+            BeatmapCharacteristicObject charObj = null;
             if (!_characteristicCache.ContainsKey(name))
             {
-                charObj = _assetsFile.Manager.MassFirstAsset<MonoBehaviourObject>(x => x.Object.Name == name).Object;
+                charObj = _assetsFile.Manager.MassFirstAsset<BeatmapCharacteristicObject>(x => x.Object.Name == name).Object;
                 _characteristicCache.Add(name, charObj);
             }
             else

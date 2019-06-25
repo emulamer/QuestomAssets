@@ -1,5 +1,6 @@
 ﻿using BeatmapAssetMaker;
 using NUnit.Framework;
+using QuestomAssets.AssetOps;
 using QuestomAssets.AssetsChanger;
 using QuestomAssets.Models;
 using QuestomAssets.Utils;
@@ -12,11 +13,12 @@ using System.Threading;
 
 namespace QuestomAssets.Tests
 {
+    [NonParallelizable]
     public abstract class QuestomAssetsEngineTestBase
     {
         public const string TEST_SONG_FOLDER = @"TestSong";
         public const string COVER_ART_FILE = @"TestCover.png";
-        public const string _apkFile = "beatsaber_TESTS.apk";
+        
         public const string TestSongName = "Testing Song!";
         public const string TestSongSubName = "An ode to test";
         public const string TestSongAuthorName = "Emulamer";
@@ -24,6 +26,36 @@ namespace QuestomAssets.Tests
         public const string PlaylistNameFormat = "A Playlist {0}";
         public string SongIDFormat = "{0:D4}-{1:D4}";
 
+
+        protected abstract string MakeTestSongDir();
+
+        public class DebugLogger : ILog
+        {
+            public void LogErr(string message, Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"{message} {ex.Message} {ex.StackTrace} {ex?.InnerException?.Message} {ex?.InnerException?.StackTrace}");
+            }
+
+            public void LogErr(string message, params object[] args)
+            {
+                System.Diagnostics.Debug.WriteLine(String.Format(message, args));
+            }
+
+            public void LogMsg(string message, params object[] args)
+            {
+                string logStr = message;
+                if (args.Length > 0 && !(args[0] is object[] && ((object[])args[0]).Length < 1))
+                {
+                    try
+                    {
+                        logStr = string.Format(logStr, args);
+                    }
+                    catch
+                    { }
+                }
+                System.Diagnostics.Debug.WriteLine(logStr);
+            }
+        }
         protected void SetupPlaylistsWithSongs(int playlistCount, int songCount)
         {
             BeatSaberQuestomConfig config = null;
@@ -47,7 +79,7 @@ namespace QuestomAssets.Tests
                             var song = new BeatSaberSong()
                             {
                                 SongID = string.Format(SongIDFormat, p, i),
-                                CustomSongPath = TEST_SONG_FOLDER
+                                CustomSongPath = MakeTestSongDir()
                             };
 
                             playlist.SongList.Add(song);
@@ -55,6 +87,7 @@ namespace QuestomAssets.Tests
                         config.Playlists.Add(playlist);
                     }
                     qae.UpdateConfig(config);
+                    qae.Save();
                 }
             }
         }
@@ -84,7 +117,8 @@ namespace QuestomAssets.Tests
         [SetUp]
         public virtual void Setup()
         {
-
+            Log.ClearLogSinks();
+            Log.SetLogSink(new DebugLogger());
             ImageUtils.Instance = new ImageUtilsWin();
         }
 
@@ -277,7 +311,149 @@ namespace QuestomAssets.Tests
 
         }
 
+        [Test]
+        public void BasicAddNewSongOpWorks()
+        {
+            SetupPlaylistsWithSongs(1, 1);
 
+            using (var fp = GetProvider())
+            {
+                var q = GetQaeConfig(fp);
+                using (QuestomAssetsEngine qae = new QuestomAssetsEngine(q))
+                {
+                    var song = new BeatSaberSong()
+                    {
+                        SongID = "TESTSONG2",
+                        CustomSongPath = MakeTestSongDir()
+                    };
+                    bool calledStatusChangeStarted = false;
+                    bool calledStatusChangeComplete = false;
+                    var newSongOp = new AddNewSongToPlaylistOp(song, "someplaylist0");
+                    qae.OpManager.OpStatusChanged += (sender, op) =>
+                     {
+                         if (op.Status == OpStatus.Started)
+                             calledStatusChangeStarted = true;
+                         if (op.Status == OpStatus.Complete)
+                             calledStatusChangeComplete = true;
+                     };
+                    qae.OpManager.QueueOp(newSongOp);
+                    while (qae.OpManager.IsProcessing)
+                    {
+                        System.Threading.Thread.Sleep(100);
+                    }
+                    Assert.IsTrue(calledStatusChangeStarted, "Did not get OpStatusChanged event for status Started!");
+                    Assert.IsTrue(calledStatusChangeComplete, "Did not get OpStatusChanged event for status Complete!");
+                    qae.Save();
+                }
+                using (QuestomAssetsEngine qae = new QuestomAssetsEngine(q))
+                {
+                    var cfg = qae.GetCurrentConfig();
+
+                    var song = cfg.Playlists.FirstOrDefault(x => x.PlaylistID == "someplaylist0")?.SongList?.FirstOrDefault(x => x.SongID == "TESTSONG2");
+                    Assert.NotNull(song, "Couldn't find the song the op was supposed to add!");
+                    //todo: more tests on this
+
+                }
+                Assert.Pass();
+            }
+        }
+
+        [Test]
+        public void BasicAddPlaylistOpWorks()
+        {
+            using (var fp = GetProvider())
+            {
+                var q = GetQaeConfig(fp);
+                using (QuestomAssetsEngine qae = new QuestomAssetsEngine(q))
+                {
+                    var newPlaylist = new BeatSaberPlaylist()
+                    {
+                        PlaylistID = "TESTPLAYLIST1",
+                        PlaylistName = "Test Playlist 1"
+                    };
+
+                    bool calledStatusChangeStarted = false;
+                    bool calledStatusChangeComplete = false;
+                    var newSongOp = new AddOrUpdatePlaylistOp(newPlaylist);
+                    qae.OpManager.OpStatusChanged += (sender, op) =>
+                    {
+                        if (op.Status == OpStatus.Started)
+                            calledStatusChangeStarted = true;
+                        if (op.Status == OpStatus.Complete)
+                            calledStatusChangeComplete = true;
+                    };
+                    qae.OpManager.QueueOp(newSongOp);
+                    while (qae.OpManager.IsProcessing)
+                    {
+                        System.Threading.Thread.Sleep(100);
+                    }
+                    Assert.IsTrue(calledStatusChangeStarted, "Did not get OpStatusChanged event for status Started!");
+                    Assert.IsTrue(calledStatusChangeComplete, "Did not get OpStatusChanged event for status Complete!");
+                    qae.Save();
+                }
+                using (QuestomAssetsEngine qae = new QuestomAssetsEngine(q))
+                {
+                    var cfg = qae.GetCurrentConfig();
+
+                    var playlist = cfg.Playlists.FirstOrDefault(x => x.PlaylistID == "TESTPLAYLIST1");
+                    Assert.NotNull(playlist, "Couldn't find the song the op was supposed to add!");
+                    Assert.AreEqual("Test Playlist 1", playlist.PlaylistName, "Playlist name was not set correctly!");
+                    //todo: more tests on this
+
+                }
+                Assert.Pass();
+            }
+        }
+
+        [Test]
+        public void BasicDeleteSongOpWorks()
+        {
+            SetupPlaylistsWithSongs(5, 5);
+            using (var fp = GetProvider())
+            {
+                var q = GetQaeConfig(fp);
+                using (QuestomAssetsEngine qae = new QuestomAssetsEngine(q))
+                {
+
+                    bool calledStatusChangeStarted = false;
+                    bool calledStatusChangeComplete = false;
+                    var deleteSongOp = new DeleteSongOp(string.Format(SongIDFormat, 2, 2));
+                    qae.OpManager.OpStatusChanged += (sender, op) =>
+                    {
+                        if (op.Status == OpStatus.Started)
+                            calledStatusChangeStarted = true;
+                        if (op.Status == OpStatus.Complete)
+                            calledStatusChangeComplete = true;
+                    };
+                    qae.OpManager.QueueOp(deleteSongOp);
+                    while (qae.OpManager.IsProcessing)
+                    {
+                        System.Threading.Thread.Sleep(100);
+                    }
+                    Assert.IsTrue(calledStatusChangeStarted, "Did not get OpStatusChanged event for status Started!");
+                    Assert.IsTrue(calledStatusChangeComplete, "Did not get OpStatusChanged event for status Complete!");
+                    qae.Save();
+                }
+                using (QuestomAssetsEngine qae = new QuestomAssetsEngine(q))
+                {
+                    var cfg = qae.GetCurrentConfig();
+
+                    Assert.AreEqual(5, cfg.Playlists.Count, "Playlist count is incorrect after song delete");
+                    Assert.AreEqual(5, cfg.Playlists[0].SongList.Count, "Song came out of the wrong playlist");
+                    Assert.AreEqual(5, cfg.Playlists[1].SongList.Count, "Song came out of the wrong playlist");
+                    Assert.AreEqual(4, cfg.Playlists[2].SongList.Count, "Song did not come out of the right playlist");
+                    Assert.AreEqual(5, cfg.Playlists[3].SongList.Count, "Song came out of the wrong playlist");
+                    Assert.AreEqual(5, cfg.Playlists[4].SongList.Count, "Song came out of the wrong playlist");
+
+                    var pl = cfg.Playlists[2];
+                    Assert.IsFalse(pl.SongList.Any(x => x.SongID == string.Format(SongIDFormat, 2, 2)), "Expected target song to be deleted.");
+                    
+                    //todo: more tests on this
+
+                }
+                Assert.Pass();
+            }
+        }
 
         //[Test]
         //public void RemovesSong()
@@ -313,7 +489,7 @@ namespace QuestomAssets.Tests
                     var song = new BeatSaberSong()
                     {
                         SongID = config.Playlists[0].SongList[0].SongID,
-                        CustomSongPath = TEST_SONG_FOLDER
+                        CustomSongPath = MakeTestSongDir()
                     };
                     oldConfig.Playlists[0].SongList.Add(song);
                     qae.UpdateConfig(config);

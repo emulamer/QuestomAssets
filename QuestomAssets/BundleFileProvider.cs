@@ -72,6 +72,11 @@ namespace QuestomAssets
             throw new NotImplementedException();
         }
 
+        public void RmRfDir(string path)
+        {
+            throw new NotImplementedException();
+        }
+
         public void Delete(string filename)
         {
             throw new NotImplementedException();

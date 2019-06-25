@@ -131,6 +131,11 @@ namespace QuestomAssets
             }
         }
 
+        public void RmRfDir(string path)
+        {
+            DeleteFiles(path + "*");
+        }
+
         public void Write(string filename, byte[] data, bool overwrite = true, bool compressData = true)
         {
             CheckRO();

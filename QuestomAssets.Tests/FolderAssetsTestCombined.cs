@@ -14,6 +14,7 @@ namespace QuestomAssets.Tests
     public class FolderAssetsTestCombined : QuestomAssetsEngineTestBase
     {
         private const string BS_EXTRACTED_ASSETS = @"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\platform-tools\1.1.0baseoriginal\assets\bin\Data\";
+        protected int TestRandomNum = (new Random()).Next(5000);
 
         [SetUp]
         public override void Setup()
@@ -25,9 +26,18 @@ namespace QuestomAssets.Tests
             if (!File.Exists(COVER_ART_FILE))
                 throw new System.Exception("Cover art file doesn't exist.  Make sure it is set in the COVER_ART_FILE constant.");
 
-            DirectoryCopy(BS_EXTRACTED_ASSETS, ".\\TestAssets", true);
+            FileUtils.DirectoryCopy(BS_EXTRACTED_ASSETS, $".\\TestAssets{TestRandomNum}", true);
 
             base.Setup();
+        }
+
+        private List<string> testSongDirs = new List<string>();
+        protected override string MakeTestSongDir()
+        {
+            string dir = $".\\{TestRandomNum}TestSongInstance{testSongDirs.Count}";
+            FileUtils.DirectoryCopy(TEST_SONG_FOLDER, dir, true);
+            testSongDirs.Add(dir);
+            return dir;
         }
 
         //[Test]
@@ -81,7 +91,10 @@ namespace QuestomAssets.Tests
         [TearDown]
         public override void TearDown()
         {
-            Directory.Delete(".\\TestAssets",true);
+            Directory.Delete($".\\TestAssets{TestRandomNum}",true);
+            foreach (string testDir in testSongDirs)
+                if (Directory.Exists(testDir))
+                    Directory.Delete(testDir, true);
             base.TearDown();
         }
 
@@ -92,45 +105,8 @@ namespace QuestomAssets.Tests
 
         protected override IAssetsFileProvider GetProvider()
         {
-            return new FolderFileProvider(".\\TestAssets\\", false, true);
+            return new FolderFileProvider($".\\TestAssets{TestRandomNum}\\", false, true);
         }
 
-        private static void DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs)
-        {
-            // Get the subdirectories for the specified directory.
-            DirectoryInfo dir = new DirectoryInfo(sourceDirName);
-
-            if (!dir.Exists)
-            {
-                throw new DirectoryNotFoundException(
-                    "Source directory does not exist or could not be found: "
-                    + sourceDirName);
-            }
-
-            DirectoryInfo[] dirs = dir.GetDirectories();
-            // If the destination directory doesn't exist, create it.
-            if (!Directory.Exists(destDirName))
-            {
-                Directory.CreateDirectory(destDirName);
-            }
-
-            // Get the files in the directory and copy them to the new location.
-            FileInfo[] files = dir.GetFiles();
-            foreach (FileInfo file in files)
-            {
-                string temppath = Path.Combine(destDirName, file.Name);
-                file.CopyTo(temppath, true);
-            }
-
-            // If copying subdirectories, copy them and their contents to new location.
-            if (copySubDirs)
-            {
-                foreach (DirectoryInfo subdir in dirs)
-                {
-                    string temppath = Path.Combine(destDirName, subdir.Name);
-                    DirectoryCopy(subdir.FullName, temppath, copySubDirs);
-                }
-            }
-        }
     }
 }

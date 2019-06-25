@@ -438,7 +438,7 @@ namespace QuestomAssets.AssetsChanger
         public void DeleteObject(AssetsObject assetsObject)
         {
             //TODO: implement dispose on these or something?
-            var obj = Metadata.ObjectInfos.FirstOrDefault(x => x.Object == assetsObject);
+            var obj = Metadata.ObjectInfos.FirstOrDefault(x => x == assetsObject.ObjectInfo);
             if (obj == null)
             {
                 Log.LogErr("Tried to delete an object that wasn't part of this file");
