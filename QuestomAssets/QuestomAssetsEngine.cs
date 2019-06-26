@@ -1109,10 +1109,9 @@ namespace QuestomAssets
                 {
                     _manager.Dispose();
                     _manager = null;
+                    _opManager.Dispose();
+                    _opManager = null;
                 }
-
-
-
                 disposedValue = true;
             }
         }

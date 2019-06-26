@@ -30,6 +30,7 @@ namespace QuestomAssets.AssetOps
                 Log.LogMsg($"Playlist {Playlist.PlaylistID} will be updated");
                 levelPack = context.Cache.PlaylistCache[Playlist.PlaylistID].Playlist;
                 levelPack.Name = Playlist.PlaylistName;
+                Playlist.LevelPackObject = levelPack;
             }
             else
             {

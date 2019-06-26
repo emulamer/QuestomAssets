@@ -59,7 +59,7 @@ namespace QuestomAssets.AssetOps
                     dequeued = _opQueue.TryDequeue(out op);
                     if (!dequeued)
                     {
-                        _queueEvent.WaitOne();
+                        _queueEvent.WaitOne(2000);
                         continue;
                     }
                     try
@@ -86,7 +86,7 @@ namespace QuestomAssets.AssetOps
                     catch (Exception ex)
                     {
                         Log.LogErr($"Error handling Op type {op.GetType()}, operation threw an exception.", ex);
-                        op.SetStatus(OpStatus.Failed);
+                        op.SetStatus(OpStatus.Failed, ex);
                     }
                     finally
                     {
