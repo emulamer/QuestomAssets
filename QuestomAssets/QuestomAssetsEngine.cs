@@ -115,8 +115,44 @@ namespace QuestomAssets
                     Log.LogMsg("Updating music config...");
                     sw.Reset();
                     sw.Start();
-                    UpdateMusicConfig(config);
+                    //UpdateMusicConfig(config);
+                    var ops = DiffMusicConfig(config);
                     sw.Stop();
+                    if (ops.Count < 1)
+                    {
+                        Log.LogMsg("No changes needed to config.");
+                    }
+                    else
+                    {
+                        List<AssetOp> failed = new List<AssetOp>();
+                        Log.LogMsg($"{ops.Count} Ops to update music config");
+                        OpManager.OpStatusChanged += (a, e) =>
+                         {
+                             if (e.Status == OpStatus.Failed)
+                             {
+                                 failed.Add(e);
+                             }
+                         };
+                             
+                        ops.ForEach(x => OpManager.QueueOp(x));
+                        Log.LogMsg($"Ops queued, waiting for all to complete...");
+                        using (new LogTiming("waiting for ops to complete"))
+                        {
+                            while (ops.Count > 0)
+                            {
+                                var waitOps = ops.Take(64);
+                                WaitHandle.WaitAll(waitOps.Select(x => x.FinishedEvent).ToArray());
+                                ops.RemoveAll(x => waitOps.Contains(x));
+                            }
+                        }
+
+                        if (failed.Count > 0)
+                        {
+                            Log.LogErr($"{failed.Count} ops failed while updating config.");
+                            failed.ForEach(x => Log.LogErr($"{x.GetType().Name} failed: {x.Exception.Message}"));
+                            throw new AssetOpsException("At least one internal operation failed while loading the config", failed);
+                        }
+                    }
                     Log.LogMsg($"Updating music config took {sw.ElapsedMilliseconds}ms");
                 }
                 else
@@ -733,6 +769,82 @@ namespace QuestomAssets
         //}
         #endregion
 
+        private List<AssetOp> DiffMusicConfig(BeatSaberQuestomConfig newConfig)
+        {
+            List<AssetOp> ops = new List<AssetOp>();
+            Func<string, bool> IgnoreSongID = (songId) => {
+                if (HideOriginalPlaylists)
+                {
+                    return BSConst.KnownLevelIDs.Contains(songId);
+                } else
+                {
+                    return false;
+                }
+            };
+
+            Func<string, bool> IgnorePackID = (packId) => {
+                if (HideOriginalPlaylists)
+                {
+                    return BSConst.KnownLevelPackIDs.Contains(packId);
+                }
+                else
+                {
+                    return false;
+                }
+            };
+            //NOTE: this code is pretty inefficient in that it loops over collections many multiple times in all of the LINQ statements and ToList()s
+            //      If it becomes a performance bottleneck, it can probably all be compressed into 1 or 2 loops rather than a bunch of individual linq queries
+            //      but for now it's left inefficient because it's easier to follow what's happening
+            using (new LogTiming(nameof(DiffMusicConfig)))
+            {                
+                var lt = new LogTiming("find new playlists");
+
+                var newOrUpdatedPlaylists = newConfig.Playlists.Where(x => !MusicCache.PlaylistCache.ContainsKey(x.PlaylistID)      //playlist id doesn't exist
+                            || (x.PlaylistName != null && MusicCache.PlaylistCache[x.PlaylistID].Playlist.Name != x.PlaylistName)   //name is different
+                            || (x.CoverImageBytes != null && x.CoverImageBytes.Length > 0)).ToList();                               //cover image bytes is provided
+                                                                                                                                 //create an op for each added or changed playlist
+                newOrUpdatedPlaylists.ForEach(x => ops.Add(new AddOrUpdatePlaylistOp(x)));
+                lt.Dispose();
+                Log.LogMsg("Adding or updating playlist IDs: " + string.Join(", ", newOrUpdatedPlaylists.Select(x => x.PlaylistID).ToArray()));
+
+                lt = new LogTiming("build all config songs");
+                //get an anon SongID, PlaylistID pair of what's in the config passed in
+                var allConfigSongs = newConfig.Playlists.SelectMany(y => y.SongList.Select(x => new { SongID = x.SongID, PlaylistID = y.PlaylistID, Song = x })).ToList();
+                lt.Dispose();
+
+                lt = new LogTiming("make delete song ops");
+                //find any songs that have been removed from everywhere and make a song delete op for each of them.  song delete op will handle removing it from the playlist
+                //  check whether it should be ignored (i.e. leave OST stuff alone)
+                var removedSongIDs = MusicCache.SongCache.Keys.Where(x => !allConfigSongs.Any(y => y.SongID == x) && !IgnoreSongID(x)).ToList();
+                removedSongIDs.ForEach(x => ops.Add(new DeleteSongOp(x)));
+                lt.Dispose();
+                Log.LogMsg("Removing song IDs: " + string.Join(", ", removedSongIDs.ToArray()));
+
+                lt = new LogTiming("make move song ops");
+                //find any song/playlist tuples whose playlist doesn't match what's in the cache for that song (i.e. a song was moved to a different playlist)
+                var movedSongs = allConfigSongs.Where(x => MusicCache.SongCache.ContainsKey(x.SongID) && MusicCache.SongCache[x.SongID].Playlist.PackID != x.PlaylistID).ToList();
+                movedSongs.ForEach(x => ops.Add(new MoveSongToPlaylistOp(x.SongID, x.PlaylistID)));
+                lt.Dispose();
+                Log.LogMsg("Moving song IDs to playlists: " + string.Join(", ", movedSongs.Select(x => x.SongID + " -> " + x.PlaylistID).ToArray()));
+
+                lt = new LogTiming("make new song ops");
+                //find any new songs, add an op to add them
+                var newSongs = allConfigSongs.Where(x => !MusicCache.SongCache.ContainsKey(x.SongID)).ToList();
+                newSongs.ForEach(x => ops.Add(new AddNewSongToPlaylistOp(x.Song, x.PlaylistID)));
+                lt.Dispose();
+                Log.LogMsg("Adding new songs to playlists: " + string.Join(", ", newSongs.Select(x => x.SongID + " -> " + x.PlaylistID)));
+
+                //find any playlists that should be removed.  tell the DeletePlaylistOp not to delete all songs in the playlist since we should have already cleaned them all up
+                //  check whether to ignore the playlist (i.e. don't delete OST stuff)
+                lt = new LogTiming("make remove playlist ops");
+                var removedPlaylists = MusicCache.PlaylistCache.Keys.Where(x => !newConfig.Playlists.Any(y => x == y.PlaylistID) && !IgnorePackID(x)).ToList();
+                removedPlaylists.ForEach(x => ops.Add(new DeletePlaylistOp(x, false)));
+                lt.Dispose();
+                Log.LogMsg("Removing playlist IDs: " + string.Join(", ", removedPlaylists.ToArray()));
+            }
+            return ops;
+        }
+
         private BeatSaberQuestomConfig GetConfig()
         {
             Stopwatch sw = new Stopwatch();
@@ -742,11 +854,12 @@ namespace QuestomAssets
                 lock (this)
                 {
                     BeatSaberQuestomConfig config = new BeatSaberQuestomConfig();
+                    
                     var mainPack = GetMainLevelPack();
                     CustomLevelLoader loader = new CustomLevelLoader(GetSongsAssetsFile(), _config);
-                    foreach (var packPtr in mainPack.BeatmapLevelPacks)
+                    foreach (var packDef in MusicCache.PlaylistCache)
                     {
-                        var pack = packPtr.Target.Object;
+                        var pack = packDef.Value.Playlist;
                         if (HideOriginalPlaylists && BSConst.KnownLevelPackIDs.Contains(pack.PackID))
                             continue;
 

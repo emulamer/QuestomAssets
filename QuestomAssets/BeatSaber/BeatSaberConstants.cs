@@ -99,7 +99,7 @@ namespace QuestomAssets.BeatSaber
 
         public static List<string> KnownLevelIDs { get; } = new List<string>()
         {
-            "100BillsLevel",
+            "100Bills",
             "AngelVoices",
             "BeatSaber",
             "BalearicPumping",

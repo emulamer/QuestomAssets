@@ -226,6 +226,7 @@ namespace QuestomAssets.Tests
                     config.Playlists[1].SongList.Add(song);
                     config.Playlists[0].SongList.Remove(song);
                     qae.UpdateConfig(config);
+                    qae.Save();
                 }
             }
             using (var fp = GetProvider())
@@ -341,6 +342,8 @@ namespace QuestomAssets.Tests
                     {
                         System.Threading.Thread.Sleep(100);
                     }
+                    //give it an extra bit of time to make sure events get fired
+                    System.Threading.Thread.Sleep(200);
                     Assert.IsTrue(calledStatusChangeStarted, "Did not get OpStatusChanged event for status Started!");
                     Assert.IsTrue(calledStatusChangeComplete, "Did not get OpStatusChanged event for status Complete!");
                     qae.Save();

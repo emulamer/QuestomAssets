@@ -437,6 +437,7 @@ namespace QuestomAssets.AssetsChanger
 
         public void DeleteObject(AssetsObject assetsObject)
         {
+            Log.LogMsg($"Deleting object of type {assetsObject.GetType().Name}");
             //TODO: implement dispose on these or something?
             var obj = Metadata.ObjectInfos.FirstOrDefault(x => x == assetsObject.ObjectInfo);
             if (obj == null)

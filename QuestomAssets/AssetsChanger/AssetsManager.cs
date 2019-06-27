@@ -143,6 +143,7 @@ namespace QuestomAssets.AssetsChanger
                         try
                         {
                             assetsFile.Write();
+                            assetsFile.HasChanges = false;
                         }
                         catch (Exception ex)
                         {
@@ -150,7 +151,6 @@ namespace QuestomAssets.AssetsChanger
                             throw;
                         }
                     }
-                    _openAssetsFiles.Remove(assetsFileName);
                 }
             }
         }

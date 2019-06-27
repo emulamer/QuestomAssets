@@ -14,8 +14,9 @@ namespace QuestomAssets.AssetOps
         private OpContext _context;
         private object _threadLock = new object();
         private Thread _thread;
+        private bool _threadAborted = false;
 
-        public bool IsProcessing { get { return _thread != null; } }
+        public bool IsProcessing { get { return _thread != null && _opQueue.Count > 0; } }
 
         public event EventHandler<AssetOp> OpStatusChanged;
 
@@ -30,6 +31,7 @@ namespace QuestomAssets.AssetOps
         {
             op.SetStatus(OpStatus.Queued);
             _opQueue.Enqueue(op);
+            OpStatusChanged?.Invoke(this, op);            
             lock (_threadLock)
             {                
                 if (_thread == null)
@@ -50,8 +52,11 @@ namespace QuestomAssets.AssetOps
             {
                 do
                 {
-                    
-                    Log.LogMsg("Op thread triggered");
+                    if (_threadAborted)
+                    {
+                        Log.LogMsg("Opmanager worker thread has been aborted");
+                        return;
+                    }
                     AssetOp op = null;
                     bool dequeued = false;
                     bool threadAborting = false;
@@ -126,7 +131,14 @@ namespace QuestomAssets.AssetOps
                     // TODO: dispose managed state (managed objects).
                     if (_thread != null)
                     {
-                        _thread.Abort();
+                        _threadAborted = true;
+                        try
+                        {
+                            _thread.Abort();
+                        }catch (PlatformNotSupportedException)
+                        {
+                           
+                        }
                         _thread = null;
                     }
                 }

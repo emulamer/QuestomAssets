@@ -16,6 +16,8 @@ namespace QuestomAssets
 
         public string PlaylistArtPath { get; set; }
 
-        public string ModsPath { get; set; }
+        public string ModsSourcePath { get; set; }
+
+        public string ModLibsPath { get; set; } = "/sdcard/Android/data/com.beatgames.beatsaber/files/mods/";
     }
 }

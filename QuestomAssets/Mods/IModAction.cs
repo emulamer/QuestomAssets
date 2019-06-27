@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace QuestomAssets.AssetsChanger
+namespace QuestomAssets.Mods
 {
-    class NamedObject
+    public interface IModAction
     {
+
     }
 }
