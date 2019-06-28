@@ -11,8 +11,6 @@ namespace QuestomAssets.BeatSaber
 {
     public sealed class BeatmapLevelDataObject : MonoBehaviourObject, INeedAssetsMetadata
     {
-
-
         public BeatmapLevelDataObject(IObjectInfo<AssetsObject> objectInfo, AssetsReader reader) : base(objectInfo)
         {
             Parse(reader);
@@ -41,7 +39,7 @@ namespace QuestomAssets.BeatSaber
             {
                 if (_levelID == null)
                 {
-                    _levelID = MiscUtils.GetLevelID(SongName);
+                    _levelID = MiscUtils.SanitizeName(SongName);
                 }
                 //this probably isn't safe to use as a songID
                 return _levelID;
@@ -131,9 +129,9 @@ namespace QuestomAssets.BeatSaber
             }
         }
 
-        protected override void Parse(AssetsReader reader)
+        public override void Parse(AssetsReader reader)
         {
-            base.Parse(reader);
+            base.ParseBase(reader);
             LevelID = reader.ReadString();
             SongName = reader.ReadString();
             SongSubName = reader.ReadString();
@@ -150,12 +148,5 @@ namespace QuestomAssets.BeatSaber
             EnvironmentSceneInfo = SmartPtr<AssetsObject>.Read(ObjectInfo.ParentFile, this, reader);
             DifficultyBeatmapSets = reader.ReadArrayOf(x => new DifficultyBeatmapSet(ObjectInfo.ParentFile, this, x));
         }
-
-        
-        
-
     }
-
-
-
 }

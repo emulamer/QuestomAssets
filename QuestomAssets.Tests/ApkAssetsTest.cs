@@ -53,7 +53,7 @@ namespace QuestomAssets.Tests
 
         protected override QaeConfig GetQaeConfig(IAssetsFileProvider prov)
         {
-            return new QaeConfig() { AssetsPath = "assets/bin/Data/", SongsPath = "", FileProvider = prov, SongFileProvider = new FolderFileProvider(".\\", false) };
+            return new QaeConfig() { AssetsPath = "assets/bin/Data/", SongsPath = "", RootFileProvider = prov, SongFileProvider = new FolderFileProvider(".\\", false) };
         }
 
         protected override IAssetsFileProvider GetProvider()

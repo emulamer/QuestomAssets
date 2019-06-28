@@ -38,6 +38,30 @@ namespace QuestomAssets
                 _zipFile.TempFileFolder = tempFolder;
         }
 
+        public ApkAssetsFileProvider(Stream zipFileStream, FileCacheMode cacheMode, bool readOnly = false, string tempFolder = null, bool useCombinedStream = false)
+        {
+            _zipFile = ZipFile.Read(zipFileStream);
+            UseCombinedStream = useCombinedStream;
+            ApkFilename = "";
+            ReadOnly = readOnly;
+            CacheMode = cacheMode;
+            _tempFolder = tempFolder;
+            if (tempFolder != null)
+                _zipFile.TempFileFolder = tempFolder;
+        }
+
+        public ApkAssetsFileProvider(ZipFile zipFile, FileCacheMode cacheMode, bool readOnly = false, string tempFolder = null, bool useCombinedStream = false)
+        {
+            _zipFile = zipFile;
+            UseCombinedStream = useCombinedStream;
+            ApkFilename = "";
+            ReadOnly = readOnly;
+            CacheMode = cacheMode;
+            _tempFolder = tempFolder;
+            if (tempFolder != null)
+                _zipFile.TempFileFolder = tempFolder;
+        }
+
         private void CheckRO()
         {
             if (ReadOnly)
@@ -70,6 +94,15 @@ namespace QuestomAssets
         public bool FileExists(string filename)
         {
             return _zipFile.Entries.Any(x => x.FileName.ToLower() == filename.ToLower());
+        }
+
+        public void Rename(string fromfile, string tofile)
+        {
+            foreach (var e in _zipFile.Entries.ToList())
+            {
+                if (e.FileName == fromfile)
+                    e.FileName = tofile;
+            }
         }
 
         public List<string> FindFiles(string pattern)

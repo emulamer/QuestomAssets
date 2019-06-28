@@ -7,6 +7,8 @@ namespace QuestomAssets.AssetOps
 {
     public class DeletePlaylistOp : AssetOp
     {
+        public override bool IsWriteOp => true;
+
         public DeletePlaylistOp(string playlistID, bool deleteSongsOnPlaylist = true)
         {
             PlaylistID = playlistID;

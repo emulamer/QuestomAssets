@@ -5,7 +5,7 @@ using System.Text;
 
 namespace QuestomAssets.BeatSaber
 {
-    public class BeatmapCharacteristicObject : MonoBehaviourObject, INeedAssetsMetadata
+    public sealed class BeatmapCharacteristicObject : MonoBehaviourObject, INeedAssetsMetadata
     {
         public BeatmapCharacteristicObject(IObjectInfo<AssetsObject> objectInfo, AssetsReader reader) : base(objectInfo)
         {
@@ -27,9 +27,9 @@ namespace QuestomAssets.BeatSaber
             }
         }
 
-        protected override void Parse(AssetsReader reader)
+        public override void Parse(AssetsReader reader)
         {
-            base.Parse(reader);
+            base.ParseBase(reader);
             Icon = SmartPtr<SpriteObject>.Read(ObjectInfo.ParentFile, this, reader);
             HintText = reader.ReadString();
             CharacteristicName = reader.ReadString();

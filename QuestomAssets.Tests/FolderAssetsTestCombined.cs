@@ -27,6 +27,8 @@ namespace QuestomAssets.Tests
                 throw new System.Exception("Cover art file doesn't exist.  Make sure it is set in the COVER_ART_FILE constant.");
 
             FileUtils.DirectoryCopy(BS_EXTRACTED_ASSETS, $".\\TestAssets{TestRandomNum}", true);
+            if (!Directory.Exists(ModLibTestFolder))
+                Directory.CreateDirectory(ModLibTestFolder);
 
             base.Setup();
         }
@@ -100,7 +102,7 @@ namespace QuestomAssets.Tests
 
         protected override QaeConfig GetQaeConfig(IAssetsFileProvider prov)
         {
-            return new QaeConfig() { AssetsPath = "", SongsPath = "", FileProvider = prov, SongFileProvider = new FolderFileProvider(".\\", false) };
+            return new QaeConfig() { AssetsPath = "", SongsPath = "", RootFileProvider = prov, SongFileProvider = new FolderFileProvider(".\\", false), ModLibsFileProvider = new FolderFileProvider(ModLibTestFolder, false, false) };
         }
 
         protected override IAssetsFileProvider GetProvider()

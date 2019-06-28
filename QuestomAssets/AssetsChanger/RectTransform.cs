@@ -6,7 +6,7 @@ namespace QuestomAssets.AssetsChanger
 {
 
 
-    public class RectTransform : Transform
+    public sealed class RectTransform : Transform
     {
         public RectTransform(AssetsFile assetsFile) : base(assetsFile, AssetsConstants.ClassID.RectTransformClassID)
         {
@@ -17,9 +17,9 @@ namespace QuestomAssets.AssetsChanger
             Parse(reader);
         }
 
-        protected override void Parse(AssetsReader reader)
+        public override void Parse(AssetsReader reader)
         {
-            base.Parse(reader);
+            base.ParseBase(reader);
             AnchorMin = new Vector2F(reader);
             AnchorMax = new Vector2F(reader);
             AnchoredPosition = new Vector2F(reader);

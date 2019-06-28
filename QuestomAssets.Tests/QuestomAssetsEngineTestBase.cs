@@ -1,4 +1,5 @@
 ﻿using BeatmapAssetMaker;
+using Newtonsoft.Json;
 using NUnit.Framework;
 using QuestomAssets.AssetOps;
 using QuestomAssets.AssetsChanger;
@@ -24,6 +25,7 @@ namespace QuestomAssets.Tests
         public const string TestSongAuthorName = "Emulamer";
         public const string PlaylistIDFormat = "someplaylist{0}";
         public const string PlaylistNameFormat = "A Playlist {0}";
+        public const string ModLibTestFolder = "testmodlib";
         public string SongIDFormat = "{0:D4}-{1:D4}";
 
 
@@ -406,6 +408,45 @@ namespace QuestomAssets.Tests
                 }
                 Assert.Pass();
             }
+        }
+
+        [Test]
+        public void HookModInstallWorks()
+        {
+            using (var fp = GetProvider())
+            {
+                var q = GetQaeConfig(fp);
+                using (QuestomAssetsEngine qae = new QuestomAssetsEngine(q))
+                {
+                    var def = Mods.ModDefinition.InstallFromZip("TestMods\\TestHookMod.zip", q, qae);
+                    Assert.IsNotNull(def);
+                    Assert.IsTrue(File.Exists(Path.Combine(ModLibTestFolder, "libhitscorevisualizer.so")), "Mod so file didn't get copied");
+                }
+            }
+            Assert.Pass();
+        }
+
+        [Test]
+        public void AssetsModWorks()
+        {
+            using (var fp = GetProvider())
+            {
+                var q = GetQaeConfig(fp);
+                using (QuestomAssetsEngine qae = new QuestomAssetsEngine(q))
+                {
+                    var def = Mods.ModDefinition.InstallFromZip("TestMods\\TestAssetsMod.zip", q, qae);
+                    Assert.IsNotNull(def);
+                    qae.Save();
+                }
+                using (var qae = new QuestomAssetsEngine(q))
+                {
+                    qae.GetCurrentConfig();
+
+                    //todo: actually verify something to make sure they got in there
+                }
+                
+            }
+            Assert.Pass();
         }
 
         [Test]

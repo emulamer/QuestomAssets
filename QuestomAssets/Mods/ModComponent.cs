@@ -1,9 +1,12 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using QuestomAssets.AssetsChanger;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace QuestomAssets.Mods
 {
+    [JsonConverter(typeof(ModComponentTypeConverter))]
     public abstract class ModComponent
     {
         /// <summary>
@@ -11,14 +14,8 @@ namespace QuestomAssets.Mods
         /// </summary>
         public abstract ModComponentType Type { get; }
 
-        ///// <summary>
-        ///// The action to be performed when the mod is installed
-        ///// </summary>
-        //public abstract IModAction InstallAction { get; set; }
+        public abstract void InstallComponent(ModContext context);
 
-        ///// <summary>
-        ///// Optionally, the action to be performed when the mod is uninstalled if the ModDefinition's CanUninstall == true
-        ///// </summary>
-        //public abstract IModAction UninstallAction { get; set; }
+        public abstract void UninstallComponent(ModContext context);
     }
 }

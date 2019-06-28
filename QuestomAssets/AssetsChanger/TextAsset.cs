@@ -7,7 +7,7 @@ using System.Text;
 
 namespace QuestomAssets.AssetsChanger
 {
-    public class TextAsset : AssetsObject, IHaveName
+    public sealed class TextAsset : AssetsObject, IHaveName
     {
         public string Name { get; set; }
         public string Script { get; set; }
@@ -19,16 +19,11 @@ namespace QuestomAssets.AssetsChanger
         public TextAsset(IObjectInfo<AssetsObject> objectInfo, AssetsReader reader) : base(objectInfo)
         {
             Parse(reader);
-            ParseDetails(reader);
         }
 
-        protected override void Parse(AssetsReader reader)
+        public override void Parse(AssetsReader reader)
         {
-            base.Parse(reader);            
-        }
-
-        protected void ParseDetails(AssetsReader reader)
-        {
+            base.ParseBase(reader);
             Name = reader.ReadString();
             Script = reader.ReadString();
         }

@@ -14,6 +14,7 @@ namespace QuestomAssets.AssetOps
         public ManualResetEvent FinishedEvent = new ManualResetEvent(false);
         public event EventHandler<AssetOp> OpFinished;
         public DateTime? FinishedAt { get; private set; }
+        public abstract bool IsWriteOp { get; }
 
         public Exception Exception { get; private set; }
 

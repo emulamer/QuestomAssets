@@ -75,7 +75,8 @@ namespace QuestomAssets
 
         public void MkDir(string path)
         {
-            Directory.CreateDirectory(Path.Combine(_rootFolder, FwdToFS(path)));
+            if (!Directory.Exists(Path.Combine(_rootFolder, FwdToFS(path))))
+                Directory.CreateDirectory(Path.Combine(_rootFolder, FwdToFS(path)));
         }
 
         public void RmRfDir(string path)

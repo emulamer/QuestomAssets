@@ -38,17 +38,17 @@ namespace QuestomAssets.AssetsChanger
         public AssetsObject(IObjectInfo<AssetsObject> objectInfo, AssetsReader reader)
         {
             ObjectInfo = objectInfo;
-            Parse(reader);
-            ParseDetails(reader);
+            Parse(reader);            
         }
 
-        protected virtual void Parse(AssetsReader reader)
+        protected virtual void ParseBase(AssetsReader reader)
         {
             reader.Seek(ObjectInfo.DataOffset);
         }
 
-        private void ParseDetails(AssetsReader reader)
+        public virtual void Parse(AssetsReader reader)
         {
+            ParseBase(reader);
             Data = reader.ReadBytes(ObjectInfo.DataSize);
         }
         

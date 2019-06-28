@@ -42,14 +42,15 @@ namespace QuestomAssets.AssetsChanger
             Parse(reader);
         }
 
-        protected override void Parse(AssetsReader reader)
+        public override void Parse(AssetsReader reader)
         {
-            base.Parse(reader);
+            base.ParseBase(reader);
             int startPosition = reader.Position;
             Name = reader.ReadString();
             int readLen = ObjectInfo.DataSize - (reader.Position - startPosition);
             MeshData = reader.ReadBytes(readLen);
         }
+
         protected override void WriteObject(AssetsWriter writer)
         {
             base.WriteBase(writer);
@@ -60,7 +61,6 @@ namespace QuestomAssets.AssetsChanger
         public string Name { get; set; }
 
         public byte[] MeshData { get; set; }
-
 
         public override byte[] Data
         {

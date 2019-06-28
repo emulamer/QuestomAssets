@@ -9,6 +9,8 @@ namespace QuestomAssets.AssetOps
 {
     public class AddNewSongToPlaylistOp : AssetOp
     {
+        public override bool IsWriteOp => true;
+
         public AddNewSongToPlaylistOp(BeatSaberSong song, string playlistID)
         {
             Song = song;

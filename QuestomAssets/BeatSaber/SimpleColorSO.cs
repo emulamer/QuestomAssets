@@ -22,9 +22,9 @@ namespace QuestomAssets.BeatSaber
         public SimpleColorSO(AssetsFile assetsFile) : base(assetsFile, assetsFile.Manager.GetScriptObject("SimpleColorSO"))
         { }
 
-        protected override void Parse(AssetsReader reader)
+        public override void Parse(AssetsReader reader)
         {
-            base.Parse(reader);
+            base.ParseBase(reader);
             color = new Color(reader);
         }
 

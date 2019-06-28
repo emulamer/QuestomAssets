@@ -215,6 +215,10 @@ namespace QuestomAssets.AssetsChanger
                                 obj.DataOffset = offset;
                                 var origSize = obj.DataSize;
                                 obj.DataSize = (int)(objectsMS.Position - obj.DataOffset);
+                                if (origSize != obj.DataSize)
+                                {
+                                    Log.LogErr("data size does not match previous on this object");
+                                }
                                 writer.AlignTo(8);
                             }
                         }

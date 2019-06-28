@@ -11,29 +11,19 @@ using Newtonsoft.Json.Linq;
 
 namespace QuestomAssets.BeatSaber
 {
-    public class BeatmapDataObject: MonoBehaviourObject
+    public sealed class BeatmapDataObject: MonoBehaviourObject
     {
         public BeatmapDataObject(IObjectInfo<AssetsObject> objectInfo, AssetsReader reader) : base(objectInfo)
         {
             Parse(reader);
         }
 
-        //public BeatmapDataObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
-        //{ }
-
         public BeatmapDataObject(AssetsFile assetsFile) : base(assetsFile, assetsFile.Manager.GetScriptObject("BeatmapDataSO"))
         { }
 
-        
-        
-        //public BeatmapDataObject(AssetsReader reader)
-        //{
-        //    Parse(reader);
-        //}
-
-        protected override void Parse(AssetsReader reader)
+        public override void Parse(AssetsReader reader)
         {
-            base.Parse(reader);
+            base.ParseBase(reader);
             JsonData = reader.ReadString();
             reader.AlignTo(4);
         }

@@ -25,9 +25,14 @@ namespace QuestomAssets.AssetsChanger
             Parse(reader);
         }
 
-        protected override void Parse(AssetsReader reader)
+        public override void Parse(AssetsReader reader)
         {
-            base.Parse(reader);
+            ParseBase(reader);
+        }
+
+        protected override void ParseBase(AssetsReader reader)
+        {
+            base.ParseBase(reader);
             LocalRotation = new QuaternionF(reader);
             LocalPosition = new Vector3F(reader);
             LocalScale = new Vector3F(reader);

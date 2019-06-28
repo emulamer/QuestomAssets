@@ -8,6 +8,8 @@ namespace QuestomAssets.AssetOps
 {
     public class MoveSongToPlaylistOp : AssetOp
     {
+        public override bool IsWriteOp => true;
+
         public string SongID { get; private set; }
         public string ToPlaylistID { get; private set; }
 

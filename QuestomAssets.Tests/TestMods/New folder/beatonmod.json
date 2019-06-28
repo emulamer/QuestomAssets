@@ -1,0 +1,20 @@
+﻿{
+  "ID": "HitScoreVisualizer",
+  "Name": "Hit Score Visualizer",
+  "Author": "Sc2ad",
+  "Description": "Color codes the hit score relative to how good a hit it was",
+  "Category": "Gameplay",
+  "TargetBeatSaberVersion": "1.1.0",
+  "CanUninstall": true,
+  "Components": [
+    {
+      "Type": "HookMod",
+      "InstallAction": {
+        "InstallLibraryFile": "libhitscorevisualizer.so"
+      },
+      "UninstallAction": {
+        "RemoveLibraryFile": "libhitscorevisualizer.so"
+      }
+    }
+  ]
+}

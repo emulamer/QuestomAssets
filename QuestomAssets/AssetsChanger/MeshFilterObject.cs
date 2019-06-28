@@ -4,7 +4,7 @@ using System.Text;
 
 namespace QuestomAssets.AssetsChanger
 {
-    public class MeshFilterObject : Component
+    public sealed class MeshFilterObject : Component
     {
         public MeshFilterObject(AssetsFile assetsFile) : base(assetsFile, AssetsConstants.ClassID.MeshFilterClassID)
         {
@@ -15,9 +15,9 @@ namespace QuestomAssets.AssetsChanger
             Parse(reader);
         }
 
-        protected override void Parse(AssetsReader reader)
+        public override void Parse(AssetsReader reader)
         {
-            base.Parse(reader);
+            base.ParseBase(reader);
             Mesh = SmartPtr<MeshObject>.Read(ObjectInfo.ParentFile, this, reader);
         }
 

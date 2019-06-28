@@ -30,7 +30,7 @@ namespace QuestomAssets
         {
             get
             {
-                return _config.FileProvider;
+                return _config.RootFileProvider;
             }
         }
 
@@ -64,7 +64,7 @@ namespace QuestomAssets
                 };
             }
             Stopwatch sw = new Stopwatch();
-            _manager = new AssetsManager(_config.FileProvider, _config.AssetsPath, BSConst.GetAssetTypeMap());
+            _manager = new AssetsManager(_config.RootFileProvider, _config.AssetsPath, BSConst.GetAssetTypeMap());
             Log.LogMsg("Preloading files...");
             sw.Start();
             PreloadFiles();
@@ -138,12 +138,7 @@ namespace QuestomAssets
                         Log.LogMsg($"Ops queued, waiting for all to complete...");
                         using (new LogTiming("waiting for ops to complete"))
                         {
-                            while (ops.Count > 0)
-                            {
-                                var waitOps = ops.Take(64);
-                                WaitHandle.WaitAll(waitOps.Select(x => x.FinishedEvent).ToArray());
-                                ops.RemoveAll(x => waitOps.Contains(x));
-                            }
+                            ops.WaitForFinish();
                         }
 
                         if (failed.Count > 0)

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace QuestomAssets.BeatSaber
 {
-    public class EnvironmentSceneInfoObject : MonoBehaviourObject, INeedAssetsMetadata
+    public sealed class EnvironmentSceneInfoObject : MonoBehaviourObject, INeedAssetsMetadata
     {
         public EnvironmentSceneInfoObject(IObjectInfo<AssetsObject> objectInfo, AssetsReader reader) : base(objectInfo)
         {
@@ -27,9 +27,9 @@ namespace QuestomAssets.BeatSaber
             }
         }
 
-        protected override void Parse(AssetsReader reader)
+        public override void Parse(AssetsReader reader)
         {
-            base.Parse(reader);
+            base.ParseBase(reader);
             SceneName = reader.ReadString();
             DisabledRootObjects = reader.ReadBoolean();
             reader.AlignTo(4);

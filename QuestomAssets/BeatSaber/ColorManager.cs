@@ -20,9 +20,9 @@ namespace QuestomAssets.BeatSaber
         public ColorManager(AssetsFile assetsFile) : base(assetsFile, assetsFile.Manager.GetScriptObject("ColorManager"))
         { }
 
-        protected override void Parse(AssetsReader reader)
+        public override void Parse(AssetsReader reader)
         {
-            base.Parse(reader);
+            base.ParseBase(reader);
             PlayerModel = SmartPtr<MonoBehaviourObject>.Read(ObjectInfo.ParentFile, this, reader);
             ColorA = SmartPtr<MonoBehaviourObject>.Read(ObjectInfo.ParentFile, this, reader);
             ColorB = SmartPtr<MonoBehaviourObject>.Read(ObjectInfo.ParentFile, this, reader);

@@ -8,7 +8,7 @@ namespace QuestomAssets.AssetsChanger
     /// <summary>
     /// !!!!!!!!!!!!THIS CLASS IS HORRIBLY INCOMPLETE AND JUST HACKED TOGETHER TO GET TO THE TEXTURE POINTER!!!!!!!!!!
     /// </summary>
-    public class SpriteObject : AssetsObject, IHaveName
+    public sealed class SpriteObject : AssetsObject, IHaveName
     {
         public SpriteObject(AssetsFile assetsFile) : base(assetsFile, AssetsConstants.ClassID.SpriteClassID)
         {
@@ -19,12 +19,9 @@ namespace QuestomAssets.AssetsChanger
             Parse(reader);
         }
 
-        //public SpriteObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
-        //{ }
-        
-        protected override void Parse(AssetsReader reader)
+        public override void Parse(AssetsReader reader)
         {
-            base.Parse(reader);
+            base.ParseBase(reader);
             int startPosition = reader.Position;
             Name = reader.ReadString();
             UnparsedData1 = reader.ReadBytes(100);

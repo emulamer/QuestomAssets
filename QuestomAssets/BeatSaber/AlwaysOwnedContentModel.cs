@@ -5,7 +5,7 @@ using System.Text;
 
 namespace QuestomAssets.BeatSaber
 {
-    public class AlwaysOwnedContentModel : MonoBehaviourObject, INeedAssetsMetadata
+    public sealed class AlwaysOwnedContentModel : MonoBehaviourObject, INeedAssetsMetadata
     {
 
         public AlwaysOwnedContentModel(AssetsFile assetsFile) : base(assetsFile, assetsFile.Manager.GetScriptObject("AlwaysOwnedContentModelSO"))
@@ -16,9 +16,9 @@ namespace QuestomAssets.BeatSaber
             Parse(reader);
         }
 
-        protected override void Parse(AssetsReader reader)
+        public override void Parse(AssetsReader reader)
         {
-            base.Parse(reader);
+            base.ParseBase(reader);
             AlwaysOwnedPacks = reader.ReadArrayOf<ISmartPtr<BeatmapLevelPackObject>>(x => SmartPtr<BeatmapLevelPackObject>.Read(ObjectInfo.ParentFile, this, reader));
             AlwaysOwnedBeatmapLevels = reader.ReadArrayOf<ISmartPtr<BeatmapLevelDataObject>>(x => SmartPtr<BeatmapLevelDataObject>.Read(ObjectInfo.ParentFile, this, reader));
         }

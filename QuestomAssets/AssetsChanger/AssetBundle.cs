@@ -4,7 +4,7 @@ using System.Text;
 
 namespace QuestomAssets.AssetsChanger
 {
-    public class AssetBundle : AssetsObject, IHaveName
+    public sealed class AssetBundle : AssetsObject, IHaveName
     {
         public AssetBundle(AssetsFile assetsFile) : base(assetsFile, AssetsConstants.ClassID.MonoScriptType)
         {
@@ -15,9 +15,9 @@ namespace QuestomAssets.AssetsChanger
             Parse(reader);
         }
 
-        protected override void Parse(AssetsReader reader)
+        public override void Parse(AssetsReader reader)
         {
-            base.Parse(reader);
+            base.ParseBase(reader);
             Name = reader.ReadString();
             PreloadTable = reader.ReadArrayOf<ISmartPtr<AssetsObject>>(x => SmartPtr<AssetsObject>.Read(ObjectInfo.ParentFile, this, x));
             Container = reader.ReadArrayOf(x => new Map(ObjectInfo.ParentFile, this, x));

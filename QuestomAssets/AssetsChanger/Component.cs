@@ -25,16 +25,21 @@ namespace QuestomAssets.AssetsChanger
         {
         }
 
-        protected override void Parse(AssetsReader reader)
+        public override void Parse(AssetsReader reader)
         {
-            base.Parse(reader);
+            ParseBase(reader);
+        }
+
+        protected override void ParseBase(AssetsReader reader)
+        {
+            base.ParseBase(reader);
             try
             {
                 GameObject = SmartPtr<GameObject>.Read(ObjectInfo.ParentFile, this, reader);
             }
             catch (Exception ex)
             {
-                Log.LogErr("Component failed to load its GameObject... allowing it to continue because this happens with bundles?");
+                Log.LogErr("Component failed to load its GameObject... allowing it to continue because this happens with bundles?", ex);
                 GameObject = null;
             }
         }

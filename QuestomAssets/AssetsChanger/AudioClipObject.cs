@@ -6,7 +6,7 @@ using System.Text;
 
 namespace QuestomAssets.AssetsChanger
 {
-    public class AudioClipObject : AssetsObject, IHaveName
+    public sealed class AudioClipObject : AssetsObject, IHaveName
     {
         public string Name { get; set; }
 
@@ -35,9 +35,6 @@ namespace QuestomAssets.AssetsChanger
         public StreamedResource Resource { get; set; }
 
         public int CompressionFormat { get; set; }
-        
-        //public AudioClipObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
-        //{ }
 
         public AudioClipObject(IObjectInfo<AssetsObject> objectInfo, AssetsReader reader) : base(objectInfo)
         {
@@ -47,9 +44,9 @@ namespace QuestomAssets.AssetsChanger
         public AudioClipObject(AssetsFile assetsFile) : base(assetsFile, AssetsConstants.ClassID.AudioClipClassID)
         { }
 
-        protected override void Parse(AssetsReader reader)
+        public override void Parse(AssetsReader reader)
         {
-            base.Parse(reader);
+            base.ParseBase(reader);
             Name = reader.ReadString();
             LoadType = reader.ReadInt32();
             Channels = reader.ReadInt32();
@@ -86,9 +83,7 @@ namespace QuestomAssets.AssetsChanger
             writer.AlignTo(4);
             Resource.Write(writer);
             writer.Write(CompressionFormat);
-        }
-
-        
+        }        
 
         public override byte[] Data
         {

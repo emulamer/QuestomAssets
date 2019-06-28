@@ -7,7 +7,7 @@ namespace QuestomAssets
 {
     public class QaeConfig
     {
-        public IAssetsFileProvider FileProvider { get; set; }
+        public IAssetsFileProvider RootFileProvider { get; set; }
         public IAssetsFileProvider SongFileProvider { get; set; }
 
         public string AssetsPath { get; set; }
@@ -18,6 +18,6 @@ namespace QuestomAssets
 
         public string ModsSourcePath { get; set; }
 
-        public string ModLibsPath { get; set; } = "/sdcard/Android/data/com.beatgames.beatsaber/files/mods/";
+        public IAssetsFileProvider ModLibsFileProvider { get; set; } 
     }
 }

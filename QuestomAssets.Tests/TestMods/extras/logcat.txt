@@ -1,0 +1,332 @@
+06-27 22:52:11.963  8687  8713 I QuestHook: [HitScoreVisualizer] Attempting to call standard HandleSaberAfterCutSwingRatingCounterDidChangeEvent...
+06-27 22:52:11.963  8687  8713 I QuestHook: [HitScoreVisualizer] Called RawScoreWithoutMultiplier Hook!
+06-27 22:52:11.963  8687  8713 I QuestHook: [HitScoreVisualizer] RawScore: 81
+06-27 22:52:11.963  8687  8713 I QuestHook: [HitScoreVisualizer] Checking judgements...
+06-27 22:52:11.963  8687  8713 I QuestHook: [HitScoreVisualizer] Checking judgements for score: 81
+06-27 22:52:11.963  8687  8713 I QuestHook: [HitScoreVisualizer] Setting score effect's color to best color with threshold: 80 for score: 81
+06-27 22:52:11.963  8687  8713 I QuestHook: [HitScoreVisualizer] Modified color!
+06-27 22:52:11.963  8687  8713 I QuestHook: [HitScoreVisualizer] Attempting to get text...
+06-27 22:52:11.963  8687  8713 I QuestHook: [HitScoreVisualizer] Original string/text location: -970116160
+06-27 22:52:11.963  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116160 has value: -339201152
+06-27 22:52:11.963  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116159 has value: 15452211
+06-27 22:52:11.963  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116158 has value: 60360
+06-27 22:52:11.963  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116157 has value: 235
+06-27 22:52:11.963  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116156 has value: 0
+06-27 22:52:11.963  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116155 has value: 234881024
+06-27 22:52:11.963  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116154 has value: 917504
+06-27 22:52:11.963  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116153 has value: 3584
+06-27 22:52:11.963  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116152 has value: 14
+06-27 22:52:11.963  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116151 has value: 939524096
+06-27 22:52:11.963  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116150 has value: 3670016
+06-27 22:52:11.963  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116149 has value: 822097920
+06-27 22:52:11.963  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116148 has value: 3211320
+06-27 22:52:11.963  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116147 has value: 12544
+06-27 22:52:11.963  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116146 has value: 49
+06-27 22:52:11.963  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116145 has value: 0
+06-27 22:52:11.963  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116144 has value: 0
+06-27 22:52:11.963  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116143 has value: 0
+06-27 22:52:11.963  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116142 has value: 0
+06-27 22:52:11.963  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116141 has value: 0
+06-27 22:52:11.963  8687  8713 I QuestHook: [HitScoreVisualizer] Got text!
+06-27 22:52:11.963  8687  8713 I QuestHook: [HitScoreVisualizer] Completed HandleSaberAfterCutSwingRatingCounterDidChangeEvent!
+06-27 22:52:11.963  8687  8713 I QuestHook: [HitScoreVisualizer] Called RawScoreWithoutMultiplier Hook!
+06-27 22:52:11.978  8687  8713 I QuestHook: [HitScoreVisualizer] Called HandleSaberAfterCutSwingRatingCounterDidChangeEvent Hook!
+06-27 22:52:11.978  8687  8713 I QuestHook: [HitScoreVisualizer] Attempting to call standard HandleSaberAfterCutSwingRatingCounterDidChangeEvent...
+06-27 22:52:11.978  8687  8713 I QuestHook: [HitScoreVisualizer] Called RawScoreWithoutMultiplier Hook!
+06-27 22:52:11.978  8687  8713 I QuestHook: [HitScoreVisualizer] RawScore: 81
+06-27 22:52:11.978  8687  8713 I QuestHook: [HitScoreVisualizer] Checking judgements...
+06-27 22:52:11.978  8687  8713 I QuestHook: [HitScoreVisualizer] Checking judgements for score: 81
+06-27 22:52:11.978  8687  8713 I QuestHook: [HitScoreVisualizer] Setting score effect's color to best color with threshold: 80 for score: 81
+06-27 22:52:11.978  8687  8713 I QuestHook: [HitScoreVisualizer] Modified color!
+06-27 22:52:11.978  8687  8713 I QuestHook: [HitScoreVisualizer] Attempting to get text...
+06-27 22:52:11.978  8687  8713 I QuestHook: [HitScoreVisualizer] Original string/text location: -970116184
+06-27 22:52:11.978  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116184 has value: -339201152
+06-27 22:52:11.978  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116183 has value: 15452211
+06-27 22:52:11.978  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116182 has value: 60360
+06-27 22:52:11.978  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116181 has value: 235
+06-27 22:52:11.978  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116180 has value: 0
+06-27 22:52:11.978  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116179 has value: 234881024
+06-27 22:52:11.978  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116178 has value: 917504
+06-27 22:52:11.978  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116177 has value: 3584
+06-27 22:52:11.978  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116176 has value: 14
+06-27 22:52:11.978  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116175 has value: 939524096
+06-27 22:52:11.978  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116174 has value: 3670016
+06-27 22:52:11.978  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116173 has value: 822097920
+06-27 22:52:11.978  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116172 has value: 3211320
+06-27 22:52:11.978  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116171 has value: 12544
+06-27 22:52:11.978  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116170 has value: 49
+06-27 22:52:11.978  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116169 has value: 0
+06-27 22:52:11.978  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116168 has value: 0
+06-27 22:52:11.978  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116167 has value: 0
+06-27 22:52:11.978  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116166 has value: 0
+06-27 22:52:11.978  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116165 has value: 0
+06-27 22:52:11.978  8687  8713 I QuestHook: [HitScoreVisualizer] Got text!
+06-27 22:52:11.978  8687  8713 I QuestHook: [HitScoreVisualizer] Completed HandleSaberAfterCutSwingRatingCounterDidChangeEvent!
+06-27 22:52:11.978  8687  8713 I QuestHook: [HitScoreVisualizer] Called RawScoreWithoutMultiplier Hook!
+06-27 22:52:11.989  8687  8713 I QuestHook: [HitScoreVisualizer] Called RawScoreWithoutMultiplier Hook!
+06-27 22:52:13.062  8687  8713 I QuestHook: [HitScoreVisualizer] Called InitAndPresent Hook!
+06-27 22:52:13.062  8687  8713 I QuestHook: [HitScoreVisualizer] Attempting to call standard InitAndPresent...
+06-27 22:52:13.062  8687  8713 I QuestHook: [HitScoreVisualizer] Called RawScoreWithoutMultiplier Hook!
+06-27 22:52:13.062  8687  8713 I QuestHook: [HitScoreVisualizer] RawScore: 82
+06-27 22:52:13.062  8687  8713 I QuestHook: [HitScoreVisualizer] Checking judgements...
+06-27 22:52:13.062  8687  8713 I QuestHook: [HitScoreVisualizer] Checking judgements for score: 82
+06-27 22:52:13.062  8687  8713 I QuestHook: [HitScoreVisualizer] Setting score effect's color to best color with threshold: 80 for score: 82
+06-27 22:52:13.062  8687  8713 I QuestHook: [HitScoreVisualizer] Modified color!
+06-27 22:52:13.062  8687  8713 I QuestHook: [HitScoreVisualizer] Attempting to get text...
+06-27 22:52:13.062  8687  8713 I QuestHook: [HitScoreVisualizer] Original string/text location: -970116208
+06-27 22:52:13.062  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116208 has value: -339201152
+06-27 22:52:13.062  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116207 has value: 15452211
+06-27 22:52:13.062  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116206 has value: 60360
+06-27 22:52:13.062  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116205 has value: 235
+06-27 22:52:13.062  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116204 has value: 0
+06-27 22:52:13.062  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116203 has value: 234881024
+06-27 22:52:13.062  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116202 has value: 917504
+06-27 22:52:13.063  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116201 has value: 3584
+06-27 22:52:13.063  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116200 has value: 14
+06-27 22:52:13.063  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116199 has value: 939524096
+06-27 22:52:13.063  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116198 has value: 3670016
+06-27 22:52:13.063  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116197 has value: 838875136
+06-27 22:52:13.063  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116196 has value: 3276856
+06-27 22:52:13.063  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116195 has value: 12800
+06-27 22:52:13.063  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116194 has value: 50
+06-27 22:52:13.063  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116193 has value: 0
+06-27 22:52:13.063  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116192 has value: 0
+06-27 22:52:13.063  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116191 has value: 0
+06-27 22:52:13.063  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116190 has value: 0
+06-27 22:52:13.063  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116189 has value: 0
+06-27 22:52:13.063  8687  8713 I QuestHook: [HitScoreVisualizer] Got text!
+06-27 22:52:13.063  8687  8713 I QuestHook: [HitScoreVisualizer] Completed InitAndPresent!
+06-27 22:52:13.063  8687  8713 I QuestHook: [HitScoreVisualizer] Called RawScoreWithoutMultiplier Hook!
+06-27 22:52:13.063  8687  8713 I QuestHook: [HitScoreVisualizer] Called RawScoreWithoutMultiplier Hook!
+06-27 22:52:13.063  8687  8713 I QuestHook: [HitScoreVisualizer] Called RawScoreWithoutMultiplier Hook!
+06-27 22:52:13.075  8687  8713 I QuestHook: [HitScoreVisualizer] Called HandleSaberAfterCutSwingRatingCounterDidChangeEvent Hook!
+06-27 22:52:13.075  8687  8713 I QuestHook: [HitScoreVisualizer] Attempting to call standard HandleSaberAfterCutSwingRatingCounterDidChangeEvent...
+06-27 22:52:13.075  8687  8713 I QuestHook: [HitScoreVisualizer] Called RawScoreWithoutMultiplier Hook!
+06-27 22:52:13.075  8687  8713 I QuestHook: [HitScoreVisualizer] RawScore: 91
+06-27 22:52:13.075  8687  8713 I QuestHook: [HitScoreVisualizer] Checking judgements...
+06-27 22:52:13.075  8687  8713 I QuestHook: [HitScoreVisualizer] Checking judgements for score: 91
+06-27 22:52:13.075  8687  8713 I QuestHook: [HitScoreVisualizer] Setting score effect's color to best color with threshold: 90 for score: 91
+06-27 22:52:13.075  8687  8713 I QuestHook: [HitScoreVisualizer] Modified color!
+06-27 22:52:13.075  8687  8713 I QuestHook: [HitScoreVisualizer] Attempting to get text...
+06-27 22:52:13.075  8687  8713 I QuestHook: [HitScoreVisualizer] Original string/text location: -970116280
+06-27 22:52:13.075  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116280 has value: -339201152
+06-27 22:52:13.075  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116279 has value: 15452211
+06-27 22:52:13.075  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116278 has value: 60360
+06-27 22:52:13.075  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116277 has value: 235
+06-27 22:52:13.075  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116276 has value: 0
+06-27 22:52:13.075  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116275 has value: 234881024
+06-27 22:52:13.075  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116274 has value: 917504
+06-27 22:52:13.075  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116273 has value: 3584
+06-27 22:52:13.075  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116272 has value: 14
+06-27 22:52:13.075  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116271 has value: 956301312
+06-27 22:52:13.075  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116270 has value: 3735552
+06-27 22:52:13.075  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116269 has value: 822098176
+06-27 22:52:13.075  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116268 has value: 3211321
+06-27 22:52:13.075  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116267 has value: 12544
+06-27 22:52:13.075  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116266 has value: 49
+06-27 22:52:13.075  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116265 has value: 0
+06-27 22:52:13.075  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116264 has value: 0
+06-27 22:52:13.075  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116263 has value: 0
+06-27 22:52:13.075  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116262 has value: 0
+06-27 22:52:13.075  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116261 has value: 0
+06-27 22:52:13.075  8687  8713 I QuestHook: [HitScoreVisualizer] Got text!
+06-27 22:52:13.075  8687  8713 I QuestHook: [HitScoreVisualizer] Completed HandleSaberAfterCutSwingRatingCounterDidChangeEvent!
+06-27 22:52:13.075  8687  8713 I QuestHook: [HitScoreVisualizer] Called RawScoreWithoutMultiplier Hook!
+06-27 22:52:13.089  8687  8713 I QuestHook: [HitScoreVisualizer] Called HandleSaberAfterCutSwingRatingCounterDidChangeEvent Hook!
+06-27 22:52:13.089  8687  8713 I QuestHook: [HitScoreVisualizer] Attempting to call standard HandleSaberAfterCutSwingRatingCounterDidChangeEvent...
+06-27 22:52:13.089  8687  8713 I QuestHook: [HitScoreVisualizer] Called RawScoreWithoutMultiplier Hook!
+06-27 22:52:13.089  8687  8713 I QuestHook: [HitScoreVisualizer] RawScore: 99
+06-27 22:52:13.089  8687  8713 I QuestHook: [HitScoreVisualizer] Checking judgements...
+06-27 22:52:13.089  8687  8713 I QuestHook: [HitScoreVisualizer] Checking judgements for score: 99
+06-27 22:52:13.089  8687  8713 I QuestHook: [HitScoreVisualizer] Setting score effect's color to best color with threshold: 90 for score: 99
+06-27 22:52:13.089  8687  8713 I QuestHook: [HitScoreVisualizer] Modified color!
+06-27 22:52:13.089  8687  8713 I QuestHook: [HitScoreVisualizer] Attempting to get text...
+06-27 22:52:13.089  8687  8713 I QuestHook: [HitScoreVisualizer] Original string/text location: -970116304
+06-27 22:52:13.089  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116304 has value: -339201152
+06-27 22:52:13.089  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116303 has value: 15452211
+06-27 22:52:13.089  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116302 has value: 60360
+06-27 22:52:13.089  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116301 has value: 235
+06-27 22:52:13.089  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116300 has value: 0
+06-27 22:52:13.089  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116299 has value: 234881024
+06-27 22:52:13.089  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116298 has value: 917504
+06-27 22:52:13.089  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116297 has value: 3584
+06-27 22:52:13.089  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116296 has value: 14
+06-27 22:52:13.089  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116295 has value: 956301312
+06-27 22:52:13.089  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116294 has value: 3735552
+06-27 22:52:13.089  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116293 has value: 956315904
+06-27 22:52:13.089  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116292 has value: 3735609
+06-27 22:52:13.089  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116291 has value: 14592
+06-27 22:52:13.089  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116290 has value: 57
+06-27 22:52:13.089  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116289 has value: 0
+06-27 22:52:13.089  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116288 has value: 0
+06-27 22:52:13.089  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116287 has value: 0
+06-27 22:52:13.089  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116286 has value: 0
+06-27 22:52:13.089  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116285 has value: 0
+06-27 22:52:13.089  8687  8713 I QuestHook: [HitScoreVisualizer] Got text!
+06-27 22:52:13.089  8687  8713 I QuestHook: [HitScoreVisualizer] Completed HandleSaberAfterCutSwingRatingCounterDidChangeEvent!
+06-27 22:52:13.089  8687  8713 I QuestHook: [HitScoreVisualizer] Called RawScoreWithoutMultiplier Hook!
+06-27 22:52:13.103  8687  8713 I QuestHook: [HitScoreVisualizer] Called HandleSaberAfterCutSwingRatingCounterDidChangeEvent Hook!
+06-27 22:52:13.103  8687  8713 I QuestHook: [HitScoreVisualizer] Attempting to call standard HandleSaberAfterCutSwingRatingCounterDidChangeEvent...
+06-27 22:52:13.103  8687  8713 I QuestHook: [HitScoreVisualizer] Called RawScoreWithoutMultiplier Hook!
+06-27 22:52:13.103  8687  8713 I QuestHook: [HitScoreVisualizer] RawScore: 106
+06-27 22:52:13.103  8687  8713 I QuestHook: [HitScoreVisualizer] Checking judgements...
+06-27 22:52:13.103  8687  8713 I QuestHook: [HitScoreVisualizer] Checking judgements for score: 106
+06-27 22:52:13.103  8687  8713 I QuestHook: [HitScoreVisualizer] Setting score effect's color to best color with threshold: 101 for score: 106
+06-27 22:52:13.103  8687  8713 I QuestHook: [HitScoreVisualizer] Modified color!
+06-27 22:52:13.103  8687  8713 I QuestHook: [HitScoreVisualizer] Attempting to get text...
+06-27 22:52:13.103  8687  8713 I QuestHook: [HitScoreVisualizer] Original string/text location: -970116328
+06-27 22:52:13.103  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116328 has value: -339201152
+06-27 22:52:13.103  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116327 has value: 15452211
+06-27 22:52:13.103  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116326 has value: 60360
+06-27 22:52:13.103  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116325 has value: 235
+06-27 22:52:13.103  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116324 has value: 0
+06-27 22:52:13.103  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116323 has value: 234881024
+06-27 22:52:13.103  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116322 has value: 917504
+06-27 22:52:13.103  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116321 has value: 3584
+06-27 22:52:13.103  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116320 has value: 14
+06-27 22:52:13.103  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116319 has value: 822083584
+06-27 22:52:13.103  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116318 has value: 3211264
+06-27 22:52:13.103  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116317 has value: 805318912
+06-27 22:52:13.103  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116316 has value: 3145777
+06-27 22:52:13.103  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116315 has value: 905981952
+06-27 22:52:13.103  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116314 has value: 3538992
+06-27 22:52:13.103  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116313 has value: 13824
+06-27 22:52:13.103  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116312 has value: 54
+06-27 22:52:13.103  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116311 has value: 0
+06-27 22:52:13.103  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116310 has value: 0
+06-27 22:52:13.103  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116309 has value: 0
+06-27 22:52:13.103  8687  8713 I QuestHook: [HitScoreVisualizer] Got text!
+06-27 22:52:13.103  8687  8713 I QuestHook: [HitScoreVisualizer] Completed HandleSaberAfterCutSwingRatingCounterDidChangeEvent!
+06-27 22:52:13.103  8687  8713 I QuestHook: [HitScoreVisualizer] Called RawScoreWithoutMultiplier Hook!
+06-27 22:52:13.117  8687  8713 I QuestHook: [HitScoreVisualizer] Called HandleSaberAfterCutSwingRatingCounterDidChangeEvent Hook!
+06-27 22:52:13.117  8687  8713 I QuestHook: [HitScoreVisualizer] Attempting to call standard HandleSaberAfterCutSwingRatingCounterDidChangeEvent...
+06-27 22:52:13.117  8687  8713 I QuestHook: [HitScoreVisualizer] Called RawScoreWithoutMultiplier Hook!
+06-27 22:52:13.117  8687  8713 I QuestHook: [HitScoreVisualizer] RawScore: 112
+06-27 22:52:13.117  8687  8713 I QuestHook: [HitScoreVisualizer] Checking judgements...
+06-27 22:52:13.117  8687  8713 I QuestHook: [HitScoreVisualizer] Checking judgements for score: 112
+06-27 22:52:13.117  8687  8713 I QuestHook: [HitScoreVisualizer] Setting score effect's color to best color with threshold: 101 for score: 112
+06-27 22:52:13.117  8687  8713 I QuestHook: [HitScoreVisualizer] Modified color!
+06-27 22:52:13.117  8687  8713 I QuestHook: [HitScoreVisualizer] Attempting to get text...
+06-27 22:52:13.117  8687  8713 I QuestHook: [HitScoreVisualizer] Original string/text location: -970116352
+06-27 22:52:13.117  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116352 has value: -339201152
+06-27 22:52:13.117  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116351 has value: 15452211
+06-27 22:52:13.117  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116350 has value: 60360
+06-27 22:52:13.117  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116349 has value: 235
+06-27 22:52:13.117  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116348 has value: 0
+06-27 22:52:13.117  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116347 has value: 234881024
+06-27 22:52:13.117  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116346 has value: 917504
+06-27 22:52:13.117  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116345 has value: 3584
+06-27 22:52:13.117  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116344 has value: 14
+06-27 22:52:13.117  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116343 has value: 822083584
+06-27 22:52:13.117  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116342 has value: 3211264
+06-27 22:52:13.117  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116341 has value: 822096128
+06-27 22:52:13.117  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116340 has value: 3211313
+06-27 22:52:13.117  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116339 has value: 838873344
+06-27 22:52:13.117  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116338 has value: 3276849
+06-27 22:52:13.117  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116337 has value: 12800
+06-27 22:52:13.117  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116336 has value: 50
+06-27 22:52:13.117  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116335 has value: 0
+06-27 22:52:13.117  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116334 has value: 0
+06-27 22:52:13.117  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116333 has value: 0
+06-27 22:52:13.117  8687  8713 I QuestHook: [HitScoreVisualizer] Got text!
+06-27 22:52:13.117  8687  8713 I QuestHook: [HitScoreVisualizer] Completed HandleSaberAfterCutSwingRatingCounterDidChangeEvent!
+06-27 22:52:13.117  8687  8713 I QuestHook: [HitScoreVisualizer] Called RawScoreWithoutMultiplier Hook!
+06-27 22:52:13.131  8687  8713 I QuestHook: [HitScoreVisualizer] Called HandleSaberAfterCutSwingRatingCounterDidChangeEvent Hook!
+06-27 22:52:13.131  8687  8713 I QuestHook: [HitScoreVisualizer] Attempting to call standard HandleSaberAfterCutSwingRatingCounterDidChangeEvent...
+06-27 22:52:13.131  8687  8713 I QuestHook: [HitScoreVisualizer] Called RawScoreWithoutMultiplier Hook!
+06-27 22:52:13.131  8687  8713 I QuestHook: [HitScoreVisualizer] RawScore: 112
+06-27 22:52:13.131  8687  8713 I QuestHook: [HitScoreVisualizer] Checking judgements...
+06-27 22:52:13.131  8687  8713 I QuestHook: [HitScoreVisualizer] Checking judgements for score: 112
+06-27 22:52:13.131  8687  8713 I QuestHook: [HitScoreVisualizer] Setting score effect's color to best color with threshold: 101 for score: 112
+06-27 22:52:13.131  8687  8713 I QuestHook: [HitScoreVisualizer] Modified color!
+06-27 22:52:13.131  8687  8713 I QuestHook: [HitScoreVisualizer] Attempting to get text...
+06-27 22:52:13.131  8687  8713 I QuestHook: [HitScoreVisualizer] Original string/text location: -970116376
+06-27 22:52:13.131  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116376 has value: -339201152
+06-27 22:52:13.131  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116375 has value: 15452211
+06-27 22:52:13.131  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116374 has value: 60360
+06-27 22:52:13.131  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116373 has value: 235
+06-27 22:52:13.131  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116372 has value: 0
+06-27 22:52:13.131  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116371 has value: 234881024
+06-27 22:52:13.131  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116370 has value: 917504
+06-27 22:52:13.131  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116369 has value: 3584
+06-27 22:52:13.131  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116368 has value: 14
+06-27 22:52:13.131  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116367 has value: 822083584
+06-27 22:52:13.131  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116366 has value: 3211264
+06-27 22:52:13.131  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116365 has value: 822096128
+06-27 22:52:13.131  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116364 has value: 3211313
+06-27 22:52:13.131  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116363 has value: 838873344
+06-27 22:52:13.131  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116362 has value: 3276849
+06-27 22:52:13.131  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116361 has value: 12800
+06-27 22:52:13.131  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116360 has value: 50
+06-27 22:52:13.131  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116359 has value: 0
+06-27 22:52:13.131  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116358 has value: 0
+06-27 22:52:13.131  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116357 has value: 0
+06-27 22:52:13.131  8687  8713 I QuestHook: [HitScoreVisualizer] Got text!
+06-27 22:52:13.131  8687  8713 I QuestHook: [HitScoreVisualizer] Completed HandleSaberAfterCutSwingRatingCounterDidChangeEvent!
+06-27 22:52:13.131  8687  8713 I QuestHook: [HitScoreVisualizer] Called RawScoreWithoutMultiplier Hook!
+06-27 22:52:13.145  8687  8713 I QuestHook: [HitScoreVisualizer] Called HandleSaberAfterCutSwingRatingCounterDidChangeEvent Hook!
+06-27 22:52:13.145  8687  8713 I QuestHook: [HitScoreVisualizer] Attempting to call standard HandleSaberAfterCutSwingRatingCounterDidChangeEvent...
+06-27 22:52:13.145  8687  8713 I QuestHook: [HitScoreVisualizer] Called RawScoreWithoutMultiplier Hook!
+06-27 22:52:13.145  8687  8713 I QuestHook: [HitScoreVisualizer] RawScore: 112
+06-27 22:52:13.145  8687  8713 I QuestHook: [HitScoreVisualizer] Checking judgements...
+06-27 22:52:13.145  8687  8713 I QuestHook: [HitScoreVisualizer] Checking judgements for score: 112
+06-27 22:52:13.145  8687  8713 I QuestHook: [HitScoreVisualizer] Setting score effect's color to best color with threshold: 101 for score: 112
+06-27 22:52:13.145  8687  8713 I QuestHook: [HitScoreVisualizer] Modified color!
+06-27 22:52:13.145  8687  8713 I QuestHook: [HitScoreVisualizer] Attempting to get text...
+06-27 22:52:13.145  8687  8713 I QuestHook: [HitScoreVisualizer] Original string/text location: -970116400
+06-27 22:52:13.145  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116400 has value: -339201152
+06-27 22:52:13.145  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116399 has value: 15452211
+06-27 22:52:13.145  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116398 has value: 60360
+06-27 22:52:13.145  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116397 has value: 235
+06-27 22:52:13.145  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116396 has value: 0
+06-27 22:52:13.145  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116395 has value: 234881024
+06-27 22:52:13.145  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116394 has value: 917504
+06-27 22:52:13.145  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116393 has value: 3584
+06-27 22:52:13.145  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116392 has value: 14
+06-27 22:52:13.145  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116391 has value: 822083584
+06-27 22:52:13.145  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116390 has value: 3211264
+06-27 22:52:13.145  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116389 has value: 822096128
+06-27 22:52:13.145  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116388 has value: 3211313
+06-27 22:52:13.145  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116387 has value: 838873344
+06-27 22:52:13.145  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116386 has value: 3276849
+06-27 22:52:13.145  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116385 has value: 12800
+06-27 22:52:13.145  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116384 has value: 50
+06-27 22:52:13.145  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116383 has value: 0
+06-27 22:52:13.145  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116382 has value: 0
+06-27 22:52:13.145  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116381 has value: 0
+06-27 22:52:13.145  8687  8713 I QuestHook: [HitScoreVisualizer] Got text!
+06-27 22:52:13.145  8687  8713 I QuestHook: [HitScoreVisualizer] Completed HandleSaberAfterCutSwingRatingCounterDidChangeEvent!
+06-27 22:52:13.145  8687  8713 I QuestHook: [HitScoreVisualizer] Called RawScoreWithoutMultiplier Hook!
+06-27 22:52:13.158  8687  8713 I QuestHook: [HitScoreVisualizer] Called HandleSaberAfterCutSwingRatingCounterDidChangeEvent Hook!
+06-27 22:52:13.159  8687  8713 I QuestHook: [HitScoreVisualizer] Attempting to call standard HandleSaberAfterCutSwingRatingCounterDidChangeEvent...
+06-27 22:52:13.159  8687  8713 I QuestHook: [HitScoreVisualizer] Called RawScoreWithoutMultiplier Hook!
+06-27 22:52:13.159  8687  8713 I QuestHook: [HitScoreVisualizer] RawScore: 112
+06-27 22:52:13.159  8687  8713 I QuestHook: [HitScoreVisualizer] Checking judgements...
+06-27 22:52:13.159  8687  8713 I QuestHook: [HitScoreVisualizer] Checking judgements for score: 112
+06-27 22:52:13.159  8687  8713 I QuestHook: [HitScoreVisualizer] Setting score effect's color to best color with threshold: 101 for score: 112
+06-27 22:52:13.159  8687  8713 I QuestHook: [HitScoreVisualizer] Modified color!
+06-27 22:52:13.159  8687  8713 I QuestHook: [HitScoreVisualizer] Attempting to get text...
+06-27 22:52:13.159  8687  8713 I QuestHook: [HitScoreVisualizer] Original string/text location: -970116424
+06-27 22:52:13.159  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116424 has value: -339201152
+06-27 22:52:13.159  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116423 has value: 15452211
+06-27 22:52:13.159  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116422 has value: 60360
+06-27 22:52:13.159  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116421 has value: 235
+06-27 22:52:13.159  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116420 has value: 0
+06-27 22:52:13.159  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116419 has value: 234881024
+06-27 22:52:13.159  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116418 has value: 917504
+06-27 22:52:13.159  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116417 has value: 3584
+06-27 22:52:13.159  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116416 has value: 14
+06-27 22:52:13.159  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116415 has value: 822083584
+06-27 22:52:13.159  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116414 has value: 3211264
+06-27 22:52:13.159  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116413 has value: 822096128
+06-27 22:52:13.159  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116412 has value: 3211313
+06-27 22:52:13.159  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116411 has value: 838873344
+06-27 22:52:13.159  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116410 has value: 3276849
+06-27 22:52:13.159  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116409 has value: 12800
+06-27 22:52:13.159  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116408 has value: 50
+06-27 22:52:13.159  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116407 has value: 0
+06-27 22:52:13.159  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116406 has value: 0
+06-27 22:52:13.159  8687  8713 I QuestHook: [HitScoreVisualizer] Byte at: -970116405 has value: 0
+06-27 22:52:13.159  8687  8713 I QuestHook: [HitScoreVisualizer] Got text!
+06-27 22:52:13.159  8687  8713 I QuestHook: [HitScoreVisualizer] Completed HandleSaberAfterCutSwingRatingCounterDidChangeEvent!
+06-27 22:52:13.159  8687  8713 I QuestHook: [HitScor
