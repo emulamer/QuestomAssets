@@ -24,7 +24,7 @@ namespace QuestomAssets.Mods
             Log.LogMsg($"Installing HookMod component");
             if (InstallAction == null)
                 throw new InvalidOperationException("HookMod is being installed, but has no install action!");
-            InstallAction.Install(context.ModFilesProvider, context.Config);
+            InstallAction.Install(context);
         }
 
         public override void UninstallComponent(ModContext context)

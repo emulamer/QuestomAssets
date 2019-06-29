@@ -27,7 +27,7 @@ namespace Assplorer
         }
 
         AssetsManager _manager;
-        IAssetsFileProvider _fileProvider;
+        IFileProvider _fileProvider;
 
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
@@ -67,7 +67,7 @@ namespace Assplorer
                     CloseStuff();
                     try
                     {
-                        _fileProvider = new ApkAssetsFileProvider(ofd.FileName, FileCacheMode.Memory,false);
+                        _fileProvider = new ZipFileProvider(ofd.FileName, FileCacheMode.Memory,false);
                         _manager = new AssetsManager(_fileProvider, BSConst.KnownFiles.AssetsRootPath, BSConst.GetAssetTypeMap());
                         if (_fileProvider.FindFiles("globalgamemanagers").Count > 0)
                             _manager.GetAssetsFile("globalgamemanagers.assets");
@@ -291,7 +291,7 @@ namespace Assplorer
         {
             _manager.WriteAllOpenAssets();
             _fileProvider.Save();
-            if (_fileProvider is ApkAssetsFileProvider)
+            if (_fileProvider is ZipFileProvider)
             {
                 ApkSigner s = new ApkSigner(BSConst.DebugCertificatePEM);
                 s.Sign(_fileProvider);

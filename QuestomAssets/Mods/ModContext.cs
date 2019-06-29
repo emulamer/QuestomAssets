@@ -7,14 +7,14 @@ namespace QuestomAssets.Mods
 {
     public class ModContext
     {
-        public ModContext(IAssetsFileProvider modFilesProvider, QaeConfig config, QuestomAssetsEngine engine)
+        public ModContext(string modPath, QaeConfig config, Func<QuestomAssetsEngine> getEngine)
         {
-            ModFilesProvider = modFilesProvider;
+            ModPath = modPath;
             Config = config;
-            Engine = engine;
+            GetEngine = getEngine;
         }
-        public IAssetsFileProvider ModFilesProvider { get; private set; }
+        public string ModPath { get; private set; }
         public QaeConfig Config { get; private set; }
-        public QuestomAssetsEngine Engine { get; private set; }
+        public Func<QuestomAssetsEngine> GetEngine { get; private set; }
     }
 }

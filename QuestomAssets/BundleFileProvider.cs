@@ -7,17 +7,32 @@ using System.Text.RegularExpressions;
 
 namespace QuestomAssets
 {
-    public class BundleFileProvider : IAssetsFileProvider
+    public class BundleFileProvider : IFileProvider
     {
         private FileStream _fileStream;
         private BundleFile _bundleFile;
         public bool UseCombinedStream { get; private set; }
+        private string _bundleFilename;
 
         public BundleFileProvider(string bundleFile, bool readOnly = true, bool useCombinedStream = false)
         {
+            _bundleFilename = bundleFile;
             _fileStream = File.Open(bundleFile, FileMode.Open, readOnly ? FileAccess.Read : FileAccess.ReadWrite);
             _bundleFile = new BundleFile(_fileStream);
             UseCombinedStream = useCombinedStream;
+        }
+
+        public string SourceName
+        {
+            get
+            {
+                return Path.GetFileName(_bundleFilename);
+            }
+        }
+
+        public bool DirectoryExists(string path)
+        {
+            return _bundleFile.Entries.Any(x => x.Filename.StartsWith(path.TrimEnd('/') + "/"));
         }
 
         private static bool FilePatternMatch(string filename, string pattern)

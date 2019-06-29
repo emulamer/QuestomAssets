@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using QuestomAssets.AssetsChanger;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -52,7 +53,6 @@ namespace QuestomAssets.Mods
         /// The list of individual components of this mod
         /// </summary>
         public List<ModComponent> Components { get; set; } = new List<ModComponent>();
-
 
         public void Install(ModContext context)
         {
@@ -108,12 +108,11 @@ namespace QuestomAssets.Mods
 
         public const string MOD_FILE_NAME = "beatonmod.json";
 
-        public static ModDefinition LoadFromZipFile(Ionic.Zip.ZipFile zip)
+        public static ModDefinition LoadDefinitionFromProvider(IFileProvider provider)
         {
             try
             {
-                var apk = new ApkAssetsFileProvider(zip, FileCacheMode.None, true);
-                return LoadModDef(apk);
+                return LoadModDef(provider);
             }
             catch (Exception ex)
             {
@@ -122,28 +121,14 @@ namespace QuestomAssets.Mods
             }
         }
 
-        //public static ModDefinition InstallFromZipFile(Ionic.Zip.ZipFile zip, QaeConfig config, QuestomAssetsEngine engine)
-        //{
-        //    try
-        //    {
-        //        var apk = new ApkAssetsFileProvider(zip, FileCacheMode.None, true);
-        //        return InstallModFile(apk, config, engine);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Log.LogErr($"ModDefinition failed to load from zip file.", ex);
-        //        throw new Exception($"ModDefinition failed to load from zip file.", ex);
-        //    }
-        //}
-        private static ModDefinition LoadModDef(ApkAssetsFileProvider apk)
+        private static ModDefinition LoadModDef(IFileProvider provider, string path = "")
         {
-          
             ModDefinition def = null;
-            if (!apk.FileExists(MOD_FILE_NAME))
+            if (!provider.FileExists(path.CombineFwdSlash(MOD_FILE_NAME)))
             {
                 throw new Exception($"ModDefinition can't load zip file becase it does not contain {MOD_FILE_NAME}");
             }
-            using (JsonTextReader jr = new JsonTextReader(new StreamReader(apk.GetReadStream(MOD_FILE_NAME))))
+            using (JsonTextReader jr = new JsonTextReader(new StreamReader(provider.GetReadStream(path.CombineFwdSlash(MOD_FILE_NAME)))))
             {
                 def = new JsonSerializer().Deserialize<ModDefinition>(jr);
             }
@@ -152,38 +137,14 @@ namespace QuestomAssets.Mods
             return def;
         }
 
-        private static ModDefinition InstallModFile(string modFileName, QaeConfig config, QuestomAssetsEngine engine)
+        /// <summary>
+        /// Installs (or queues the ops to install) a mod from the directory RELATIVE TO THE BEATONDATAROOT
+        /// </summary>
+        public static void InstallModFromDirectory(string modDirectory, QaeConfig config, Func<QuestomAssetsEngine> getEngine)
         {
-            ModDefinition def;
-            using (var rs = config.RootFileProvider.GetReadStream(config.ModsSourcePath + "/" + modFileName))
-            {
-                using (ApkAssetsFileProvider apk = new ApkAssetsFileProvider(rs, FileCacheMode.None, true))
-                {
-                    def = LoadModDef(apk);
-                    Log.LogMsg($"Installing mod ID {def.ID}");
-                    var context = new ModContext(apk, config, engine);
-                    def.Install(context);
-                    return def;
-                }
-            }
-        }
-
-        public static ModDefinition InstallFromZip(string zipFileName, QaeConfig config, QuestomAssetsEngine engine)
-        {
-            //need to get these paths using config out of here, it's a side effect of a poor job in the download class
-            try
-            {
-                if (!config.RootFileProvider.FileExists(config.ModsSourcePath+"/"+ zipFileName))
-                    throw new Exception($"Mod zip file {zipFileName} does not exist!");
-                
-                var apk = new ApkAssetsFileProvider(zipFileName, FileCacheMode.None, true);
-                return InstallModFile(zipFileName, config, engine);
-            }
-            catch (Exception ex)
-            {
-                Log.LogErr($"ModDefinition failed to load from zip file {zipFileName}", ex);
-                throw new Exception($"ModDefinition failed to load from zip file {zipFileName}", ex);
-            }
+            var def = LoadModDef(config.RootFileProvider, modDirectory);
+            var context = new ModContext(modDirectory, config, getEngine);
+            def.Install(context);
         }
     }
 }

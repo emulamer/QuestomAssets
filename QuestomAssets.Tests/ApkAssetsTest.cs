@@ -51,14 +51,14 @@ namespace QuestomAssets.Tests
             base.TearDown();
         }
 
-        protected override QaeConfig GetQaeConfig(IAssetsFileProvider prov)
+        protected override QaeConfig GetQaeConfig(IFileProvider prov)
         {
             return new QaeConfig() { AssetsPath = "assets/bin/Data/", SongsPath = "", RootFileProvider = prov, SongFileProvider = new FolderFileProvider(".\\", false) };
         }
 
-        protected override IAssetsFileProvider GetProvider()
+        protected override IFileProvider GetProvider()
         {
-            return new ApkAssetsFileProvider(_apkFile, FileCacheMode.Memory, false);
+            return new ZipFileProvider(_apkFile, FileCacheMode.Memory, false);
         }
     }
 }

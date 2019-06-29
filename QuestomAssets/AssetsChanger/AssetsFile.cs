@@ -14,11 +14,11 @@ namespace QuestomAssets.AssetsChanger
         public AssetsManager Manager { get; private set; }
         public string AssetsFilename { get; private set; }
         public string AssetsRootPath { get; private set; }
-        public IAssetsFileProvider FileProvider { get; private set; }
+        public IFileProvider FileProvider { get; private set; }
         public bool FileWasSplit { get; private set; }
         public Stream BaseStream { get; private set; }
 
-        public AssetsFile(AssetsManager manager, IAssetsFileProvider fileProvider, string assetsRootPath, string assetsFileName, bool loadData = true)
+        public AssetsFile(AssetsManager manager, IFileProvider fileProvider, string assetsRootPath, string assetsFileName, bool loadData = true)
         {
             Manager = manager;
             FileProvider = fileProvider;
@@ -144,7 +144,7 @@ namespace QuestomAssets.AssetsChanger
             }
             set
             {
-                _hasChanges = true;
+                _hasChanges = value;
             }
         }
 
@@ -215,10 +215,6 @@ namespace QuestomAssets.AssetsChanger
                                 obj.DataOffset = offset;
                                 var origSize = obj.DataSize;
                                 obj.DataSize = (int)(objectsMS.Position - obj.DataOffset);
-                                if (origSize != obj.DataSize)
-                                {
-                                    Log.LogErr("data size does not match previous on this object");
-                                }
                                 writer.AlignTo(8);
                             }
                         }
@@ -305,9 +301,12 @@ namespace QuestomAssets.AssetsChanger
                                         outputStream.CopyTo(writeStream);
                                     }
                                 }
-
-                                _hasChanges = false;
                                 FileProvider.Save();
+                                _hasChanges = false;
+                                foreach (var ptr in _knownPointers.Where(x => x.Owner.ObjectInfo.ParentFile == this && x.IsNew))
+                                {
+                                    ptr.IsNew = false;
+                                }
                                 OpenBaseStream();
                             }
                             catch (Exception ex)
@@ -363,9 +362,13 @@ namespace QuestomAssets.AssetsChanger
 
         public int GetFileIDForFilename(string filename)
         {
-            var file = Metadata.ExternalFiles.First(x => x.FileName == filename);
+            var file = Metadata.ExternalFiles.FirstOrDefault(x => x.FileName == filename);
             if (file == null)
-                throw new Exception($"Filename {filename} does not exist in the file list!");
+            {
+                Log.LogMsg($"External file {filename} is not already references from this file {AssetsFilename}.  Adding reference with what is hopefully the correct values.");
+                file = new ExternalFile() { AssetName = "", FileName = filename, ID = Guid.Empty, Type = 0 };
+                Metadata.ExternalFiles.Add(file);
+            }
             return Metadata.ExternalFiles.IndexOf(file)+1;
         }
 

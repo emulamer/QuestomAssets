@@ -7,8 +7,8 @@ namespace QuestomAssets
 {
     public class QaeConfig
     {
-        public IAssetsFileProvider RootFileProvider { get; set; }
-        public IAssetsFileProvider SongFileProvider { get; set; }
+        public IFileProvider RootFileProvider { get; set; }
+        public IFileProvider SongFileProvider { get; set; }
 
         public string AssetsPath { get; set; }
 
@@ -18,6 +18,6 @@ namespace QuestomAssets
 
         public string ModsSourcePath { get; set; }
 
-        public IAssetsFileProvider ModLibsFileProvider { get; set; } 
+        public IFileProvider ModLibsFileProvider { get; set; } 
     }
 }

@@ -15,7 +15,8 @@ namespace QuestomAssets.Mods.Assets
 
         public override IEnumerable<AssetOp> GetOps(ModContext context)
         {
-            if (!context.ModFilesProvider.FileExists(FromDataFile))
+            //TODO: I don't like the root path constant here.  Get rid of it.
+            if (!context.Config.RootFileProvider.FileExists(context.ModPath.CombineFwdSlash(FromDataFile)))
                 throw new Exception($"ReplaceAssetsAction could not find the asset data file {FromDataFile}");
             if (Locator == null)
                 throw new Exception("Locator is null for ReplaceAssetsAction!");
@@ -23,14 +24,14 @@ namespace QuestomAssets.Mods.Assets
             byte[] assetData;
             try
             {
-                assetData = context.ModFilesProvider.Read(FromDataFile);
+                assetData = context.Config.RootFileProvider.Read(context.ModPath.CombineFwdSlash(FromDataFile));
             }
             catch (Exception ex)
             {
                 Log.LogMsg($"Exception reading {FromDataFile} for ReplaceAssetAction.", ex);
                 throw new Exception($"ReplaceAssetAction could not read data file {FromDataFile}", ex);
             }
-            
+
             yield return new ReplaceAssetOp(Locator, assetData);
         }
     }

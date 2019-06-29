@@ -100,12 +100,12 @@ namespace QuestomAssets.Tests
             base.TearDown();
         }
 
-        protected override QaeConfig GetQaeConfig(IAssetsFileProvider prov)
+        protected override QaeConfig GetQaeConfig(IFileProvider prov)
         {
             return new QaeConfig() { AssetsPath = "", SongsPath = "", RootFileProvider = prov, SongFileProvider = new FolderFileProvider(".\\", false), ModLibsFileProvider = new FolderFileProvider(ModLibTestFolder, false, false) };
         }
 
-        protected override IAssetsFileProvider GetProvider()
+        protected override IFileProvider GetProvider()
         {
             return new FolderFileProvider($".\\TestAssets{TestRandomNum}\\", false, true);
         }

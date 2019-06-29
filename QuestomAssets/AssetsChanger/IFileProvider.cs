@@ -5,7 +5,7 @@ using System.Text;
 
 namespace QuestomAssets.AssetsChanger
 {
-    public interface IAssetsFileProvider : IDisposable
+    public interface IFileProvider : IDisposable
     {
         List<string> FindFiles(string pattern);
         Stream GetReadStream(string filename, bool bypassCache = false);
@@ -22,6 +22,13 @@ namespace QuestomAssets.AssetsChanger
         void Save(string toFile = null);
         Stream GetWriteStream(string filename);
         bool UseCombinedStream { get; }
+
+        /// <summary>
+        /// Gets the name of the source folder or file.  e.g. in the case of a folder provider /sdcard/somedata/morethings/songdata, it would be "songdata", in the case of an apk file provider opening somesong.zip, it would be "somesong.zip"
+        /// </summary>
+        string SourceName { get; }
+
+        bool DirectoryExists(string path);
 
     }
 }

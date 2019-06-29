@@ -10,7 +10,7 @@ namespace QuestomAssets.Utils
     public class CombinedStream : Stream
     {
         private int _totalLength;
-        private IAssetsFileProvider _fileProvider;
+        private IFileProvider _fileProvider;
         private class SplitFile
         {
             public SplitFile(Stream s)
@@ -66,7 +66,7 @@ namespace QuestomAssets.Utils
         }
         private List<SplitFile> _files = new List<SplitFile>();
 
-        public CombinedStream(List<string> orderedSplitFiles, IAssetsFileProvider provider)
+        public CombinedStream(List<string> orderedSplitFiles, IFileProvider provider)
         {
             _fileProvider = provider;
             InitFromFiles(orderedSplitFiles);

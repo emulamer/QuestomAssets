@@ -10,16 +10,25 @@ namespace QuestomAssets.AssetsChanger
     public class AssetsManager : IDisposable
     {
         public Dictionary<string, Type> ClassNameToTypes { get; private set; } = new Dictionary<string, Type>();
-        private IAssetsFileProvider _fileProvider;
+        private IFileProvider _fileProvider;
         private string _assetsRootPath;
 
-        public AssetsManager(IAssetsFileProvider fileProvider, string assetsRootPath, Dictionary<string, Type> classNameToTypes)
+        public AssetsManager(IFileProvider fileProvider, string assetsRootPath, Dictionary<string, Type> classNameToTypes)
         {
             _fileProvider = fileProvider;
             _assetsRootPath = assetsRootPath;
             LazyLoad = true;
             ClassNameToTypes = classNameToTypes;
             ForceLoadAllFiles = false;
+        }
+
+
+        public bool HasChanges
+        {
+            get
+            {
+                return _openAssetsFiles.Any(x=> x.Value.HasChanges);
+            }
         }
 
         private Dictionary<string, AssetsFile> _openAssetsFiles = new Dictionary<string, AssetsFile>();
@@ -143,7 +152,6 @@ namespace QuestomAssets.AssetsChanger
                         try
                         {
                             assetsFile.Write();
-                            assetsFile.HasChanges = false;
                         }
                         catch (Exception ex)
                         {

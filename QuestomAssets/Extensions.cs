@@ -10,6 +10,30 @@ namespace QuestomAssets
 {
     public static class Extensions
     {
+        public static string GetDirectoryFwdSlash(this string path)
+        {
+            if (!path.Contains("/"))
+                return "";
+
+            return path.Substring(0, path.LastIndexOf('/'));
+        }
+
+        public static string GetFilenameFwdSlash(this string path)
+        {
+            if (path == "/")
+                return "";
+
+            if (!path.Contains("/"))
+                return path;
+
+            if (path.EndsWith("/"))
+                path = path.TrimEnd('/');
+
+            int idx = path.LastIndexOf('/') + 1;
+
+            return path.Substring(idx, path.Length - idx);
+        }
+
         public static string CombineFwdSlash(this string path1, string path2)
         {
             if (path1.EndsWith("/") && path1.Length > 1)
@@ -30,7 +54,7 @@ namespace QuestomAssets
             return Cloner.DeepClone<T>((T)source.Object, toFile, addedObjects, null, exclusions);
         }
 
-        public static string ReadToString(this IAssetsFileProvider provider, string filename)
+        public static string ReadToString(this IFileProvider provider, string filename)
         {
             var data = provider.Read(filename);
             return System.Text.Encoding.UTF8.GetString(data);

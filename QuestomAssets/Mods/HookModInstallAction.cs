@@ -14,21 +14,21 @@ namespace QuestomAssets.Mods
         public string InstallLibraryFile { get; set; }
 
 
-        public void Install(IAssetsFileProvider modFilesProvider, QaeConfig config)
+        public void Install(ModContext context)
         {
-            if (!modFilesProvider.FileExists(InstallLibraryFile))
+            if (!context.Config.RootFileProvider.FileExists(context.ModPath.CombineFwdSlash(InstallLibraryFile)))
             {
                 throw new Exception($"HookMod installation failed because the library file {InstallLibraryFile} could not be found.");
             }
-            if (config.ModLibsFileProvider.FileExists(InstallLibraryFile))
+            if (context.Config.ModLibsFileProvider.FileExists(InstallLibraryFile))
             {
                 Log.LogMsg($"HookMod library file {InstallLibraryFile} already exists, it will be overwritten.");
             }
             try
             {
-                using (var rs = modFilesProvider.GetReadStream(InstallLibraryFile))
+                using (var rs = context.Config.RootFileProvider.GetReadStream(context.ModPath.CombineFwdSlash(InstallLibraryFile)))
                 {
-                    rs.CopyTo(config.ModLibsFileProvider.GetWriteStream(InstallLibraryFile));
+                    rs.CopyTo(context.Config.ModLibsFileProvider.GetWriteStream(InstallLibraryFile));
                 }
             }
             catch (Exception ex)

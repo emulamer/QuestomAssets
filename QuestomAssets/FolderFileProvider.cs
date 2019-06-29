@@ -5,11 +5,11 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using QuestomAssets.AssetsChanger;
-using static QuestomAssets.ApkAssetsFileProvider;
+using static QuestomAssets.ZipFileProvider;
 
 namespace QuestomAssets
 {
-    public class FolderFileProvider : IAssetsFileProvider
+    public class FolderFileProvider : IFileProvider
     {
         private string _rootFolder;
         private string _originalRoot;
@@ -26,6 +26,19 @@ namespace QuestomAssets
             _rootFolder = _originalRoot;
             _readonly = readOnly;
             UseCombinedStream = useCombinedStream;
+        }
+
+        public string SourceName
+        {
+            get
+            {
+                return Path.GetFileName(_originalRoot);
+            }
+        }
+
+        public bool DirectoryExists(string path)
+        {
+            return Directory.Exists(Path.Combine(_rootFolder, FwdToFS(path)));
         }
 
         private string AddTrailSlash(string path)

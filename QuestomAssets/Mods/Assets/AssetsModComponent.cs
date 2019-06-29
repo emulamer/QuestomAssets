@@ -25,7 +25,7 @@ namespace QuestomAssets.Mods.Assets
             using (new LogTiming("preloading asset files for assets mod"))
             {
                 if (InstallAction.PreloadFiles != null)
-                    InstallAction.PreloadFiles.ForEach(x => context.Engine.Manager.GetAssetsFile(x));
+                    InstallAction.PreloadFiles.ForEach(x => context.GetEngine().Manager.GetAssetsFile(x));
             }
             List<AssetOp> ops = new List<AssetOp>();
             foreach (var action in InstallAction.Actions.OrderBy(x=> x.StepNumber))
@@ -36,7 +36,7 @@ namespace QuestomAssets.Mods.Assets
                 }
             }
             Log.LogMsg($"Queueing {ops.Count} for assets mod component and waiting for completion...");
-            ops.ForEach(x => context.Engine.OpManager.QueueOp(x));
+            ops.ForEach(x => context.GetEngine().OpManager.QueueOp(x));
 
             //TODO: I'd like to just leave all these queued, but the modcontext has an open reader I don't want to let dangle or worry about cleaning up later
             ops.WaitForFinish();

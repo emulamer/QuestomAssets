@@ -30,7 +30,8 @@ namespace QuestomAssets.AssetOps
                     asset.ObjectInfo.DataSize = _replaceDataWith.Length;
                     asset.Parse(reader);
 
-                    asset.ObjectInfo.ParentFile.HasChanges = true;
+                    asset.ObjectInfo.DataOffset = -1;
+                    asset.ObjectInfo.DataSize = -1;
                 }
             }
         }

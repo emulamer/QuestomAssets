@@ -14,7 +14,7 @@ namespace QuestomAssets.Tests
     public class FolderAssetsTestNotCombined : FolderAssetsTestCombined
     {
         
-        protected override IAssetsFileProvider GetProvider()
+        protected override IFileProvider GetProvider()
         {
             return new FolderFileProvider($".\\TestAssets{TestRandomNum}\\", false, true);
         }

@@ -10,7 +10,7 @@ namespace QuestomAssets.BeatSaber
 {
     public static class Extensions
     {
-        private static string FindFirstOfSplit(IAssetsFileProvider fp, string assetsFile)
+        private static string FindFirstOfSplit(IFileProvider fp, string assetsFile)
         {
             int lastDot = assetsFile.LastIndexOf('.');
             if (lastDot > 0)
@@ -46,7 +46,7 @@ namespace QuestomAssets.BeatSaber
             return null;            
         }
 
-        public static string CorrectAssetFilename(this IAssetsFileProvider fp, string assetsFile)
+        public static string CorrectAssetFilename(this IFileProvider fp, string assetsFile)
         {
             var correctName = FindFirstOfSplit(fp, assetsFile);
             if (correctName != null)
@@ -88,7 +88,7 @@ namespace QuestomAssets.BeatSaber
             throw new ArgumentException($"The assets file {assetsFile} doesn't exist in with any known name variations!");
         }
 
-        public static Stream ReadCombinedAssets(this IAssetsFileProvider fp, string assetsFilePath, out bool wasCombined)
+        public static Stream ReadCombinedAssets(this IFileProvider fp, string assetsFilePath, out bool wasCombined)
         {
             string actualName = fp.CorrectAssetFilename(assetsFilePath);
 

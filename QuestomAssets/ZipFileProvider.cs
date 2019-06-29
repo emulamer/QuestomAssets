@@ -8,8 +8,15 @@ using System.Text.RegularExpressions;
 
 namespace QuestomAssets
 {
-    public class ApkAssetsFileProvider : IAssetsFileProvider
+    public class ZipFileProvider : IFileProvider
     {
+        public string SourceName
+        {
+            get
+            {
+                return ApkFilename.GetFilenameFwdSlash();
+            }
+        }
         private Dictionary<string, string> _tempFiles = new Dictionary<string, string>();
         public bool ReadOnly { get; private set; }
         public string ApkFilename { get; private set; }
@@ -23,10 +30,16 @@ namespace QuestomAssets
                 return _zipFile != null;
             }
         }
+
+        public bool DirectoryExists(string path)
+        {
+            return FindFiles(path.TrimEnd('/') + "/*").Any();
+        }
+
         public bool UseCombinedStream { get; private set; }
         private ZipFile _zipFile;
         string _tempFolder = null;
-        public ApkAssetsFileProvider(string apkFilename, FileCacheMode cacheMode, bool readOnly = false, string tempFolder = null, bool useCombinedStream = false)
+        public ZipFileProvider(string apkFilename, FileCacheMode cacheMode, bool readOnly = false, string tempFolder = null, bool useCombinedStream = false)
         {
             _zipFile = new ZipFile(apkFilename, System.Text.Encoding.UTF8);
             UseCombinedStream = useCombinedStream;
@@ -38,11 +51,11 @@ namespace QuestomAssets
                 _zipFile.TempFileFolder = tempFolder;
         }
 
-        public ApkAssetsFileProvider(Stream zipFileStream, FileCacheMode cacheMode, bool readOnly = false, string tempFolder = null, bool useCombinedStream = false)
+        public ZipFileProvider(Stream zipFileStream, string zipFilename, FileCacheMode cacheMode, bool readOnly = false, string tempFolder = null, bool useCombinedStream = false)
         {
             _zipFile = ZipFile.Read(zipFileStream);
+            ApkFilename = zipFilename;
             UseCombinedStream = useCombinedStream;
-            ApkFilename = "";
             ReadOnly = readOnly;
             CacheMode = cacheMode;
             _tempFolder = tempFolder;
@@ -50,17 +63,17 @@ namespace QuestomAssets
                 _zipFile.TempFileFolder = tempFolder;
         }
 
-        public ApkAssetsFileProvider(ZipFile zipFile, FileCacheMode cacheMode, bool readOnly = false, string tempFolder = null, bool useCombinedStream = false)
-        {
-            _zipFile = zipFile;
-            UseCombinedStream = useCombinedStream;
-            ApkFilename = "";
-            ReadOnly = readOnly;
-            CacheMode = cacheMode;
-            _tempFolder = tempFolder;
-            if (tempFolder != null)
-                _zipFile.TempFileFolder = tempFolder;
-        }
+        //public ZipFileProvider(ZipFile zipFile, FileCacheMode cacheMode, bool readOnly = false, string tempFolder = null, bool useCombinedStream = false)
+        //{
+        //    _zipFile = zipFile;
+        //    UseCombinedStream = useCombinedStream;
+        //    ApkFilename = "";
+        //    ReadOnly = readOnly;
+        //    CacheMode = cacheMode;
+        //    _tempFolder = tempFolder;
+        //    if (tempFolder != null)
+        //        _zipFile.TempFileFolder = tempFolder;
+        //}
 
         private void CheckRO()
         {
