@@ -34,12 +34,13 @@ namespace QuestomAssets.AssetOps
                 levelPack = context.Cache.PlaylistCache[Playlist.PlaylistID].Playlist;
                 levelPack.Name = Playlist.PlaylistName;
                 Playlist.LevelPackObject = levelPack;
+                OpCommon.UpdateCoverImage(Playlist, context, songsAssetFile);
             }
             else
             {
                 levelPack = OpCommon.CreatePlaylist(context, Playlist, songsAssetFile);
             }
-            OpCommon.UpdateCoverImage(Playlist, context, songsAssetFile);
+            
         }
 
         

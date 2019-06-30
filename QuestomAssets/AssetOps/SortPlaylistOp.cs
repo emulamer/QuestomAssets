@@ -41,7 +41,7 @@ namespace QuestomAssets.AssetOps
                     {
                         try
                         {
-                            return s1.Song.SongName.ToUpper().CompareTo(s2.Song.Name.ToUpper());
+                            return s1.Song.SongName.ToUpper().CompareTo(s2.Song.SongName.ToUpper());
                         }
                         catch
                         {
@@ -94,6 +94,7 @@ namespace QuestomAssets.AssetOps
                 var song = songList[i];
                 song.Order = i;
                 plCache.Playlist.BeatmapLevelCollection.Object.BeatmapLevels.Add(song.Song.PtrFrom(plCache.Playlist.BeatmapLevelCollection.Object));
+                Log.LogMsg($"{song.Song.SongName}");
             }
         }
     }

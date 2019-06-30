@@ -37,7 +37,7 @@ namespace QuestomAssets.AssetOps
                     {
                         try
                         {
-                            return s1.Song.SongName.ToUpper().CompareTo(s2.Song.Name.ToUpper());
+                            return s1.Song.SongName.ToUpper().CompareTo(s2.Song.SongName.ToUpper());
                         }
                         catch
                         {
@@ -92,9 +92,12 @@ namespace QuestomAssets.AssetOps
             var songsAssetFile = context.Engine.GetSongsAssetsFile();
             PlaylistAndSongs currentPlaylist = null;
             int plCtr = 0;
-            for (int i = 0; i < songList.Count(); i++)
+            string previousSongName = "";
+            for (int i = 0; i < songList.Length; i++)
             {
                 var song = songList[i];
+                if (BSConst.KnownLevelIDs.Contains(song.Song.LevelID) || BSConst.KnownLevelPackIDs.Contains(song.Playlist.PackID))
+                    continue;
                 var curSongName = nameGetter(song);
                 var packID = $"Auto_{curSongName}";
                 if (currentPlaylist == null || currentPlaylist.Playlist.PackID != packID)
@@ -107,26 +110,21 @@ namespace QuestomAssets.AssetOps
                             newPlaylist = false;
                         } else
                         {
-                            currentPlaylist.Playlist.PackName = " - " + curSongName;
+                            currentPlaylist.Playlist.PackName += " - " + previousSongName;
+                            
                         }
                     }
                     if (newPlaylist)
                     {
-                        if (context.Cache.PlaylistCache.ContainsKey(packID))
+                        if (!context.Cache.PlaylistCache.ContainsKey(packID))
                         {
-                            currentPlaylist = context.Cache.PlaylistCache[packID];
-                        }
-                        else
-                        {
-                            currentPlaylist = new PlaylistAndSongs()
+                            OpCommon.CreatePlaylist(context, new Models.BeatSaberPlaylist()
                             {
-                                Playlist = OpCommon.CreatePlaylist(context, new Models.BeatSaberPlaylist()
-                                {
-                                    PlaylistID = packID,
-                                    PlaylistName = curSongName
-                                }, songsAssetFile)
-                            };
+                                PlaylistID = packID,
+                                PlaylistName = curSongName
+                            }, songsAssetFile);
                         }
+                        currentPlaylist = context.Cache.PlaylistCache[packID];
                         plCtr = 0;
                     }                    
                 }
@@ -144,6 +142,11 @@ namespace QuestomAssets.AssetOps
                 currentPlaylist.Songs.Add(song.Song.LevelID, new OrderedSong() { Song = song.Song, Order = plCtr });
 
                 plCtr++;
+                previousSongName = curSongName;
+                if (SortMode == PlaylistSortMode.Name && i == songList.Length -1)
+                {
+                    currentPlaylist.Playlist.PackName += " - " + curSongName;
+                }
             }
         }
     }

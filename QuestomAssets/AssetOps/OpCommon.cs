@@ -35,6 +35,7 @@ namespace QuestomAssets.AssetOps
             mainCol.BeatmapLevelPacks.Add(levelPack.PtrFrom(mainCol));
             aoPacks.AlwaysOwnedPacks.Add(levelPack.PtrFrom(aoPacks));
             context.Cache.PlaylistCache.Add(playlist.PlaylistID, new PlaylistAndSongs() { Playlist = levelPack });
+            UpdateCoverImage(playlist, context, songsAssetFile);
             return levelPack;
         }
 
