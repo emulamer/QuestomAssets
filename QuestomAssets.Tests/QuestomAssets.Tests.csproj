@@ -5,7 +5,7 @@
 
 <SolutionDir>..\</SolutionDir>
     <IsPackable>false</IsPackable>
-    <Configurations>Debug;Release;Emulator Debug</Configurations>
+    <Configurations>Debug;Release;Emulator Debug;Profiler</Configurations>
   </PropertyGroup>
 
   <ItemGroup>

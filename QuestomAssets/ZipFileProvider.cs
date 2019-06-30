@@ -53,7 +53,7 @@ namespace QuestomAssets
 
         public ZipFileProvider(Stream zipFileStream, string zipFilename, FileCacheMode cacheMode, bool readOnly = false, string tempFolder = null, bool useCombinedStream = false)
         {
-            _zipFile = ZipFile.Read(zipFileStream);
+            _zipFile = ZipFile.Read(zipFileStream, new ReadOptions() { Encoding = System.Text.Encoding.UTF8 });
             ApkFilename = zipFilename;
             UseCombinedStream = useCombinedStream;
             ReadOnly = readOnly;

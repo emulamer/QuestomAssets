@@ -92,6 +92,8 @@ namespace QuestomAssets
             return config;
         }
 
+
+
         public void UpdateConfig(BeatSaberQuestomConfig config)
         {
             Stopwatch sw = new Stopwatch();

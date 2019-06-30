@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using NUnit.Framework;
 using QuestomAssets.AssetOps;
 using QuestomAssets.AssetsChanger;
+using QuestomAssets.BeatSaber;
 using QuestomAssets.Models;
 using QuestomAssets.Utils;
 using System;
@@ -410,6 +411,122 @@ namespace QuestomAssets.Tests
             }
         }
 
+        [Test]
+        public void LotsOfSongs()
+        {
+
+
+        }
+        public static List<string> GetCustomSongsFromPath(string path)
+        {
+            List<string> customSongsFolders = new List<string>();
+
+            List<string> foundSongs = Directory.EnumerateDirectories(path).Where(y => File.Exists(Path.Combine(y, "Info.dat"))).ToList();
+            Log.LogMsg($"Found {foundSongs.Count()} custom songs to inject");
+            customSongsFolders.AddRange(foundSongs.Select(x => Path.GetFileName(x)));
+            return customSongsFolders;
+        }
+
+        [Test]
+        public void loadlots()
+        {
+            QuestomAssets.Utils.ImageUtils.Instance = new ImageUtilsWin();
+
+                try
+                {
+
+                    QaeConfig cfg2 = new QaeConfig()
+                    {
+                        AssetsPath = "Data",
+                        RootFileProvider = new FolderFileProvider(@"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\perftest", false),
+                        SongsPath = "customsongs",
+                        SongFileProvider = new FolderFileProvider(@"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\perftest", false)
+                    };
+
+                    var qae2 = new QuestomAssetsEngine(cfg2);
+                    var config = qae2.GetCurrentConfig();
+                    var folders = GetCustomSongsFromPath(@"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\perftest\customsongs");
+                    if (folders.Count < 1)
+                    {
+                        Log.LogErr("Request to reload songs folder, but didn't find any songs!");
+                        //not found probably isn't the right response code for this, but meh
+
+                        return;
+                    }
+                    Log.LogMsg($"Starting to reload custom songs from folders.  Found {folders.Count} folders to evaluate");
+                    //todo: probably don't just grab this one
+                    var playlist = config.Playlists.FirstOrDefault(x => x.PlaylistID == "CustomSongs");
+                    if (playlist == null)
+                    {
+                        playlist = new BeatSaberPlaylist()
+                        {
+                            PlaylistID = "CustomSongs",
+                            PlaylistName = "Custom Songs"
+                        };
+                        config.Playlists.Add(playlist);
+                    }
+                    int addedCtr = 0;
+
+                    foreach (var folder in folders)
+                    {
+                        string songId = folder.Replace("/", "");
+                        songId = songId.Replace(" ", "");
+                        if (config.Playlists.SelectMany(x => x.SongList).Any(x => x.SongID?.ToLower() == songId.ToLower()))
+                        {
+                            //SendStatusMessage($"Folder {folder} already loaded");
+                            Log.LogMsg($"Custom song in folder {folder} appears to already be loaded, skipping it.");
+                            continue;
+                        }
+                        //safety check to make sure we aren't importing one with the same ID as a beatsaber song.  It could be re-ID'ed, but this is a stopgap
+                        if (BSConst.KnownLevelIDs.Contains(songId))
+                        {
+                            Log.LogErr($"Song in path {folder} would conflict with a built in songID and will be skipped");
+                            continue;
+                        }
+                        // SendStatusMessage($"Adding song in {folder}");
+                        Log.LogMsg($"Adding custom song in folder {folder} to playlist ID {playlist.PlaylistID}");
+                        playlist.SongList.Add(new BeatSaberSong()
+                        {
+                            SongID = songId,
+                            CustomSongPath = Path.Combine(cfg2.SongsPath, folder)
+                        });
+                        addedCtr++;
+                        //maybe limit how many
+                        //if (addedCtr > 200)
+                        //{
+                        //    ShowToast("Too Many Songs", "That's too many at once.  After these finish and you 'Sync to Beat Saber', then try 'Reload Songs Folder' again to load more.", ToastType.Warning, 10);
+                        //    break;
+                        //}
+                    }
+                    if (addedCtr > 0)
+                    {
+
+                        Log.LogMsg("Updating config with loaded song folders");
+
+                        qae2.UpdateConfig(config);
+
+
+                    }
+                    qae2.Save();
+
+                }
+                finally
+                {
+
+                }
+            QaeConfig cfg3 = new QaeConfig()
+            {
+                AssetsPath = "Data",
+                RootFileProvider = new FolderFileProvider(@"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\perftest\Data", false),
+                SongsPath = "customsongs",
+                SongFileProvider = new FolderFileProvider(@"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\perftest\Data\customsongs", false)
+            };
+
+            var qae3 = new QuestomAssetsEngine(cfg3);
+            Assert.Pass();
+        }
+
+
         //[Test]
         //public void HookModInstallWorks()
         //{
@@ -444,7 +561,7 @@ namespace QuestomAssets.Tests
 
         //            //todo: actually verify something to make sure they got in there
         //        }
-                
+
         //    }
         //    Assert.Pass();
         //}

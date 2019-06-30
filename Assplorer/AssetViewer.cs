@@ -15,6 +15,7 @@ using QuestomAssets.BeatSaber;
 using QuestomAssets.Utils;
 using System.IO;
 using System.Text.RegularExpressions;
+using QuestomAssets.Models;
 
 namespace Assplorer
 {
@@ -300,5 +301,6 @@ namespace Assplorer
             
             CloseStuff();
         }
+      
     }
 }

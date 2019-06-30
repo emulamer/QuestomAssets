@@ -16,7 +16,9 @@ namespace QuestomAssets.Utils
             public SplitFile(Stream s)
             {
                 Stream = s;
+                _streamLength = Stream.Length;
             }
+            private long _streamLength;
             public string Filename { get; set; }
             private Stream Stream { get; set; }
             public int StartOffset { get; set; }
@@ -24,7 +26,7 @@ namespace QuestomAssets.Utils
             {
                 get
                 {
-                    return (int)Stream.Length;
+                    return (int)_streamLength;
                 }
             }
 
@@ -32,7 +34,7 @@ namespace QuestomAssets.Utils
             {
                 int relativePos = position - StartOffset;
                 //check if the absolute position is within this file
-                if (relativePos >= Stream.Length)
+                if (relativePos >= _streamLength)
                     return false;
 
                 return true;
@@ -42,7 +44,7 @@ namespace QuestomAssets.Utils
             {
                 int relativePos = position - StartOffset;
                 //check if the absolute position is within this file
-                if (relativePos >= Stream.Length)
+                if (relativePos >= _streamLength)
                     throw new ArgumentOutOfRangeException();
 
                 Stream.Seek(relativePos, SeekOrigin.Begin);
@@ -51,9 +53,9 @@ namespace QuestomAssets.Utils
             public int Read(byte[] buffer, int offset, int length)
             {
                 int readLen = length;
-                if (readLen > (Stream.Length - Stream.Position))
+                if (readLen > (_streamLength - Stream.Position))
                 {
-                    readLen = (int)(Stream.Length - Stream.Position);
+                    readLen = (int)(_streamLength - Stream.Position);
                 }
                 return Stream.Read(buffer, offset, readLen);
             }

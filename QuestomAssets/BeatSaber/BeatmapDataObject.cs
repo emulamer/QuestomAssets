@@ -47,15 +47,6 @@ namespace QuestomAssets.BeatSaber
             set
             {
                 var json = value;
-                if (json != null)
-                {
-                    var jo = JObject.Parse(json);
-                    if (jo.ContainsKey("_BPMChanges"))
-                    {
-                        jo.Remove("_BPMChanges");
-                        json = jo.ToString(Formatting.None);
-                    }
-                }
                 _jsonData = value;
             }
         }
