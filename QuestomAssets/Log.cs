@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace QuestomAssets
@@ -16,6 +17,18 @@ namespace QuestomAssets
         public static void SetLogSink(ILog logSink)
         {
             _logSinks.Add(logSink);
+        }
+
+        public static void ClearSinksOfType<T>(Func<T, bool> filter) where T : class, ILog
+        {
+            var sinks = _logSinks.Where(x => x as T != null && filter.Invoke(x as T)).ToList();
+            _logSinks.RemoveAll(x => sinks.Contains(x));
+            foreach (var sink in sinks)
+            {
+                var disp = sink as IDisposable;
+                if (disp != null)
+                    disp.Dispose();
+            }
         }
 
         public static void RemoveLogSink(ILog logSink)

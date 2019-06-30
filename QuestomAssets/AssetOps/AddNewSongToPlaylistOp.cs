@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using QuestomAssets.AssetsChanger;
+using static QuestomAssets.MusicConfigCache;
 
 namespace QuestomAssets.AssetOps
 {
@@ -55,8 +56,8 @@ namespace QuestomAssets.AssetOps
             Song.SongSubName = level.SongSubName;
             var playlist = context.Cache.PlaylistCache[PlaylistID];
             playlist.Playlist.BeatmapLevelCollection.Object.BeatmapLevels.Add(Song.LevelData.PtrFrom(playlist.Playlist.BeatmapLevelCollection.Object));
-            playlist.Songs.Add(Song.SongID, Song.LevelData);
-            context.Cache.SongCache.Add(Song.SongID, new QuestomAssetsEngine.MusicConfigCache.SongAndPlaylist() { Playlist = playlist.Playlist, Song = Song.LevelData });
+            playlist.Songs.Add(Song.SongID, new OrderedSong() { Song = Song.LevelData, Order = playlist.Songs.Count });
+            context.Cache.SongCache.Add(Song.SongID, new SongAndPlaylist() { Playlist = playlist.Playlist, Song = Song.LevelData });
         }
 
     }

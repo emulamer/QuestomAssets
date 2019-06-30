@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using QuestomAssets.AssetsChanger;
+using static QuestomAssets.MusicConfigCache;
 
 namespace QuestomAssets.AssetOps
 {
@@ -44,7 +45,7 @@ namespace QuestomAssets.AssetOps
             //keep the cache updated
             context.Cache.PlaylistCache[song.Playlist.PackID].Songs.Remove(song.Song.LevelID);
             song.Playlist = toPlaylist.Playlist;
-            toPlaylist.Songs.Add(song.Song.LevelID, song.Song);
+            toPlaylist.Songs.Add(song.Song.LevelID, new OrderedSong() { Song = song.Song, Order = toPlaylist.Songs.Count });
         }
     }
 }
