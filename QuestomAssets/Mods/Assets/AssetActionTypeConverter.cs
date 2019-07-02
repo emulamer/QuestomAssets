@@ -16,7 +16,8 @@ namespace QuestomAssets.Mods.Assets
         public override bool CanWrite { get { return false; } }
 
         private static Dictionary<AssetActionType, Type> _classMap = new Dictionary<AssetActionType, Type>()
-        { {AssetActionType.ReplaceAsset, typeof(ReplaceAssetAction)} };
+        {   {AssetActionType.ReplaceAsset, typeof(ReplaceAssetAction)},
+            {AssetActionType.RestoreAsset, typeof(RestoreAssetAction)} };
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {

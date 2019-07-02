@@ -18,6 +18,22 @@ namespace QuestomAssets
             return path.Substring(0, path.LastIndexOf('/'));
         }
 
+        public static string FullMessage(this Exception exception)
+        {
+            if (exception == null)
+                return "(Exception was null!)";
+
+            string exmsg = "";
+            exmsg = $"{exception.Message} {exception.StackTrace}";
+            var ex = exception.InnerException;
+            while (ex != null)
+            {
+                exmsg += $"\nInnerException: {ex.Message} {ex.StackTrace}";
+                ex = ex.InnerException;
+            }
+            return exmsg;
+        }
+
         public static string GetFilenameFwdSlash(this string path)
         {
             if (path == "/")

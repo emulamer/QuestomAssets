@@ -7,6 +7,7 @@ namespace QuestomAssets.BeatSaber
 {
     public static class BSConst
     {
+        
         public static class KnownFiles
         {
             //public const string File19 = "sharedassets19.assets";

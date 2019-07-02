@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using QuestomAssets.AssetOps;
 using QuestomAssets.AssetsChanger;
 using System;
 using System.Collections.Generic;
@@ -14,8 +15,8 @@ namespace QuestomAssets.Mods
         /// </summary>
         public abstract ModComponentType Type { get; }
 
-        public abstract void InstallComponent(ModContext context);
+        public abstract List<AssetOp> GetInstallOps(ModContext context);
 
-        public abstract void UninstallComponent(ModContext context);
+        public abstract List<AssetOp> GetUninstallOps(ModContext context);
     }
 }

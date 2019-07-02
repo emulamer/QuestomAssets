@@ -6,6 +6,7 @@ using QuestomAssets.BeatSaber;
 using System.ComponentModel;
 using System.Collections.ObjectModel;
 using System.Linq;
+using QuestomAssets.Mods;
 
 namespace QuestomAssets.Models
 {
@@ -27,7 +28,6 @@ namespace QuestomAssets.Models
                     {
                         var p = oi as BeatSaberPlaylist;
                         p.PropertyChanged -= Playlists_PropertyChanged;
-
                     }
                 }
                 if (a.NewItems != null)
@@ -39,6 +39,33 @@ namespace QuestomAssets.Models
                     }
                 }
             };
+
+            Mods = new ObservableCollection<ModDefinition>();
+            Mods.CollectionChanged += (e, a) =>
+              {
+                  PropChanged("Mods");
+                  if (a.OldItems != null)
+                  {
+                      foreach (var oi in a.OldItems)
+                      {
+                          var m = oi as ModDefinition;
+                          m.PropertyChanged -= Mods_PropertyChanged;
+                      }
+                  }
+                  if (a.NewItems != null)
+                  {
+                      foreach (var ni in a.NewItems)
+                      {
+                          var m = ni as ModDefinition;
+                          m.PropertyChanged += Mods_PropertyChanged;
+                      }
+                  }
+              };
+        }
+
+        private void Mods_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            PropChanged(nameof(Mods));
         }
 
         private void Playlists_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -97,6 +124,8 @@ namespace QuestomAssets.Models
         /// The list of playlists (i.e.. level packs) that will show up in Beat Saber
         /// </summary>
         public ObservableCollection<BeatSaberPlaylist> Playlists { get; private set; }
+
+        public ObservableCollection<ModDefinition> Mods { get; private set; }
 
         private SaberModel _saberModel;
         /// <summary>
@@ -195,7 +224,6 @@ namespace QuestomAssets.Models
         /// </summary>
         public List<(string, string)> TextChanges { get; set; } = new List<(string, string)>();
         //TODO: hook up TextChanges to prop changed
-
 
         public event PropertyChangedEventHandler PropertyChanged;
 

@@ -18,6 +18,10 @@ namespace QuestomAssets
 
         public string ModsSourcePath { get; set; }
 
-        public IFileProvider ModLibsFileProvider { get; set; } 
+        public string ModsStatusFile { get; set; }
+
+        public string BackupApkFileAbsolutePath { get; set; }
+
+        public IFileProvider ModLibsFileProvider { get; set; }
     }
 }

@@ -55,6 +55,8 @@ namespace QuestomAssets
                 throw new Exception("Folder is open in read only mode, cannot make changes!");
         }
 
+
+
         public void Delete(string filename)
         {
             CheckRO();

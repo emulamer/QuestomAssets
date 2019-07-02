@@ -12,6 +12,7 @@ using System.Threading;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using QuestomAssets.AssetOps;
+using QuestomAssets.Mods;
 
 namespace QuestomAssets
 {
@@ -22,7 +23,7 @@ namespace QuestomAssets
         {
             get
             {
-                return Manager.HasChanges;
+                return Manager.HasChanges || ModManager.HasChanges || QueuedFileOperations.Count > 0;
             }
         }
         private CustomLevelLoader _loader;
@@ -30,7 +31,9 @@ namespace QuestomAssets
         private AssetsManager _manager;
         internal AssetsManager Manager { get => _manager;  }
         internal MusicConfigCache MusicCache { get => _musicCache; }
+        public ModManager ModManager { get; private set; }
         private MusicConfigCache _musicCache;
+        internal List<ModDefinition> _modCache;
         private AssetOpManager _opManager;
         public AssetOpManager OpManager { get => _opManager; }
         public IFileProvider FileProvider
@@ -47,6 +50,8 @@ namespace QuestomAssets
         private QaeConfig _config;
         internal QaeConfig Config { get => _config; }
 
+        internal List<QueuedFileOp> QueuedFileOperations { get; } = new List<QueuedFileOp>();
+        
         /// <summary>
         /// Create a new instance of the class and open the apk file
         /// </summary>
@@ -79,20 +84,51 @@ namespace QuestomAssets
             Log.LogMsg($"Preload files took {sw.ElapsedMilliseconds}ms");
             _musicCache = new MusicConfigCache(GetMainLevelPack());
             _opManager = new AssetOpManager(new OpContext(this));
+            ModManager = new ModManager(_config, () => this);
         }
 
         public BeatSaberQuestomConfig GetCurrentConfig()
         {
             var config = GetConfig();
 
-            //config.Saber = new SaberModel()
-            //{
-            //    SaberID = GetCurrentSaberID(manager)
-            //};
             return config;
         }
 
+        private List<AssetOp> DiffModConfig(BeatSaberQuestomConfig config)
+        {
+            ModManager.ResetCache();
+            var toAddIDs = config.Mods.Where(x => x.Status == ModStatusType.Installed && !ModManager.Mods.Any(y => y.ID == x.ID && y.Status == ModStatusType.Installed)).Select(x => x.ID);
+            var toRemoveIDs = ModManager.Mods.Where(x => x.Status == ModStatusType.Installed && !config.Mods.Any(y => y.Status == ModStatusType.Installed && y.ID == x.ID)).Select(x=> x.ID);
+            List<ModDefinition> toAdd = new List<ModDefinition>();
+            List<ModDefinition> toRemove = new List<ModDefinition>();
+            var fullMods = ModManager.Mods;
+            foreach (var addID in toAddIDs)
+            {
+                var fullMod = fullMods.FirstOrDefault(x => x.ID == addID);
+                if (fullMod == null)
+                {
+                    Log.LogErr($"Added mod ID {addID} was not found, which probably means it isn't in the Mods/ folder.");
+                    throw new Exception($"Added mod ID {addID} was not found, which probably means it isn't in the Mods/ folder.");
+                }
+                toAdd.Add(fullMod);
+            }
+            foreach (var removeID in toRemoveIDs)
+            {
+                var fullMod = fullMods.FirstOrDefault(x => x.ID == removeID);
+                if (fullMod == null)
+                {
+                    Log.LogErr($"Removed mod ID {removeID} was not found, which probably means it isn't in the Mods/ folder.");
+                    throw new Exception($"Removed mod ID {removeID} was not found, which probably means it isn't in the Mods/ folder.");
+                }
+                toRemove.Add(fullMod);
+            }
 
+            List<AssetOp> ops = new List<AssetOp>();
+
+            toRemove.ForEach(x => ops.AddRange(ModManager.GetUninstallModOps(x)));
+            toAdd.ForEach(x => ops.AddRange(ModManager.GetInstallModOps(x)));
+            return ops;
+        }
 
         public void UpdateConfig(BeatSaberQuestomConfig config)
         {
@@ -101,79 +137,76 @@ namespace QuestomAssets
             {
                 //todo: basic validation of the config
 
-
-                //
-                //get existing playlists and their songs
-                //compare with new ones
-                //generate a diff
-                //etc.
-
                 //TODO; fix
                 //UpdateColorConfig(config.Colors);
 
                 //TODO: something broke
                 //UpdateTextConfig(manager, config.TextChanges);
-
-                //if (!UpdateSaberConfig(manager, config.Saber))
-                //{
-                //    Log.LogErr("Saber failed to update.  Aborting all changes.");
-                //}
+                List<AssetOp> ops = new List<AssetOp>();
+                if (config.Mods != null)
+                {
+                    using (new LogTiming("Diffing mod config"))
+                    {
+                        ops.AddRange(DiffModConfig(config));
+                    }
+                }
+                else
+                {
+                    Log.LogMsg("Mods config is null, not changing mods");
+                }
 
                 if (config.Playlists != null)
                 {
                     Log.LogMsg("Updating music config...");
-                    sw.Reset();
-                    sw.Start();
-                    //UpdateMusicConfig(config);
-                    var ops = DiffMusicConfig(config);
-                    sw.Stop();
-                    if (ops.Count < 1)
-                    {
-                        Log.LogMsg("No changes needed to config.");
-                    }
-                    else
-                    {
-                        List<AssetOp> failed = new List<AssetOp>();
-                        Log.LogMsg($"{ops.Count} Ops to update music config");
-                        OpManager.OpStatusChanged += (a, e) =>
-                         {
-                             if (e.Status == OpStatus.Failed)
-                             {
-                                 failed.Add(e);
-                             }
-                         };
-                             
-                        ops.ForEach(x => OpManager.QueueOp(x));
-                        Log.LogMsg($"Ops queued, waiting for all to complete...");
-                        using (new LogTiming("waiting for ops to complete"))
-                        {
-                            ops.WaitForFinish();
-                        }
 
-                        if (failed.Count > 0)
-                        {
-                            Log.LogErr($"{failed.Count} ops failed while updating config.");
-                            failed.ForEach(x => Log.LogErr($"{x.GetType().Name} failed: {x.Exception.Message}"));
-                            throw new AssetOpsException("At least one internal operation failed while loading the config", failed);
-                        }
-                    }
-                    Log.LogMsg($"Updating music config took {sw.ElapsedMilliseconds}ms");
+                    using (new LogTiming("Diffing music config"))
+                    {
+                        ops.AddRange(DiffMusicConfig(config));
+                    }                    
                 }
                 else
                 {
                     Log.LogMsg("Playlists is null, song configuration will not be changed.");
                 }
+
+                if (ops.Count < 1)
+                {
+                    Log.LogMsg("No changes needed to config.");
+                }
+                else
+                {
+                    List<AssetOp> failed = new List<AssetOp>();
+                    Log.LogMsg($"{ops.Count} Ops to update music config");
+                    OpManager.OpStatusChanged += (a, e) =>
+                    {
+                        if (e.Status == OpStatus.Failed)
+                        {
+                            failed.Add(e);
+                        }
+                    };
+
+                    ops.ForEach(x => OpManager.QueueOp(x));
+                    Log.LogMsg($"Ops queued, waiting for all to complete...");
+                    using (new LogTiming("waiting for ops to complete"))
+                    {
+                        ops.WaitForFinish();
+                    }
+
+                    if (failed.Count > 0)
+                    {
+                        Log.LogErr($"{failed.Count} ops failed while updating config.");
+                        failed.ForEach(x => Log.LogErr($"{x.GetType().Name} failed: {x.Exception.Message}"));
+                        throw new AssetOpsException("At least one internal operation failed while updating the config", failed);
+                    }
+                }
             }
         }
-
-        
 
         public void Save()
         {
             Stopwatch sw = new Stopwatch();
             try
             {
-
                 Log.LogMsg("Serializing all assets...");
                 sw.Restart();
                 _manager.WriteAllOpenAssets();
@@ -181,10 +214,44 @@ namespace QuestomAssets
                 Log.LogMsg($"Serialization of assets took {sw.ElapsedMilliseconds}ms");
 
                 Log.LogMsg("Making sure everything is saved...");
-                sw.Restart();
                 FileProvider.Save();
-                sw.Stop();
-                Log.LogMsg($"Done saving, took {sw.ElapsedMilliseconds}ms (should be very low)");
+
+
+                if (ModManager.HasChanges)
+                {
+                    using (new LogTiming("Saving mod status"))
+                    {
+                        ModManager.Save();
+                    }
+                }
+                else
+                {
+                    Log.LogMsg("ModManager has no changes, not saving it.");
+                }
+
+                if (QueuedFileOperations.Count > 0)
+                {
+                    using (new LogTiming("Performing queued file operations"))
+                    {
+                        foreach (var qfo in QueuedFileOperations.ToList())
+                        {
+                            try
+                            {
+                                qfo.PerformFileOperation(_config);
+                                QueuedFileOperations.Remove(qfo);
+                            }
+                            catch (Exception ex)
+                            {
+                                Log.LogErr($"Queued file operation of type {qfo.Type} for target {qfo.TargetPath} failed!", ex);
+                                throw new Exception($"Queued file operation of type {qfo.Type} for target {qfo.TargetPath} failed!", ex);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    Log.LogMsg("No queued file operations to perform");
+                }
             }
             catch (Exception ex)
             {
@@ -887,6 +954,8 @@ namespace QuestomAssets
                         }
                         config.Playlists.Add(packModel);
                     }
+
+                    ModManager.Mods.ForEach(x => config.Mods.Add(x));
                     return config;
                 }
             }

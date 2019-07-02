@@ -3,10 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
+using QuestomAssets.AssetOps;
 
 namespace QuestomAssets.Mods
 {
-    public class HookModInstallAction : IModAction
+    public class HookModInstallAction
     {
         /// <summary>
         /// The filename of the .so library file of the hook that should be installed
@@ -14,7 +15,7 @@ namespace QuestomAssets.Mods
         public string InstallLibraryFile { get; set; }
 
 
-        public void Install(ModContext context)
+        public List<AssetOp> GetInstallOps(ModContext context)
         {
             if (!context.Config.RootFileProvider.FileExists(context.ModPath.CombineFwdSlash(InstallLibraryFile)))
             {
@@ -26,14 +27,13 @@ namespace QuestomAssets.Mods
             }
             try
             {
-                using (var rs = context.Config.RootFileProvider.GetReadStream(context.ModPath.CombineFwdSlash(InstallLibraryFile)))
-                {
-                    rs.CopyTo(context.Config.ModLibsFileProvider.GetWriteStream(InstallLibraryFile));
-                }
+                var bytes = context.Config.RootFileProvider.Read(context.ModPath.CombineFwdSlash(InstallLibraryFile));
+                var op = new QueuedFileOp() { TargetPath = InstallLibraryFile, SourceData = bytes, ProviderType = QueuedFileOperationProviderType.ModLibs };
+                return new List<AssetOp>() { op };
             }
             catch (Exception ex)
             {
-                Log.LogErr($"HookMod install failed to install mod to {InstallLibraryFile}.", ex);
+                Log.LogErr($"HookMod install failed to queue install mod to {InstallLibraryFile}.", ex);
                 throw;
             }
 
