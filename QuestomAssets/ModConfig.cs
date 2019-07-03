@@ -18,7 +18,7 @@ namespace QuestomAssets
         {
             try
             {
-                if (config.RootFileProvider.FileExists(config.ModsStatusFile))
+                if (config.ModsStatusFile != null && config.RootFileProvider.FileExists(config.ModsStatusFile))
                 {
                     string modCfgTxt = System.Text.Encoding.UTF8.GetString(config.RootFileProvider.Read(config.ModsStatusFile));
                     return JsonConvert.DeserializeObject<ModConfig>(modCfgTxt);

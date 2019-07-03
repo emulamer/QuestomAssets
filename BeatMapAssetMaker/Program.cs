@@ -121,6 +121,33 @@ namespace BeatmapAssetMaker
 
         static int Main(string[] args)
         {
+            string playlist = @"C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\Playlists\SongBrowserPluginFavorites.json";
+            string customSongsFolder2 = @"C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\CustomLevels";
+            string copyToFolder = @"C:\Users\VR\Desktop\platform-tools_r28.0.3-windows\dist\ToConvert";
+            dynamic favs = JObject.Parse(File.ReadAllText(playlist));
+
+            JArray songs = favs["songs"] as JArray;
+            var songsToCopy = (from x in songs select x["key"].Value<string>()).ToList();
+            foreach (var key in songsToCopy)
+            {
+                if (string.IsNullOrWhiteSpace(key))
+                    continue;
+                string songPath = Path.Combine(customSongsFolder2, key) + "\\";
+                string findDir = Directory.EnumerateDirectories(customSongsFolder2).FirstOrDefault(x => Path.GetFileName(x).StartsWith(key));
+                if (findDir == null)
+                {
+                    Console.WriteLine($"Missing custom song: {songPath}");
+                    continue;
+                }
+                try
+                {
+                    new Microsoft.VisualBasic.Devices.Computer().FileSystem.CopyDirectory(findDir + "\\", Path.Combine(copyToFolder, Path.GetFileName(findDir)));
+                }
+                catch
+                {
+                    Console.WriteLine($"Error copying {findDir}");
+                }
+            }
             return -1;
             //QuestomAssets.Utils.ImageUtils.Instance = new ImageUtilsWin();
             //return CommandLine.Parser.Default.ParseArguments<OutputConfig, UpdateConfig, FolderMode>(args)

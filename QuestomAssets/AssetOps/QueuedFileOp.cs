@@ -57,10 +57,24 @@ namespace QuestomAssets.AssetOps
                 switch (Type)
                 {
                     case QueuedFileOperationType.DeleteFile:
-                        provider.Delete(TargetPath);
+                        if (!provider.FileExists(TargetPath))
+                        {
+                            Log.LogErr($"Queued file operation was supposed to delete '{TargetPath}' but it didn't exist!");
+                        }
+                        else
+                        {
+                            provider.Delete(TargetPath);
+                        }
                         break;
                     case QueuedFileOperationType.DeleteFolder:
-                        provider.RmRfDir(TargetPath);
+                        if (!provider.DirectoryExists(TargetPath))
+                        {
+                            Log.LogErr($"Queued file operation was supposed to delete '{TargetPath}' but it didn't exist!");
+                        }
+                        else
+                        {
+                            provider.RmRfDir(TargetPath);
+                        }
                         break;
                     case QueuedFileOperationType.ExtractZipToFolder:
                         throw new NotImplementedException();

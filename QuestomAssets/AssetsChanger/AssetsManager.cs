@@ -102,7 +102,7 @@ namespace QuestomAssets.AssetsChanger
 
         public AssetsFile GetAssetsFile(string assetsFilename)
         {
-            lock (this)
+            lock (_openAssetsFiles)
             {
                 if (_openAssetsFiles.ContainsKey(assetsFilename.ToLower()))
                     return _openAssetsFiles[assetsFilename.ToLower()];
@@ -115,7 +115,7 @@ namespace QuestomAssets.AssetsChanger
 
         public bool TryGetAssetsFile(string assetsFilename, out AssetsFile loadedFile)
         {
-            lock (this)
+            lock (_openAssetsFiles)
             {
                 if (_openAssetsFiles.ContainsKey(assetsFilename))
                 {
@@ -141,22 +141,25 @@ namespace QuestomAssets.AssetsChanger
 
         public void WriteAllOpenAssets()
         {
-            lock(this)
-            { 
-                foreach (var assetsFileName in _openAssetsFiles.Keys.ToList())
+            lock (_openAssetsFiles)
+            {
+                lock (this)
                 {
-                    var assetsFile = _openAssetsFiles[assetsFileName];
-                    if (assetsFile.HasChanges)
+                    foreach (var assetsFileName in _openAssetsFiles.Keys.ToList())
                     {
-                        Log.LogMsg($"File {assetsFileName} has changed, writing new contents.");
-                        try
+                        var assetsFile = _openAssetsFiles[assetsFileName];
+                        if (assetsFile.HasChanges)
                         {
-                            assetsFile.Write();
-                        }
-                        catch (Exception ex)
-                        {
-                            Log.LogErr($"Exception writing assets file {assetsFileName}", ex);
-                            throw;
+                            Log.LogMsg($"File {assetsFileName} has changed, writing new contents.");
+                            try
+                            {
+                                assetsFile.Write();
+                            }
+                            catch (Exception ex)
+                            {
+                                Log.LogErr($"Exception writing assets file {assetsFileName}", ex);
+                                throw;
+                            }
                         }
                     }
                 }
@@ -165,11 +168,14 @@ namespace QuestomAssets.AssetsChanger
 
         public void CloseAllOpenAssets()
         {
-            foreach (var assetsFileName in _openAssetsFiles.Keys.ToList())
+            lock (this)
             {
-                var assetsFile = _openAssetsFiles[assetsFileName];
-                _openAssetsFiles[assetsFileName].Dispose();
-                _openAssetsFiles.Remove(assetsFileName);
+                foreach (var assetsFileName in _openAssetsFiles.Keys.ToList())
+                {
+                    var assetsFile = _openAssetsFiles[assetsFileName];
+                    _openAssetsFiles[assetsFileName].Dispose();
+                    _openAssetsFiles.Remove(assetsFileName);
+                }
             }
         }
 

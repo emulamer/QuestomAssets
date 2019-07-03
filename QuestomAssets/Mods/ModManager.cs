@@ -68,6 +68,7 @@ namespace QuestomAssets.Mods
         public void Save()
         {
             ModConfig.Save(_config);
+            _originalModConfig.InstalledModIDs = ModConfig.InstalledModIDs.ToList();
         }
 
         private List<ModDefinition> _modCache;
@@ -113,14 +114,33 @@ namespace QuestomAssets.Mods
                         }
                     }
                 }
+                foreach (var modDef in _modCache)
+                {
+                    if (ModConfig.InstalledModIDs.Contains(modDef.ID))
+                        modDef.Status = ModStatusType.Installed;
+                    else
+                        modDef.Status = ModStatusType.NotInstalled;
+                }
                 return _modCache;
             }
         }
 
         public List<AssetOp> GetInstallModOps(ModDefinition modDef)
         {
+            List<AssetOp> ops = new List<AssetOp>();
             ModContext mc = new ModContext(_config.ModsSourcePath.CombineFwdSlash(modDef.ID), _config, _getEngine);
-            return modDef.GetInstallOps(mc);
+            //don't really like to put category specific logic in here, but whatever.
+            if ( modDef.Category == ModCategory.Saber)
+            {
+                var otherSabers = Mods.Where(x => x.Category == ModCategory.Saber && x.ID != modDef.ID && x.Status == ModStatusType.Installed);
+                foreach (var otherSaber in otherSabers)
+                {
+                    ops.AddRange(otherSaber.GetUninstallOps(mc));
+                }
+            }
+            
+            ops.AddRange(modDef.GetInstallOps(mc));
+            return ops;
         }
 
         public List<AssetOp> GetUninstallModOps(ModDefinition modDef)

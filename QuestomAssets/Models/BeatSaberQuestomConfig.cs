@@ -111,11 +111,19 @@ namespace QuestomAssets.Models
             if (this.TextChanges != null)
             {
                 if (this.TextChanges.Count != config.TextChanges.Count)
-                {
+                    return false;
                     //I think this is right...
-                    if (TextChanges.Any(x => !config.TextChanges.Any(y => y.Item1 == x.Item1 && y.Item2 == x.Item2)))
-                        return false;
-                }
+                if (TextChanges.Any(x => !config.TextChanges.Any(y => y.Item1 == x.Item1 && y.Item2 == x.Item2)))
+                    return false;                
+            }
+            if (this.Mods == null && config.Mods != null || this.Mods != null && config.Mods == null)
+                return false;
+            if (this.Mods != null)
+            {
+                if (this.Mods.Count != config.Mods.Count)
+                    return false;
+                if (this.Mods.Any(x => !config.Mods.Any(y => x.ID == y.ID && x.Status == y.Status)))
+                    return false;
             }
             return true;
         }

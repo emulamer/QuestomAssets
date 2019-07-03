@@ -28,7 +28,7 @@ namespace QuestomAssets.Mods
             try
             {
                 var bytes = context.Config.RootFileProvider.Read(context.ModPath.CombineFwdSlash(InstallLibraryFile));
-                var op = new QueuedFileOp() { TargetPath = InstallLibraryFile, SourceData = bytes, ProviderType = QueuedFileOperationProviderType.ModLibs };
+                var op = new QueuedFileOp() { Type= QueuedFileOperationType.WriteFile, TargetPath = InstallLibraryFile, SourceData = bytes, ProviderType = QueuedFileOperationProviderType.ModLibs };
                 return new List<AssetOp>() { op };
             }
             catch (Exception ex)

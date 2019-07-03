@@ -22,6 +22,9 @@ namespace QuestomAssets
 
         public string BackupApkFileAbsolutePath { get; set; }
 
+        //this should only ever be used in ugly scenarios where there's no backup, and one has to be created out of the modded apk.
+        public string ModdedFallbackBackupPath { get; set; }
+
         public IFileProvider ModLibsFileProvider { get; set; }
     }
 }

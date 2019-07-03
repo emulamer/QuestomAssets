@@ -67,18 +67,22 @@ namespace QuestomAssets.AssetOps
                         _queueEvent.WaitOne(2000);
                         continue;
                     }
+                    
                     try
                     {
-                        Stopwatch sw = new Stopwatch();
-                        op.SetStatus(OpStatus.Started);
-                        OpStatusChanged?.Invoke(this, op);
-                        Log.LogMsg($"AssetOpManager starting op of type {op.GetType().Name}");
-                        sw.Start();
-                        op.PerformOp(_context);
-                        sw.Stop();
-                        Log.LogMsg($"AssetOpManager completed op of type {op.GetType().Name} in {sw.ElapsedMilliseconds}ms");
-                        op.SetStatus(OpStatus.Complete);
-                        OpStatusChanged?.Invoke(this, op);
+                        lock (_context.Manager)
+                        {
+                            Stopwatch sw = new Stopwatch();
+                            op.SetStatus(OpStatus.Started);
+                            OpStatusChanged?.Invoke(this, op);
+                            Log.LogMsg($"AssetOpManager starting op of type {op.GetType().Name}");
+                            sw.Start();
+                            op.PerformOp(_context);
+                            sw.Stop();
+                            Log.LogMsg($"AssetOpManager completed op of type {op.GetType().Name} in {sw.ElapsedMilliseconds}ms");
+                            op.SetStatus(OpStatus.Complete);
+                            OpStatusChanged?.Invoke(this, op);
+                        }
                     }
                     catch (ThreadAbortException)
                     {

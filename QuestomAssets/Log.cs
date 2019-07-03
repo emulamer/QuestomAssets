@@ -52,7 +52,12 @@ namespace QuestomAssets
             _logSinks.ForEach(x =>
             {
                 try
-                { x.LogErr(message, ex); }
+                {
+                    if (ex != null)
+                        x.LogErr(message, ex);
+                    else
+                        x.LogErr(message);
+                }
                 catch { }
             });
         }

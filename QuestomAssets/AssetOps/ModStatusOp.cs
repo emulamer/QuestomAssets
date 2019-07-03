@@ -2,6 +2,7 @@
 using QuestomAssets.Mods;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace QuestomAssets.AssetOps
@@ -27,7 +28,7 @@ namespace QuestomAssets.AssetOps
                         Log.LogErr($"ModStatusOp was supposed to install mod ID {Definition.ID} but it is already listed as installed.");
                     else
                         context.Engine.ModManager.ModConfig.InstalledModIDs.Add(Definition.ID);
-                    Definition.Status = ModStatusType.Installed;
+                    Definition.Status = ModStatusType.Installed;                    
                     break;
                 case ModStatusType.NotInstalled:
                     if (!context.Engine.ModManager.ModConfig.InstalledModIDs.Contains(Definition.ID))
@@ -37,6 +38,9 @@ namespace QuestomAssets.AssetOps
                     Definition.Status = ModStatusType.NotInstalled;
                     break;
             }
+            var def = context.Engine.ModManager.Mods.FirstOrDefault(x => x.ID == Definition.ID);
+            if (def != null)
+                def.Status = Definition.Status;
         }
     }
 
