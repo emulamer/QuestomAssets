@@ -26,5 +26,7 @@ namespace QuestomAssets
         public string ModdedFallbackBackupPath { get; set; }
 
         public IFileProvider ModLibsFileProvider { get; set; }
+
+        public string PlaylistsPath { get; set; }
     }
 }

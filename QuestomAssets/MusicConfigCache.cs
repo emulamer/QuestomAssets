@@ -25,6 +25,7 @@ namespace QuestomAssets
                 sw.Start();
                 PlaylistCache.Clear();
                 SongCache.Clear();
+                int plCtr = 0;
                 foreach (var x in mainPack.BeatmapLevelPacks)
                 {
                     if (PlaylistCache.ContainsKey(x.Object.PackID))
@@ -33,7 +34,7 @@ namespace QuestomAssets
                     }
                     else
                     {
-                        var pns = new PlaylistAndSongs() { Playlist = x.Object };
+                        var pns = new PlaylistAndSongs() { Playlist = x.Object, Order = plCtr };
                         int ctr = 0;
                         foreach (var y in x.Object.BeatmapLevelCollection.Object.BeatmapLevels)
                         {
@@ -56,6 +57,7 @@ namespace QuestomAssets
                             ctr++;
                         }
                         PlaylistCache.Add(x.Object.PackID, pns);
+                        plCtr++;
                     }
                 }
                 sw.Stop();
@@ -70,6 +72,7 @@ namespace QuestomAssets
 
         public class PlaylistAndSongs
         {
+            public int Order { get; set; }
             public BeatmapLevelPackObject Playlist { get; set; }
             public Dictionary<string, OrderedSong> Songs = new Dictionary<string, OrderedSong>();
         }

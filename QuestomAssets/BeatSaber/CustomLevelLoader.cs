@@ -282,58 +282,7 @@ namespace QuestomAssets.BeatSaber
             return coverAsset;
         }
 
-        //todo: not sure if this is always safe to assume the folder where the ogg is has the info.dat, but I hope it is
-        public string GetCoverImageFilename(BeatmapLevelDataObject levelData)
-        {
-            var path = levelData?.AudioClip?.Object?.Resource?.Source;
-            if (path == null)
-            {
-                Log.LogErr("Trying to get the cover image file, audio clip resource object was null!");
-                return null;
-            }
-            if (!path.StartsWith(_config.SongsPath))
-            {
-                Log.LogErr($"The audio clip path for level ID {levelData.LevelID} of '{path}' doesn't match with the configured songs path of '{_config.SongsPath}'.  Can't get cover art image location!");
-                return null;
-            }
-
-            //path = path.Substring(_config.SongsPath.Length).TrimStart('/');
-            int idx = path.LastIndexOf("/");
-            path = path.Substring(0, idx);
-
-            var infodatfile = path.CombineFwdSlash("info.dat");
-            if (!_config.SongFileProvider.FileExists(infodatfile))
-            {
-                Log.LogErr($"Could not find {infodatfile} for level ID {levelData.LevelID}");
-                return null;
-            }
-
-            //I hope this is a faster way than deserializing the entire object and worth the double code paths for parsing the same serialized type
-            string imageFilename = null;
-            try
-            {
-                using (var jr = new JsonTextReader(new StreamReader(_config.SongFileProvider.GetReadStream(infodatfile))))
-                {
-                    while (jr.Read())
-                    {
-                        if (jr.TokenType == JsonToken.PropertyName && jr.Value?.ToString() == "_coverImageFilename")
-                        {
-                            if (jr.Read() && jr.TokenType == JsonToken.String)
-                            {
-                                imageFilename = jr.Value?.ToString();
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.LogErr($"Exception trying to read info.dat to get _coverImageFilename for level ID {levelData.LevelID} from '{infodatfile}'.", ex);
-                return null;
-            }
-            return imageFilename;
-        }
+        
 
         private static void SetFallbackCoverTexture(Texture2DObject texture)
         {

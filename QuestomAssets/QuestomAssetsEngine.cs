@@ -894,7 +894,7 @@ namespace QuestomAssets
                 lt = new LogTiming("make move song ops");
                 //find any song/playlist tuples whose playlist doesn't match what's in the cache for that song (i.e. a song was moved to a different playlist)
                 var movedSongs = allConfigSongs.Where(x => MusicCache.SongCache.ContainsKey(x.SongID) && MusicCache.SongCache[x.SongID].Playlist.PackID != x.PlaylistID).ToList();
-                movedSongs.ForEach(x => ops.Add(new MoveSongToPlaylistOp(x.SongID, x.PlaylistID)));
+                movedSongs.ForEach(x => ops.Add(new MoveSongToPlaylistOp(x.SongID, x.PlaylistID, null)));
                 lt.Dispose();
                 Log.LogMsg("Moving song IDs to playlists: " + string.Join(", ", movedSongs.Select(x => x.SongID + " -> " + x.PlaylistID).ToArray()));
 
@@ -949,7 +949,7 @@ namespace QuestomAssets
                                 SongSubName = songObj.SongSubName,
                                 LevelData = songObj
                             };
-                            songModel.CoverArtFilename = loader.GetCoverImageFilename(songObj);
+                            //songModel.CoverArtFilename = loader.GetCoverImageFilename(songObj);
                             packModel.SongList.Add(songModel);
                         }
                         config.Playlists.Add(packModel);

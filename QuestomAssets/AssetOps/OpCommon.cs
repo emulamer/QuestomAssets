@@ -34,7 +34,7 @@ namespace QuestomAssets.AssetOps
             var aoPacks = context.Engine.GetAlwaysOwnedModel();
             mainCol.BeatmapLevelPacks.Add(levelPack.PtrFrom(mainCol));
             aoPacks.AlwaysOwnedPacks.Add(levelPack.PtrFrom(aoPacks));
-            context.Cache.PlaylistCache.Add(playlist.PlaylistID, new PlaylistAndSongs() { Playlist = levelPack });
+            context.Cache.PlaylistCache.Add(playlist.PlaylistID, new PlaylistAndSongs() { Playlist = levelPack, Order = context.Cache.PlaylistCache.Count });
             UpdateCoverImage(playlist, context, songsAssetFile);
             return levelPack;
         }
@@ -49,35 +49,67 @@ namespace QuestomAssets.AssetOps
                 var oldCoverImage = playlist?.LevelPackObject?.CoverImage;
                 var oldTex = playlist?.LevelPackObject?.CoverImage?.Object?.Texture;
 
-                //todo: verify this is a good place to delete stuff                
-                playlist.CoverArtSprite = loader.LoadPackCover(playlist.PlaylistID, playlist.CoverImageBytes);
-                playlist.LevelPackObject.CoverImage = playlist.CoverArtSprite.PtrFrom(playlist.LevelPackObject);
-                if (oldCoverImage != null)
+                //todo: verify this is a good place to delete stuff      
+                try
                 {
-                    if (oldCoverImage.Object != null)
-                        songsAssetFile.DeleteObject(oldCoverImage.Object);
-
-                    oldCoverImage.Dispose();
+                    playlist.CoverArtSprite = loader.LoadPackCover(playlist.PlaylistID, playlist.CoverImageBytes);
+                    playlist.LevelPackObject.CoverImage = playlist.CoverArtSprite.PtrFrom(playlist.LevelPackObject);
                 }
-                if (oldTex != null)
+                catch (Exception ex)
                 {
-                    if (oldTex?.Object != null)
-                        songsAssetFile.DeleteObject(oldTex.Object);
+                    Log.LogErr("Exception in step 1!",ex);
+                    throw;
+                }
+                try
+                {
+                    if (oldTex != null)
+                    {
+                        if (oldTex?.Object != null)
+                            songsAssetFile.DeleteObject(oldTex.Object);
 
-                    oldTex.Dispose();
+                        oldTex.Dispose();
+                    }
+                    if (oldCoverImage != null)
+                    {
+                        if (oldCoverImage.Object != null)
+                            songsAssetFile.DeleteObject(oldCoverImage.Object);
+
+                        oldCoverImage.Dispose();
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    Log.LogErr("Exception trying to clean up playlist cover art!  This may leak cover images!", ex);
                 }
             }
             else
             {
-                if (playlist.LevelPackObject.CoverImage != null)
+                try
                 {
-                    playlist.CoverArtSprite = playlist.LevelPackObject.CoverImage.Object;
+                    if (playlist.LevelPackObject.CoverImage != null)
+                    {
+                        playlist.CoverArtSprite = playlist.LevelPackObject.CoverImage.Object;
+                    }
+                    else
+                    {
+                        playlist.CoverArtSprite = loader.LoadPackCover(playlist.PlaylistID, null);
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    playlist.CoverArtSprite = loader.LoadPackCover(playlist.PlaylistID, null);
+                    Log.LogErr("Exception in the cover art sprite part!", ex);
+                    throw;
                 }
-                playlist.LevelPackObject.CoverImage = playlist.CoverArtSprite.PtrFrom(playlist.LevelPackObject);
+                try
+                {
+                    playlist.LevelPackObject.CoverImage = playlist.CoverArtSprite.PtrFrom(playlist.LevelPackObject);
+                }
+                catch (Exception ex)
+                {
+                    Log.LogErr("Exception in the final step!", ex);
+                    throw;
+                }
             }
         }
 

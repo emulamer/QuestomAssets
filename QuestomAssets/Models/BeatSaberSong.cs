@@ -31,7 +31,7 @@ namespace QuestomAssets.Models
 
         public string SongName { get; internal set; }
 
-        public string CoverArtFilename { get; internal set; }
+       // public string CoverArtFilename { get; internal set; }
 
         public string SongSubName { get; internal set; }
 
@@ -51,19 +51,21 @@ namespace QuestomAssets.Models
                 _customSongPath = value;
             }
         }
-
+        private object _coverLock = new object();
         public byte[] TryGetCoverPngBytes()
         {
             if (LevelData == null)
                 return null;
             try
             {
-                bool texLoaded = LevelData.CoverImageTexture2D.Target.IsLoaded;
-                var png = QuestomAssets.Utils.ImageUtils.Instance.TextureToPngBytes(LevelData.CoverImageTexture2D?.Object);
-                if (!texLoaded)
-                    LevelData.CoverImageTexture2D.Target.FreeObject();
-
-                return png;
+                lock (_coverLock)
+                {
+                    bool texLoaded = LevelData.CoverImageTexture2D.Target.IsLoaded;
+                    var png = QuestomAssets.Utils.ImageUtils.Instance.TextureToPngBytes(LevelData.CoverImageTexture2D?.Target?.Object);
+                    if (!texLoaded)
+                        LevelData.CoverImageTexture2D.Target.FreeObject();
+                    return png;
+                }                
             }
             catch (Exception ex)
             {

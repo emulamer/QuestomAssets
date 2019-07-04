@@ -13,11 +13,13 @@ namespace QuestomAssets.AssetOps
 
         public string SongID { get; private set; }
         public string ToPlaylistID { get; private set; }
+        public int? Index { get; private set; }
 
-        public MoveSongToPlaylistOp(string songID, string toPlaylistID)
+        public MoveSongToPlaylistOp(string songID, string toPlaylistID, int? index)
         {
             SongID = songID;
             ToPlaylistID = toPlaylistID;
+            Index = index;
         }
 
         internal override void PerformOp(OpContext context)
@@ -40,7 +42,23 @@ namespace QuestomAssets.AssetOps
                 throw new Exception($"Unable to find the song pointer for song id {song.Song.LevelID} in the playlist it is moving from ({song.Playlist.PackID}).");
             song.Playlist.BeatmapLevelCollection.Object.BeatmapLevels.Remove(songPtr);
             songPtr.Dispose();
-            toPlaylist.Playlist.BeatmapLevelCollection.Object.BeatmapLevels.Add(song.Song.PtrFrom(toPlaylist.Playlist));
+            bool inserted = false;
+            if (Index.HasValue)
+            {
+                if (Index.Value >= toPlaylist.Playlist.BeatmapLevelCollection.Object.BeatmapLevels.Count)
+                {
+                    Log.LogErr($"Song ID {SongID} moved to playlist {ToPlaylistID} but it specified an out of range index of {Index.Value}, it will be put at the end.");
+                }
+                else
+                {
+                    toPlaylist.Playlist.BeatmapLevelCollection.Object.BeatmapLevels.Insert(Index.Value, song.Song.PtrFrom(toPlaylist.Playlist));
+                    inserted = true;
+                }
+            }
+            if (!inserted)
+            {
+                toPlaylist.Playlist.BeatmapLevelCollection.Object.BeatmapLevels.Add(song.Song.PtrFrom(toPlaylist.Playlist));
+            }
 
             //keep the cache updated
             context.Cache.PlaylistCache[song.Playlist.PackID].Songs.Remove(song.Song.LevelID);
