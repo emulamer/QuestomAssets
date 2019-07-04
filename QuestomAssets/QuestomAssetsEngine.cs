@@ -46,7 +46,7 @@ namespace QuestomAssets
 
         //public string AssetsRootPath { get; private set; }
 
-        public bool HideOriginalPlaylists { get; private set; } = true;
+        public bool HideOriginalPlaylists { get; private set; } = false;
         private QaeConfig _config;
         internal QaeConfig Config { get => _config; }
 
@@ -928,9 +928,9 @@ namespace QuestomAssets
                     
                     var mainPack = GetMainLevelPack();
                     CustomLevelLoader loader = new CustomLevelLoader(GetSongsAssetsFile(), _config);
-                    foreach (var packDef in MusicCache.PlaylistCache)
+                    foreach (var packDef in MusicCache.PlaylistCache.Values.OrderBy(x=> x.Order))
                     {
-                        var pack = packDef.Value.Playlist;
+                        var pack = packDef.Playlist;
                         if (HideOriginalPlaylists && BSConst.KnownLevelPackIDs.Contains(pack.PackID))
                             continue;
 

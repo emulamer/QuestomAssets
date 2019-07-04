@@ -62,21 +62,24 @@ namespace QuestomAssets.AssetOps
                 }
                 try
                 {
-                    if (oldTex != null)
+                    //don't erase base content from the assets
+                    if (!BSConst.KnownLevelPackIDs.Contains(playlist.PlaylistID))
                     {
-                        if (oldTex?.Object != null)
-                            songsAssetFile.DeleteObject(oldTex.Object);
+                        if (oldTex != null)
+                        {
+                            if (oldTex?.Object != null)
+                                songsAssetFile.DeleteObject(oldTex.Object);
 
-                        oldTex.Dispose();
+                            oldTex.Dispose();
+                        }
+                        if (oldCoverImage != null)
+                        {
+                            if (oldCoverImage.Object != null)
+                                songsAssetFile.DeleteObject(oldCoverImage.Object);
+
+                            oldCoverImage.Dispose();
+                        }
                     }
-                    if (oldCoverImage != null)
-                    {
-                        if (oldCoverImage.Object != null)
-                            songsAssetFile.DeleteObject(oldCoverImage.Object);
-
-                        oldCoverImage.Dispose();
-                    }
-
                 }
                 catch (Exception ex)
                 {
@@ -121,27 +124,28 @@ namespace QuestomAssets.AssetOps
             if (songPtr == null)
                 throw new Exception("Song pointer could not be found in the playlist.");
 
-            var sourceFile = song.Song?.AudioClip?.Object?.Resource?.Source;
-
             song.Playlist.BeatmapLevelCollection.Object.BeatmapLevels.Remove(songPtr);
             songPtr.Dispose();
-            songsAssetFile.DeleteObject(song.Song.AudioClip.Object);
-            songsAssetFile.DeleteObject(song.Song.CoverImageTexture2D.Object);
-            song.Song.CoverImageTexture2D.Dispose();
-            song.Song.DifficultyBeatmapSets.ForEach(x =>
+            //don't delete built in songs
+            if (!BSConst.KnownLevelIDs.Contains(songID))
             {
-                x.DifficultyBeatmaps.ForEach(y =>
+                songsAssetFile.DeleteObject(song.Song.AudioClip.Object);
+                songsAssetFile.DeleteObject(song.Song.CoverImageTexture2D.Object);
+                song.Song.CoverImageTexture2D.Dispose();
+                song.Song.DifficultyBeatmapSets.ForEach(x =>
                 {
-                    songsAssetFile.DeleteObject(y.BeatmapDataPtr.Object);
-                    y.BeatmapDataPtr.Dispose();
+                    x.DifficultyBeatmaps.ForEach(y =>
+                    {
+                        songsAssetFile.DeleteObject(y.BeatmapDataPtr.Object);
+                        y.BeatmapDataPtr.Dispose();
+                    });
+                    x.BeatmapCharacteristic.Dispose();
                 });
-                x.BeatmapCharacteristic.Dispose();
-            });
-            songsAssetFile.DeleteObject(song.Song);
+                songsAssetFile.DeleteObject(song.Song);
+                context.Engine.QueuedFileOperations.Add(new QueuedFileOp() { Type = QueuedFileOperationType.DeleteFolder, TargetPath = context.Config.SongsPath.CombineFwdSlash(songID) });
+            }
             context.Cache.SongCache.Remove(song.Song.LevelID);
-            context.Cache.PlaylistCache[song.Playlist.PackID].Songs.Remove(song.Song.LevelID);
-
-            context.Engine.QueuedFileOperations.Add(new QueuedFileOp() { Type = QueuedFileOperationType.DeleteFolder, TargetPath = context.Config.SongsPath.CombineFwdSlash(songID) });
+            context.Cache.PlaylistCache[song.Playlist.PackID].Songs.Remove(song.Song.LevelID);            
         }
     }
 }

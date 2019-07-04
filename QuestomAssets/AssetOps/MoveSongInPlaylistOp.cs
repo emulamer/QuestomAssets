@@ -35,8 +35,8 @@ namespace QuestomAssets.AssetOps
             var songIndex = playlistCache.Playlist.BeatmapLevelCollection.Object.BeatmapLevels.IndexOf(ptr);
             playlistCache.Playlist.BeatmapLevelCollection.Object.BeatmapLevels.Remove(ptr);
             var newIndex = Index;
-            if (songIndex < Index)
-                newIndex--;
+
+
 
             playlistCache.Playlist.BeatmapLevelCollection.Object.BeatmapLevels.Insert(newIndex, ptr);
 
@@ -46,8 +46,8 @@ namespace QuestomAssets.AssetOps
             var oldIndex = ordered.IndexOf(sng);
             ordered.Remove(sng);
             newIndex = Index;
-            if (oldIndex < Index)
-                newIndex--;
+
+            
 
             ordered.Insert(newIndex, sng);
 

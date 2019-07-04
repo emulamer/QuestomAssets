@@ -52,6 +52,9 @@ namespace QuestomAssets
 
         public static string CombineFwdSlash(this string path1, string path2)
         {
+            if (path1 == null || path2 == null)
+                return null;
+
             if (path1.EndsWith("/") && path1.Length > 1)
                 path1 = path1.TrimEnd('/');
 

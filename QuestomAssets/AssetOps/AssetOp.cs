@@ -23,11 +23,11 @@ namespace QuestomAssets.AssetOps
             Status = status;
             if (status == OpStatus.Complete || status == OpStatus.Failed)
             {
+                Exception = ex;
                 FinishedAt = DateTime.Now;
                 IsFinished = true;
                 FinishedEvent.Set();
                 OpFinished?.Invoke(this, this);
-                Exception = ex;
             }
         }
         internal abstract void PerformOp(OpContext context);

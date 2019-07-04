@@ -29,7 +29,7 @@ namespace QuestomAssets.AssetOps
             if (!context.Cache.PlaylistCache.ContainsKey(PlaylistID))
                 throw new KeyNotFoundException($"PlaylistID {PlaylistID} not found in the cache!");
             if (context.Cache.SongCache.ContainsKey(Song.SongID))
-                throw new InvalidOperationException($"SongID {Song.SongID} already exists!");
+                throw new AddSongException( AddSongFailType.SongExists, $"SongID {Song.SongID} already exists!");
 
             BeatmapLevelDataObject level = null;
             try
@@ -46,7 +46,7 @@ namespace QuestomAssets.AssetOps
 
             if (level == null)
             {
-                throw new Exception($"Song at folder '{Song.CustomSongPath}' for SongID {Song.SongID} failed to load");
+                throw new AddSongException(AddSongFailType.InvalidFormat, $"Song at folder '{Song.CustomSongPath}' for SongID {Song.SongID} failed to load");
             }
 
             Song.LevelData = level;

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using QuestomAssets.BeatSaber;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -66,12 +67,16 @@ namespace QuestomAssets.AssetOps
             {
                 Log.LogErr($"The playlist id {playlist.Playlist.PackID} didn't exist in the always owned level packs");
             }
-            var plParent = playlist.Playlist.ObjectInfo.ParentFile;
-            plParent.DeleteObject(playlist.Playlist.CoverImage.Object.Texture.Object);
-            playlist.Playlist.CoverImage.Object.Texture.Dispose();
-            plParent.DeleteObject(playlist.Playlist.CoverImage.Object);
-            plParent.DeleteObject(playlist.Playlist);
-            playlist.Playlist.CoverImage.Dispose();
+            //don't delete built in packs assets, just unlink them
+            if (!BSConst.KnownLevelPackIDs.Contains(playlist.Playlist.PackID))
+            {
+                var plParent = playlist.Playlist.ObjectInfo.ParentFile;
+                plParent.DeleteObject(playlist.Playlist.CoverImage.Object.Texture.Object);
+                playlist.Playlist.CoverImage.Object.Texture.Dispose();
+                plParent.DeleteObject(playlist.Playlist.CoverImage.Object);
+                plParent.DeleteObject(playlist.Playlist);
+                playlist.Playlist.CoverImage.Dispose();
+            }
             context.Cache.PlaylistCache.Remove(PlaylistID);
             
 
