@@ -125,8 +125,14 @@ namespace QuestomAssets.AssetOps
                                 PlaylistID = packID,
                                 PlaylistName = curSongName
                             }, songsAssetFile);
+                            currentPlaylist = context.Cache.PlaylistCache[packID];
                         }
-                        currentPlaylist = context.Cache.PlaylistCache[packID];
+                        else
+                        {
+                            currentPlaylist = context.Cache.PlaylistCache[packID];
+                            currentPlaylist.Playlist.PackName = curSongName;
+                        }
+                        
                         plCtr = 0;
                     }                    
                 }

@@ -35,10 +35,10 @@ namespace QuestomAssets.AssetOps
             var songIndex = playlistCache.Playlist.BeatmapLevelCollection.Object.BeatmapLevels.IndexOf(ptr);
             playlistCache.Playlist.BeatmapLevelCollection.Object.BeatmapLevels.Remove(ptr);
             var newIndex = Index;
-
-
-
-            playlistCache.Playlist.BeatmapLevelCollection.Object.BeatmapLevels.Insert(newIndex, ptr);
+            if (newIndex >= playlistCache.Playlist.BeatmapLevelCollection.Object.BeatmapLevels.Count)
+                playlistCache.Playlist.BeatmapLevelCollection.Object.BeatmapLevels.Add(ptr);
+            else
+                playlistCache.Playlist.BeatmapLevelCollection.Object.BeatmapLevels.Insert(newIndex, ptr);
 
             //do the cache separately to be safe about it
             var ordered = playlistCache.Songs.Values.OrderBy(x => x.Order).ToList();
@@ -46,10 +46,10 @@ namespace QuestomAssets.AssetOps
             var oldIndex = ordered.IndexOf(sng);
             ordered.Remove(sng);
             newIndex = Index;
-
-            
-
-            ordered.Insert(newIndex, sng);
+            if (newIndex >= ordered.Count)
+                ordered.Add(sng);
+            else
+                ordered.Insert(newIndex, sng);
 
             for (int i = 0; i < ordered.Count; i++)
             {

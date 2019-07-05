@@ -86,18 +86,46 @@ namespace QuestomAssets.Models
 
         public byte[] CoverImageBytes { get; set; }
 
+        public bool IsCoverLoaded
+        {
+            get
+            {
+                return LevelPackObject != null && LevelPackObject.CoverImage.Target.IsLoaded;
+            }
+        }
+        private object _coverLock = new object();
         public byte[] TryGetCoverPngBytes()
         {
             if (LevelPackObject == null)
                 return null;
-            try
+            lock (_coverLock)
             {
-                return QuestomAssets.Utils.ImageUtils.Instance.TextureToPngBytes(LevelPackObject.CoverImage?.Object?.Texture?.Object);
-            }
-            catch (Exception ex)
-            {
-                Log.LogErr("Unable to get cover PNG bytes", ex);
-                return null;
+                try
+                {
+                    if (LevelPackObject == null)
+                    {
+                        Log.LogErr($"LevelPackObject for song id {PlaylistID} isn't set!  Cannot get cover texture from assets.");
+                        return null;
+                    }
+                    bool texLoaded = LevelPackObject.CoverImage.Target.IsLoaded;
+                    var tex = LevelPackObject.CoverImage?.Object?.Texture?.Object;
+
+                    if (tex == null)
+                    {
+                        Log.LogErr($"Texture from pack data on playlist ID {PlaylistID} returned null trying to pull it from assets, which is a problem.  Cover image won't load.");
+                        return null;
+                    }
+
+                    var png = QuestomAssets.Utils.ImageUtils.Instance.TextureToPngBytes(tex);
+                    if (!texLoaded)
+                        LevelPackObject.CoverImage.Target.FreeObject();
+                    return png;
+                }
+                catch (Exception ex)
+                {
+                    Log.LogErr("Unable to get cover PNG bytes", ex);
+                    return null;
+                }
             }
         }
 

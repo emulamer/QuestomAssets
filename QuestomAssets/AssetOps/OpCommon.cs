@@ -118,7 +118,7 @@ namespace QuestomAssets.AssetOps
                 }
                 try
                 {
-                    //don't erase base content from the assets
+                    //don't erase base content from the assets, although this definitely leaks textures if you keep switching the stock level pack picture
                     if (!BSConst.KnownLevelPackIDs.Contains(playlist.PlaylistID))
                     {
                         if (oldTex != null)
