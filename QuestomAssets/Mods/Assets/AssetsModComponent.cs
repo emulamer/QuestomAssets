@@ -44,9 +44,9 @@ namespace QuestomAssets.Mods.Assets
         public override List<AssetOp> GetUninstallOps(ModContext context)
         {
             if (UninstallAction == null)
-                throw new InvalidOperationException("Tried to install AssetsModComponent, but install action is null.");
+                throw new InvalidOperationException("Tried to install AssetsModComponent, but uninstall action is null.");
             if (UninstallAction.Actions == null || UninstallAction.Actions.Count < 1)
-                throw new InvalidOperationException("Install action has no asset actions defined!");
+                throw new InvalidOperationException("Uninstall action has no asset actions defined!");
             if (string.IsNullOrEmpty(context.Config.BackupApkFileAbsolutePath))
                 throw new InvalidOperationException("Uninstall assets mod can't happen when the backup APK isn't set!");
             string backup = null;

@@ -9,6 +9,7 @@ namespace QuestomAssets
     {
         private static List<ILog> _logSinks = new List<ILog>();
 
+
         public static void ClearLogSinks()
         {
             _logSinks.Clear();
@@ -42,7 +43,7 @@ namespace QuestomAssets
             _logSinks.ForEach(x =>
             {
                 try
-                { x.LogMsg(message, args); }
+                { x.LogMsg($"MSG: {message}", args); }
                 catch { }
             });
         }
@@ -54,9 +55,9 @@ namespace QuestomAssets
                 try
                 {
                     if (ex != null)
-                        x.LogErr(message, ex);
+                        x.LogErr($"ERR: {message}", ex);
                     else
-                        x.LogErr(message);
+                        x.LogErr($"ERR: {message}");
                 }
                 catch { }
             });
@@ -67,7 +68,7 @@ namespace QuestomAssets
             _logSinks.ForEach(x =>
             {
                 try
-                { x.LogErr(message); }
+                { x.LogErr($"ERR: {message}"); }
                 catch { }
             });
         }

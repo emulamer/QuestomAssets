@@ -25,7 +25,7 @@ namespace QuestomAssets.AssetOps
                 throw new InvalidOperationException("PlaylistID must be provided.");
             if (!context.Cache.PlaylistCache.ContainsKey((PlaylistID)))
                 throw new InvalidOperationException("Playlist ID was not found.");
-            if (Index < 0 || Index >= context.Cache.PlaylistCache.Count)
+            if (Index < 0 || Index > context.Cache.PlaylistCache.Count)
                 throw new InvalidOperationException("Index is out of range.");
 
             var mainCol = context.Engine.GetMainLevelPack();
@@ -36,6 +36,8 @@ namespace QuestomAssets.AssetOps
             var packIndex = mainCol.BeatmapLevelPacks.IndexOf(ptr);
             mainCol.BeatmapLevelPacks.Remove(ptr);
             var newIndex = Index;
+            if (newIndex >= packIndex)
+                newIndex++;
 
             if (newIndex >= mainCol.BeatmapLevelPacks.Count)
                 mainCol.BeatmapLevelPacks.Add(ptr);
@@ -48,6 +50,8 @@ namespace QuestomAssets.AssetOps
             var oldIndex = ordered.IndexOf(playlist);
             ordered.Remove(playlist);
             newIndex = Index;
+            if (newIndex >= oldIndex)
+                newIndex++;
 
             if (newIndex >= ordered.Count)
                 ordered.Add(playlist);

@@ -160,7 +160,8 @@ namespace QuestomAssets.AssetOps
             {
                 foreach (var pl in context.Cache.PlaylistCache.ToList())
                 {
-                    if (pl.Value.Songs.Count < 1)
+                    //leave CustomSongs alone
+                    if (pl.Value.Songs.Count < 1 && pl.Key != "CustomSongs")
                     {
                         OpCommon.DeletePlaylist(context, pl.Key, false);
                     }

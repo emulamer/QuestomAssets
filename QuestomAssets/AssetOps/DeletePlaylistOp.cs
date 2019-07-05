@@ -26,6 +26,9 @@ namespace QuestomAssets.AssetOps
             if (!context.Cache.PlaylistCache.ContainsKey(PlaylistID))
                 throw new InvalidOperationException("Playlist ID does not exist.");
 
+            if (PlaylistID == "CustomSongs")
+                throw new InvalidOperationException("Don't delete CustomSongs playlist, it's needed for things.");
+
             OpCommon.DeletePlaylist(context, PlaylistID, DeleteSongsOnPlaylist);
         }
     }

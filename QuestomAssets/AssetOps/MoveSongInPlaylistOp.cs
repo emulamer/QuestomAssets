@@ -26,7 +26,7 @@ namespace QuestomAssets.AssetOps
                 throw new InvalidOperationException("SongID was not found.");
             var songCache = context.Cache.SongCache[SongID];
             var playlistCache = context.Cache.PlaylistCache[songCache.Playlist.PackID];
-            if (Index < 0 || Index >= playlistCache.Songs.Count)
+            if (Index < 0 || Index > playlistCache.Songs.Count)
                 throw new InvalidOperationException("Index is out of range.");
 
             var ptr = playlistCache.Playlist.BeatmapLevelCollection.Object.BeatmapLevels.FirstOrDefault(x => x.Object.LevelID == SongID);
