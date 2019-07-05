@@ -12,6 +12,62 @@ namespace QuestomAssets.AssetOps
     internal static class OpCommon
     {
 
+        public static void DeletePlaylist(OpContext context, string playlistID, bool deleteSongsOnPlaylist)
+        {
+            var playlist = context.Cache.PlaylistCache[playlistID];
+
+            if (deleteSongsOnPlaylist)
+            {
+                try
+                {
+                    foreach (var song in playlist.Songs.ToList())
+                    {
+                        OpCommon.DeleteSong(context, song.Key);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Error while deleting songs from playlist id {playlist.Playlist.PackID}", ex);
+                }
+                playlist.Songs.Clear();
+            }
+            //this should be done in song delete already
+            //playlist.Playlist.BeatmapLevelCollection.Object.BeatmapLevels.ForEach(x => { x.Target.ParentFile.DeleteObject(x.Object); x.Dispose(); });
+            var mlp = context.Engine.GetMainLevelPack();
+            var aop = context.Engine.GetAlwaysOwnedModel();
+            var mlpptr = mlp.BeatmapLevelPacks.FirstOrDefault(x => x.Object.PackID == playlist.Playlist.PackID);
+            var aopptr = aop.AlwaysOwnedPacks.FirstOrDefault(x => x.Object.PackID == playlist.Playlist.PackID);
+            if (mlpptr != null)
+            {
+                mlp.BeatmapLevelPacks.Remove(mlpptr);
+                mlpptr.Dispose();
+            }
+            else
+            {
+                Log.LogErr($"The playlist id {playlist.Playlist.PackID} didn't exist in the main level packs");
+            }
+            if (aopptr != null)
+            {
+                aop.AlwaysOwnedPacks.Remove(aopptr);
+                aopptr.Dispose();
+            }
+            else
+            {
+                Log.LogErr($"The playlist id {playlist.Playlist.PackID} didn't exist in the always owned level packs");
+            }
+            //don't delete built in packs assets, just unlink them
+            if (!BSConst.KnownLevelPackIDs.Contains(playlist.Playlist.PackID))
+            {
+                var plParent = playlist.Playlist.ObjectInfo.ParentFile;
+                plParent.DeleteObject(playlist.Playlist.CoverImage.Object.Texture.Object);
+                playlist.Playlist.CoverImage.Object.Texture.Dispose();
+                plParent.DeleteObject(playlist.Playlist.CoverImage.Object);
+                plParent.DeleteObject(playlist.Playlist);
+                playlist.Playlist.CoverImage.Dispose();
+            }
+            context.Cache.PlaylistCache.Remove(playlistID);
+        }
+
         public static BeatmapLevelPackObject CreatePlaylist(OpContext context, BeatSaberPlaylist playlist, AssetsFile songsAssetFile)
         {
             Log.LogMsg($"Playlist {playlist.PlaylistID} will be created");
@@ -113,6 +169,24 @@ namespace QuestomAssets.AssetOps
                     Log.LogErr("Exception in the final step!", ex);
                     throw;
                 }
+            }
+            //try queueing a file write op to output the playlist cover image
+            try
+            {
+                var tex = playlist.LevelPackObject?.CoverImage?.Object?.Texture?.Object;
+                if (tex == null)
+                    throw new Exception("Texture couldn't be loaded from the playlist even though it should have just been set...");
+
+                var qfo = new QueuedFileOp() {
+                    TargetPath = context.Config.PlaylistsPath.CombineFwdSlash(playlist.PlaylistID + ".png"),
+                    Type = QueuedFileOperationType.WriteFile,
+                    SourceData = Utils.ImageUtils.Instance.TextureToPngBytes(tex)
+                };
+                context.Engine.QueuedFileOperations.Add(qfo);
+            }
+            catch (Exception ex)
+            {
+                Log.LogErr($"Exception queueing write op for playlist art on {playlist.PlaylistID}!", ex);
             }
         }
 

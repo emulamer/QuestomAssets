@@ -88,10 +88,27 @@ namespace QuestomAssets
             return File.Exists(Path.Combine(_rootFolder, FwdToFS(filename))) || Directory.Exists(Path.Combine(_rootFolder, FwdToFS(filename)));
         }
 
-        public void MkDir(string path)
+        public void MkDir(string path, bool recursive = false)
         {
-            if (!Directory.Exists(Path.Combine(_rootFolder, FwdToFS(path))))
-                Directory.CreateDirectory(Path.Combine(_rootFolder, FwdToFS(path)));
+            if (recursive)
+                MakeFullPath(path);
+            else
+            {
+                if (!Directory.Exists(Path.Combine(_rootFolder, FwdToFS(path))))
+                    Directory.CreateDirectory(Path.Combine(_rootFolder, FwdToFS(path)));
+            }
+        }
+
+        private void MakeFullPath(string path)
+        {
+            string[] splitPath = path.Split(new char[] { Path.DirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
+            string curPath = _rootFolder;
+            for (int i = 0; i < splitPath.Length; i++)
+            {
+                curPath = Path.Combine(curPath, splitPath[i]);
+                if (!Directory.Exists(curPath))
+                    Directory.CreateDirectory(curPath);
+            }
         }
 
         public void RmRfDir(string path)

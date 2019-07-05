@@ -83,6 +83,10 @@ namespace QuestomAssets.BeatSaber
                 
                 foreach (var difficultySet in beatmapLevel.DifficultyBeatmapSets)
                 {
+                    //don't know what lightshow is, don't want it, but maps have it and fail to load.
+                    if (difficultySet.BeatmapCharacteristicName == Characteristic.LightShow)
+                        continue;
+
                     difficultySet.BeatmapCharacteristic = GetCharacteristicAsset(difficultySet.BeatmapCharacteristicName).PtrFrom(beatmapLevel);
                     List<DifficultyBeatmap> toRemove = new List<DifficultyBeatmap>();
                     foreach (var difficultyBeatmap in difficultySet.DifficultyBeatmaps)

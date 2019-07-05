@@ -12,7 +12,8 @@ namespace QuestomAssets.BeatSaber
     {
         Standard,
         OneSaber,
-        NoArrows
+        NoArrows,
+        LightShow
     }
 }
 

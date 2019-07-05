@@ -71,11 +71,43 @@ namespace QuestomAssets.Mods
             _originalModConfig.InstalledModIDs = ModConfig.InstalledModIDs.ToList();
         }
 
+        private List<string> _deletedModIDs = new List<string>();
+
         private List<ModDefinition> _modCache;
 
         public void ResetCache()
         {
             _modCache = null;
+        }
+
+        public void DeleteMod(ModDefinition def)
+        {
+            if (ModConfig.InstalledModIDs.Contains(def.ID))
+            {
+                var ops = GetUninstallModOps(def);
+                ops.ForEach(x => _getEngine().OpManager.QueueOp(x));
+                ops.WaitForFinish();
+                if (ops.Any(x=> x.Status == OpStatus.Failed))
+                {
+                    string err = "";
+                    foreach (var failed in ops.Where(x=> x.Status == OpStatus.Failed))
+                    {
+                        err += failed.GetType().Name + " failed! " + failed.Exception ?? " \n";
+                    }
+                    throw new Exception("Uninstall of mod failed, cannot delete it! " + err);
+                }
+            }
+            var defPath = _config.ModsSourcePath.CombineFwdSlash(def.ID);
+            if (!_config.RootFileProvider.DirectoryExists(defPath))
+            {
+                Log.LogErr($"Tried to delete mod ID {def.ID} but it doesn't seem to exist at {defPath}.  Going to count it as already uninstalled.");
+                return;
+            }
+
+            var qfo = new QueuedFileOp() { Type = QueuedFileOperationType.DeleteFolder, TargetPath = defPath };
+            _getEngine().QueuedFileOperations.Add(qfo);
+            _deletedModIDs.Add(def.ID);
+            ResetCache();
         }
 
         public List<ModDefinition> Mods
@@ -103,6 +135,11 @@ namespace QuestomAssets.Mods
                                 Log.LogErr($"Mod path {file} doesn't match the mod ID within the file, {modDef.ID}, skipping it.");
                                 continue;
                             }
+
+                            //check to see if the mod is queued to be deleted, don't include it if so
+                            if (_deletedModIDs.Contains(modDef.ID))
+                                continue;
+
                             if (ModConfig.InstalledModIDs.Contains(modDef.ID))
                                 modDef.Status = ModStatusType.Installed;
 
@@ -148,36 +185,6 @@ namespace QuestomAssets.Mods
             ModContext mc = new ModContext(_config.ModsSourcePath.CombineFwdSlash(modDef.ID), _config, _getEngine);
             return modDef.GetUninstallOps(mc);            
         }
-        //public void DeleteModFolder(string modID)
-        //{
-        //    try
-        //    {
-        //        var path = _config.ModsSourcePath.CombineFwdSlash(modID);
-        //        if (!_config.RootFileProvider.DirectoryExists(path))
-        //        {
-        //            //guess that means its already deleted, or somebody broke the rule of modid = directory name
-        //            Log.LogErr($"Tried to delete mod, but folder {path} does not exist!");
-        //            return;
-        //        }
-        //        _config.RootFileProvider.RmRfDir(path);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Log.LogErr($"Exception trying to delete mod id {modID}", ex);
-        //        throw;
-        //    }
-        //}
-
-        //public void UninstallMod(string modID)
-        //{
-        //    var mod = GetMods().FirstOrDefault(x => x.ID == modID);
-        //    if (mod == null)
-        //        throw new Exception($"Mod ID {modID} was not found to uninstall!");
-        //    if (!mod.CanUninstall)
-        //        throw new Exception($"Mod ID {modID} cannot be uninstalled.  You will need to reset assets to remove it.");
-        //    ModContext context = new ModContext(modID, _config, _getEngine);
-        //    mod.Uninstall(context);
-        //}
     }
 
     

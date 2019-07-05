@@ -86,7 +86,7 @@ namespace QuestomAssets
             return mask.IsMatch(filename);
         }
 
-        public void MkDir(string path)
+        public void MkDir(string path, bool recursive = false)
         {
             //not really relevant for a zip file
         }

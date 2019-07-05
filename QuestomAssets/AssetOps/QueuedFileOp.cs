@@ -79,6 +79,7 @@ namespace QuestomAssets.AssetOps
                     case QueuedFileOperationType.ExtractZipToFolder:
                         throw new NotImplementedException();
                     case QueuedFileOperationType.WriteFile:
+                        provider.MkDir(TargetPath.GetDirectoryFwdSlash(), true);
                         provider.Write(TargetPath, SourceData, true);
                         break;
                 }

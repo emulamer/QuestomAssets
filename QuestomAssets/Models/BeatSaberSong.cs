@@ -51,7 +51,7 @@ namespace QuestomAssets.Models
                 _customSongPath = value;
             }
         }
-        private object _coverLock = new object();
+        private static object _coverLock = new object();
         public byte[] TryGetCoverPngBytes()
         {
             if (LevelData == null)
@@ -60,8 +60,20 @@ namespace QuestomAssets.Models
             {
                 lock (_coverLock)
                 {
+                    if (LevelData == null)
+                    {
+                        Log.LogErr($"LevelData for song id {SongID} isn't set!  Cannot get cover texture from assets.");
+                        return null;
+                    }
                     bool texLoaded = LevelData.CoverImageTexture2D.Target.IsLoaded;
-                    var png = QuestomAssets.Utils.ImageUtils.Instance.TextureToPngBytes(LevelData.CoverImageTexture2D?.Target?.Object);
+                    var tex = LevelData.CoverImageTexture2D?.Target?.Object;
+                    if (tex == null)
+                    {
+                        Log.LogErr($"Texture from level data on song id {SongID} returned null trying to pull it from assets, which is a problem.  Cover image won't load.");
+                        return null;
+                    }
+                    
+                    var png = QuestomAssets.Utils.ImageUtils.Instance.TextureToPngBytes(tex);
                     if (!texLoaded)
                         LevelData.CoverImageTexture2D.Target.FreeObject();
                     return png;

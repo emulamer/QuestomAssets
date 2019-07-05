@@ -82,7 +82,7 @@ namespace QuestomAssets
 
         #region "Not implemented things"
 
-        public void MkDir(string path)
+        public void MkDir(string path, bool recursive = false)
         {
             throw new NotImplementedException();
         }

@@ -17,6 +17,7 @@ namespace QuestomAssets.Mods
         /// <summary>
         /// The list of individual components of this mod
         /// </summary>
+        [JsonProperty("components")]
         public List<ModComponent> Components { get; set; } = new List<ModComponent>();
 
         public bool ShouldSerializeComponents()
@@ -102,6 +103,8 @@ namespace QuestomAssets.Mods
             }
         }
 
+        public string Platform { get; set; }
+
         /// <summary>
         /// Unique identifier of this mod
         /// </summary>
@@ -117,14 +120,142 @@ namespace QuestomAssets.Mods
         public string Author { get; set; }
 
         /// <summary>
+        /// The mod version
+        /// </summary>
+        public string Version { get; set; }
+
+        #region json properties for supporting beatmods2 format
+
+        public string version
+        {
+            get
+            {
+                return Version;
+            }
+            set
+            {
+                Version = value;
+            }
+        }
+
+        public Dictionary<string, string> links { get; set; } = new Dictionary<string, string>();
+
+        public List<string> description{ get; set; } = new List<string>();
+
+        public string gameVersion
+        {
+            get
+            {
+                return TargetBeatSaberVersion;
+            }
+            set
+            {
+                TargetBeatSaberVersion = value;
+            }
+        }
+        
+        public string platform
+        {
+            get
+            {
+                return Platform;
+            }
+            set
+            {
+                Platform = value;
+            }
+        }
+
+        public string id
+        {
+            get
+            {
+                return ID;
+            }
+            set
+            {
+                ID = value;
+            }
+        }
+        
+        public string name
+        {
+            get
+            {
+                return Name;
+            }
+            set
+            {
+                Name = value;
+            }
+        }
+
+        public string author { get
+            {
+                return Author;
+            }
+            set
+            {
+                Author = value;
+            }
+        }
+
+        public ModCategory category
+        {
+            get
+            {
+                return Category;
+            }
+            set
+            {
+                Category = value;
+            }
+        }
+
+        #endregion
+
+        /// <summary>
         /// A link to more information about the mod
         /// </summary>
-        public string InfoUrl { get; set; }
+        public string InfoUrl {
+            get
+            {
+                if (links == null || links.Count < 1)
+                    return null;
+
+                if (links.ContainsKey("project-home"))
+                    return links["project-home"];
+
+                return links.First().Value;                
+            }
+        }
+
+
 
         /// <summary>
         /// The description of the mod
         /// </summary>
-        public string Description { get; set; }
+        public string Description {
+            get
+            {
+                if (description == null || description.Count < 1)
+                    return null;
+                return String.Join("\n", description);
+            }
+            set
+            {
+                if (description == null)
+                    description = new List<string>();
+
+                description.Clear();
+
+                if (value == null)
+                    return;
+                description.AddRange(value.Split('\n'));
+            }
+        }
+
+
 
         /// <summary>
         /// The category this mod falls into for display and organizational purposes

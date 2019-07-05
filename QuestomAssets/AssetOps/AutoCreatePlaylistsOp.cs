@@ -12,12 +12,14 @@ namespace QuestomAssets.AssetOps
     {
         public override bool IsWriteOp => true;
 
-        public AutoCreatePlaylistsOp(PlaylistSortMode sortMode, int maxPerNamePlaylist)
+        public AutoCreatePlaylistsOp(PlaylistSortMode sortMode, int maxPerNamePlaylist, bool removeEmptyPlaylists)
         {
             SortMode = sortMode;
             MaxPerNamePlaylist = maxPerNamePlaylist;
+            RemoveEmptyPlaylists = removeEmptyPlaylists;
         }
 
+        public bool RemoveEmptyPlaylists { get; private set; }
         public PlaylistSortMode SortMode { get; private set; }
         public int MaxPerNamePlaylist { get; set; }
         internal override void PerformOp(OpContext context)
@@ -146,6 +148,16 @@ namespace QuestomAssets.AssetOps
                 if (SortMode == PlaylistSortMode.Name && i == songList.Length -1)
                 {
                     currentPlaylist.Playlist.PackName += " - " + curSongName;
+                }
+            }
+            if (RemoveEmptyPlaylists)
+            {
+                foreach (var pl in context.Cache.PlaylistCache.ToList())
+                {
+                    if (pl.Value.Songs.Count < 1)
+                    {
+                        OpCommon.DeletePlaylist(context, pl.Key, false);
+                    }
                 }
             }
         }
