@@ -36,8 +36,7 @@ namespace QuestomAssets.AssetOps
             var packIndex = mainCol.BeatmapLevelPacks.IndexOf(ptr);
             mainCol.BeatmapLevelPacks.Remove(ptr);
             var newIndex = Index;
-            if (newIndex >= packIndex)
-                newIndex++;
+
 
             if (newIndex >= mainCol.BeatmapLevelPacks.Count)
                 mainCol.BeatmapLevelPacks.Add(ptr);
@@ -50,8 +49,7 @@ namespace QuestomAssets.AssetOps
             var oldIndex = ordered.IndexOf(playlist);
             ordered.Remove(playlist);
             newIndex = Index;
-            if (newIndex >= oldIndex)
-                newIndex++;
+
 
             if (newIndex >= ordered.Count)
                 ordered.Add(playlist);
