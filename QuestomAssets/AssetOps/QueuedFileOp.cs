@@ -81,6 +81,7 @@ namespace QuestomAssets.AssetOps
                     case QueuedFileOperationType.WriteFile:
                         provider.MkDir(TargetPath.GetDirectoryFwdSlash(), true);
                         provider.Write(TargetPath, SourceData, true);
+                        provider.Save();
                         break;
                 }
             }
