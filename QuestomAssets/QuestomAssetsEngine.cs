@@ -94,6 +94,15 @@ namespace QuestomAssets
             return config;
         }
 
+        //for some reason, I think this is a bad idea.
+        public bool IsManagerLocked()
+        {
+            bool entered = Monitor.TryEnter(_manager);
+            if (entered)
+                Monitor.Exit(_manager);
+            return !entered;
+        }
+
         private List<AssetOp> DiffModConfig(BeatSaberQuestomConfig config)
         {
             ModManager.ResetCache();
@@ -204,59 +213,69 @@ namespace QuestomAssets
 
         public void Save()
         {
-            Stopwatch sw = new Stopwatch();
-            try
+            lock (this)
             {
-                Log.LogMsg("Serializing all assets...");
-                sw.Restart();
-                _manager.WriteAllOpenAssets();
-                sw.Stop();
-                Log.LogMsg($"Serialization of assets took {sw.ElapsedMilliseconds}ms");
-
-                Log.LogMsg("Making sure everything is saved...");
-                FileProvider.Save();
-
-
-                if (ModManager.HasChanges)
-                {
-                    using (new LogTiming("Saving mod status"))
+                if (!Monitor.TryEnter(_manager))
+                    throw new Exception("Other operations are in progress, cannot save now.");
+                
+                    Stopwatch sw = new Stopwatch();
+                    try
                     {
-                        ModManager.Save();
-                    }
-                }
-                else
-                {
-                    Log.LogMsg("ModManager has no changes, not saving it.");
-                }
+                        Log.LogMsg("Serializing all assets...");
+                        sw.Restart();
+                        _manager.WriteAllOpenAssets();
+                        sw.Stop();
+                        Log.LogMsg($"Serialization of assets took {sw.ElapsedMilliseconds}ms");
 
-                if (QueuedFileOperations.Count > 0)
-                {
-                    using (new LogTiming("Performing queued file operations"))
-                    {
-                        foreach (var qfo in QueuedFileOperations.ToList())
+                        Log.LogMsg("Making sure everything is saved...");
+                        FileProvider.Save();
+
+
+                        if (ModManager.HasChanges)
                         {
-                            try
+                            using (new LogTiming("Saving mod status"))
                             {
-                                qfo.PerformFileOperation(_config);
-                                QueuedFileOperations.Remove(qfo);
-                            }
-                            catch (Exception ex)
-                            {
-                                Log.LogErr($"Queued file operation of type {qfo.Type} for target {qfo.TargetPath} failed!", ex);
-                                throw new Exception($"Queued file operation of type {qfo.Type} for target {qfo.TargetPath} failed!", ex);
+                                ModManager.Save();
                             }
                         }
+                        else
+                        {
+                            Log.LogMsg("ModManager has no changes, not saving it.");
+                        }
+
+                        if (QueuedFileOperations.Count > 0)
+                        {
+                            using (new LogTiming("Performing queued file operations"))
+                            {
+                                foreach (var qfo in QueuedFileOperations.ToList())
+                                {
+                                    try
+                                    {
+                                        qfo.PerformFileOperation(_config);
+                                        QueuedFileOperations.Remove(qfo);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Log.LogErr($"Queued file operation of type {qfo.Type} for target {qfo.TargetPath} failed!", ex);
+                                        throw new Exception($"Queued file operation of type {qfo.Type} for target {qfo.TargetPath} failed!", ex);
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            Log.LogMsg("No queued file operations to perform");
+                        }
                     }
-                }
-                else
+                    catch (Exception ex)
+                    {
+                        Log.LogErr("Exception saving assets!", ex);
+                        throw new Exception("Failed to save assets!", ex);
+                    }
+                finally
                 {
-                    Log.LogMsg("No queued file operations to perform");
+                    Monitor.Exit(_manager);
                 }
-            }
-            catch (Exception ex)
-            {
-                Log.LogErr("Exception saving assets!", ex);
-                throw new Exception("Failed to save assets!", ex);
             }
         }
 

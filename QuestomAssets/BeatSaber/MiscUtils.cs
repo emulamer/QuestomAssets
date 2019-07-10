@@ -8,7 +8,7 @@ namespace QuestomAssets.BeatSaber
 {
     public class MiscUtils
     {
-        private static HashSet<char> InvalidChars = new HashSet<char>(System.IO.Path.GetInvalidPathChars().Union(System.IO.Path.GetInvalidFileNameChars()).Union(new char[] { ' ' }));
+        private static HashSet<char> InvalidChars = new HashSet<char>(System.IO.Path.GetInvalidPathChars().Union(System.IO.Path.GetInvalidFileNameChars()).Union(new char[] { ' ' }).Union(new char[] { '-' }));
         public static string SanitizeName(string songName)
         {
             return new string(songName.Where(c => !InvalidChars.Contains(c)).ToArray());

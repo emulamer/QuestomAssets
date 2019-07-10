@@ -22,7 +22,6 @@ namespace QuestomAssets.AssetsChanger
             ForceLoadAllFiles = false;
         }
 
-
         public bool HasChanges
         {
             get

@@ -19,6 +19,14 @@ namespace QuestomAssets.BeatSaber
         public BeatmapLevelDataObject(AssetsFile assetsFile) : base(assetsFile, assetsFile.Manager.GetScriptObject("BeatmapLevelSO"))
         { }
 
+        /// <summary>
+        /// Empty constructor is used only for temporary deserialization, it will not create a useable AssetObject!
+        /// </summary>
+        public BeatmapLevelDataObject() : base(null)
+        {
+
+        }
+
         public override byte[] ScriptParametersData
         {
             get

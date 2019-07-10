@@ -130,7 +130,16 @@ namespace QuestomAssets.BeatSaber
                 beatmapLevel.AudioClip = audioAsset.PtrFrom(beatmapLevel);
                 if (coverImage == null)
                 {
-                    beatmapLevel.CoverImageTexture2D = _assetsFile.FindAsset<Texture2DObject>(x => x.Object.Name == "BeatSaberCover").PtrFrom(beatmapLevel);
+                    var bsCover = _assetsFile.FindAsset<Texture2DObject>(x => x.Object.Name == "BeatSaberCover");
+                    if (bsCover == null)
+                    {
+                        Log.LogErr("Unable to find BeatSaberCover in assets!  How is that gone?");
+                        throw new Exception("Could not find beat saber cover in assets!  That should never be missing.");
+                    }
+                    var cover = bsCover.Clone();
+                    
+                    _assetsFile.AddObject(cover, true);
+                    beatmapLevel.CoverImageTexture2D = cover.PtrFrom(beatmapLevel);
                 }
                 else
                 {

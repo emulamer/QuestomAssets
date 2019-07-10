@@ -12,6 +12,7 @@ using System.Reflection;
 using QuestomAssets.AssetsChanger;
 using QuestomAssets;
 using QuestomAssets.Utils;
+using System.IO;
 
 namespace Assplorer
 {
@@ -264,6 +265,32 @@ namespace Assplorer
                             Clipboard.Clear();
                             Clipboard.SetText(n.GetHashCode().ToString(), TextDataFormat.Text);
                             ClipData = n;
+                        }));
+                        cm.MenuItems.Add(new MenuItem("Export Raw", (o, ea) =>
+                        {
+                            SaveFileDialog sfd = new SaveFileDialog();
+                            var name = Path.GetFileNameWithoutExtension(ao.ObjectInfo.ParentFile.AssetsFilename) + "-" ao.ObjectInfo.ObjectID.ToString().PadLeft(4, '0');
+                            if (ao as IHaveName != null)
+                                name = name + "-" + (ao as IHaveName).Name;
+                            sfd.FileName = name.Where(x => !System.IO.Path.GetInvalidFileNameChars().Contains(x)) + ".dat";
+                            sfd.OverwritePrompt = true;
+                            if (sfd.ShowDialog() == DialogResult.Cancel)
+                                return;
+                            try
+                            {
+                                using (FileStream fs = File.Open(sfd.FileName, FileMode.Create, FileAccess.Write, FileShare.Write))
+                                {
+                                    using (AssetsWriter aw = new AssetsWriter(fs))
+                                    {
+                                        ao.Write(aw);
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Log.LogErr($"failed to save {sfd.FileName}", ex);
+                                MessageBox.Show($"Error saving {sfd.FileName}, check log for details.", "Error Saving", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            }
                         }));
                     }
                 }

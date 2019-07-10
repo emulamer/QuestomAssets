@@ -47,6 +47,7 @@ namespace QuestomAssets.AssetOps
 
         private void WorkerThreadProc(object o)
         {
+            bool entered = false;
             //I *think* this covers all the race conditions where the thread would stop as an item was being enqueued, probably need to re-review
             try
             {
@@ -64,25 +65,34 @@ namespace QuestomAssets.AssetOps
                     dequeued = _opQueue.TryDequeue(out op);
                     if (!dequeued)
                     {
+                        if (entered)
+                        {
+                            Log.LogMsg("trying to exit on thread " + Thread.CurrentThread.ManagedThreadId);
+                            Monitor.Exit(_context.Manager);
+                            entered = false;
+                        }
                         _queueEvent.WaitOne(2000);
                         continue;
                     }
-                    
+                    if (!entered)
+                    {
+                        entered = Monitor.TryEnter(_context.Manager);
+                        if (!entered)
+                            continue;
+                        Log.LogMsg("entered on thread " + Thread.CurrentThread.ManagedThreadId);
+                    }
                     try
                     {
-                        lock (_context.Manager)
-                        {
-                            Stopwatch sw = new Stopwatch();
-                            op.SetStatus(OpStatus.Started);
-                            OpStatusChanged?.Invoke(this, op);
-                            Log.LogMsg($"AssetOpManager starting op of type {op.GetType().Name}");
-                            sw.Start();
-                            op.PerformOp(_context);
-                            sw.Stop();
-                            Log.LogMsg($"AssetOpManager completed op of type {op.GetType().Name} in {sw.ElapsedMilliseconds}ms");
-                            op.SetStatus(OpStatus.Complete);
-                            OpStatusChanged?.Invoke(this, op);
-                        }
+                        Stopwatch sw = new Stopwatch();
+                        op.SetStatus(OpStatus.Started);
+                        OpStatusChanged?.Invoke(this, op);
+                        Log.LogMsg($"AssetOpManager starting op of type {op.GetType().Name}");
+                        sw.Start();
+                        op.PerformOp(_context);
+                        sw.Stop();
+                        Log.LogMsg($"AssetOpManager completed op of type {op.GetType().Name} in {sw.ElapsedMilliseconds}ms");
+                        op.SetStatus(OpStatus.Complete);
+                        OpStatusChanged?.Invoke(this, op);                        
                     }
                     catch (ThreadAbortException)
                     {
@@ -99,6 +109,7 @@ namespace QuestomAssets.AssetOps
                     }
                     finally
                     {
+                        
                         if (!threadAborting)
                         {
                             OpStatusChanged?.Invoke(this, op);
@@ -118,6 +129,8 @@ namespace QuestomAssets.AssetOps
             }
             finally
             {
+                if (entered)
+                    Monitor.Exit(_context.Manager);
                 //just to make sure it gets set null in all cases
                 _thread = null;
             }

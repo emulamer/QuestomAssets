@@ -11,7 +11,6 @@ namespace QuestomAssets.AssetOps
 {
     internal static class OpCommon
     {
-
         public static void DeletePlaylist(OpContext context, string playlistID, bool deleteSongsOnPlaylist)
         {
             var playlist = context.Cache.PlaylistCache[playlistID];
@@ -22,12 +21,41 @@ namespace QuestomAssets.AssetOps
                 {
                     foreach (var song in playlist.Songs.ToList())
                     {
-                        OpCommon.DeleteSong(context, song.Key);
+                        try
+                        {
+                            OpCommon.DeleteSong(context, song.Key);
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.LogErr($"Exception trying to delete song id {song.Key} while deleting playlist id {playlist.Playlist.PackID}, will be unlinked in cache.  This may leave unused data in the assets.", ex);
+                            try
+                            {
+                                context.Cache.SongCache.Remove(song.Value.Song.LevelID);
+                                playlist.Songs.Remove(song.Value.Song.LevelID);
+                            }
+                            catch (Exception ex2)
+                            {
+                                Log.LogErr($"Exception cleaning up cache for song id {song.Key} in playlist if {playlist.Playlist.PackID} while recovering from a failed delete.", ex2);
+                            }
+                        }
                     }
                 }
                 catch (Exception ex)
                 {
-                    throw new Exception($"Error while deleting songs from playlist id {playlist.Playlist.PackID}", ex);
+                    //really this shouldn't ever get hit anymore.  Probably can remove it.
+                    Log.LogErr($"Deleting songs on playlist ID {playlist?.Playlist?.PackID} failed! Attempting to recover by removing links to songs, although this may leave extra stuff in assets!");
+                    try
+                    {
+                        var bmCol = playlist?.Playlist?.BeatmapLevelCollection?.Object?.BeatmapLevels?.ToList();
+                        if (bmCol != null)
+                        {
+                            bmCol.ForEach(x => { playlist.Playlist.BeatmapLevelCollection.Object.BeatmapLevels.Remove(x); x.Dispose(); });
+                        }
+                    }
+                    catch (Exception ex2)
+                    {
+                        Log.LogErr($"Failed to recover by removing song pointers while deleting playlist {playlist?.Playlist?.PackID}!  This will definitely leave stuff in assets.", ex2);
+                    }
                 }
                 playlist.Songs.Clear();
             }
@@ -196,30 +224,39 @@ namespace QuestomAssets.AssetOps
             var song = context.Cache.SongCache[songID];
             var songPtr = song.Playlist.BeatmapLevelCollection.Object.BeatmapLevels.FirstOrDefault(x => x.Object == song.Song);
             if (songPtr == null)
-                throw new Exception("Song pointer could not be found in the playlist.");
-
-            song.Playlist.BeatmapLevelCollection.Object.BeatmapLevels.Remove(songPtr);
-            songPtr.Dispose();
-            //don't delete built in songs
-            if (!BSConst.KnownLevelIDs.Contains(songID))
+                throw new Exception($"Song pointer is null trying to delete song ID {songID}");
+            try
             {
-                songsAssetFile.DeleteObject(song.Song.AudioClip.Object);
-                songsAssetFile.DeleteObject(song.Song.CoverImageTexture2D.Object);
-                song.Song.CoverImageTexture2D.Dispose();
-                song.Song.DifficultyBeatmapSets.ForEach(x =>
+                song.Playlist.BeatmapLevelCollection.Object.BeatmapLevels.Remove(songPtr);
+                songPtr.Dispose();
+                //don't delete built in songs
+                if (!BSConst.KnownLevelIDs.Contains(songID))
                 {
-                    x.DifficultyBeatmaps.ForEach(y =>
+                    songsAssetFile.DeleteObject(song.Song.AudioClip.Object);
+                    songsAssetFile.DeleteObject(song.Song.CoverImageTexture2D.Object);
+                    song.Song.CoverImageTexture2D.Dispose();
+                    song.Song.DifficultyBeatmapSets.ForEach(x =>
                     {
-                        songsAssetFile.DeleteObject(y.BeatmapDataPtr.Object);
-                        y.BeatmapDataPtr.Dispose();
+                        x.DifficultyBeatmaps.ForEach(y =>
+                        {
+                            if (y != null && y.BeatmapDataPtr != null)
+                            {
+                                songsAssetFile.DeleteObject(y.BeatmapDataPtr.Object);
+                                y.BeatmapDataPtr.Dispose();
+                            }
+                        });
+                        x.BeatmapCharacteristic.Dispose();
                     });
-                    x.BeatmapCharacteristic.Dispose();
-                });
-                songsAssetFile.DeleteObject(song.Song);
-                context.Engine.QueuedFileOperations.Add(new QueuedFileOp() { Type = QueuedFileOperationType.DeleteFolder, TargetPath = context.Config.SongsPath.CombineFwdSlash(songID) });
+                    songsAssetFile.DeleteObject(song.Song);
+                    context.Engine.QueuedFileOperations.Add(new QueuedFileOp() { Type = QueuedFileOperationType.DeleteFolder, TargetPath = context.Config.SongsPath.CombineFwdSlash(songID) });
+                }
+                context.Cache.SongCache.Remove(song.Song.LevelID);
+                context.Cache.PlaylistCache[song.Playlist.PackID].Songs.Remove(song.Song.LevelID);
             }
-            context.Cache.SongCache.Remove(song.Song.LevelID);
-            context.Cache.PlaylistCache[song.Playlist.PackID].Songs.Remove(song.Song.LevelID);            
+            catch ( Exception ex)
+            {
+                Log.LogErr("Exception deleting song!", ex);
+            }
         }
     }
 }
