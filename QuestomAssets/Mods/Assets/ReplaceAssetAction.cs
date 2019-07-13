@@ -13,6 +13,8 @@ namespace QuestomAssets.Mods.Assets
 
         public AssetLocator Locator { get; set; }
 
+        public bool AllowOverwriteName { get; set; } = false;
+
         public override IEnumerable<AssetOp> GetOps(ModContext context)
         {
             //TODO: I don't like the root path constant here.  Get rid of it.
@@ -32,7 +34,7 @@ namespace QuestomAssets.Mods.Assets
                 throw new Exception($"ReplaceAssetAction could not read data file {FromDataFile}", ex);
             }
 
-            yield return new ReplaceAssetOp(Locator, assetData);
+            yield return new ReplaceAssetOp(Locator, assetData, AllowOverwriteName);
         }
     }
 }

@@ -47,6 +47,8 @@ namespace QuestomAssets.BeatSaber
             BeatmapLevelCollection = SmartPtr<BeatmapLevelCollectionObject>.Read(ObjectInfo.ParentFile, this, reader);
         }
 
+        [System.ComponentModel.Browsable(false)]
+        [Newtonsoft.Json.JsonIgnore]
         public override byte[] ScriptParametersData
         {
             get

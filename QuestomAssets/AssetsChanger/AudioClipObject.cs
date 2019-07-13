@@ -83,20 +83,10 @@ namespace QuestomAssets.AssetsChanger
             writer.AlignTo(4);
             Resource.Write(writer);
             writer.Write(CompressionFormat);
-        }        
-
-        public override byte[] Data
-        {
-            get
-            {
-                throw new InvalidOperationException("Data cannot be accessed from this class.");
-            }
-            set
-            {
-                throw new InvalidOperationException("Data cannot be accessed from this class.");
-            }
-
-
         }
+
+        [System.ComponentModel.Browsable(false)]
+        [Newtonsoft.Json.JsonIgnore]
+        public override byte[] Data { get => throw new InvalidOperationException("Data cannot be accessed from this class!"); set => throw new InvalidOperationException("Data cannot be accessed from this class!"); }
     }
 }

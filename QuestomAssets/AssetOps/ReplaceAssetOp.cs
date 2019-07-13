@@ -13,15 +13,22 @@ namespace QuestomAssets.AssetOps
 
         private AssetLocator _locator;
         private byte[] _replaceDataWith;
-        public ReplaceAssetOp(AssetLocator locator, byte[] replaceDataWith)
+        private bool _allowOverwriteName;
+        public ReplaceAssetOp(AssetLocator locator, byte[] replaceDataWith, bool allowOverwriteName)
         {
             _locator = locator;
             _replaceDataWith = replaceDataWith;
+            _allowOverwriteName = allowOverwriteName;
         }
 
         internal override void PerformOp(OpContext context)
         {
             var asset = _locator.Locate(context.Manager, false);
+            string oldName = null;
+            if (asset as IHaveName != null && !_allowOverwriteName)
+            {
+                oldName = (asset as IHaveName).Name;
+            }
             using (var ms = new MemoryStream(_replaceDataWith))
             {
                 using (AssetsReader reader = new AssetsReader(ms))
@@ -32,6 +39,8 @@ namespace QuestomAssets.AssetOps
 
                     asset.ObjectInfo.DataOffset = -1;
                     asset.ObjectInfo.DataSize = -1;
+                    if (oldName != null)
+                        (asset as IHaveName).Name = oldName;
                 }
             }
         }

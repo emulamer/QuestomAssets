@@ -15,6 +15,8 @@ namespace QuestomAssets.BeatSaber
         public EnvironmentSceneInfoObject(AssetsFile assetsFile) : base(assetsFile, assetsFile.Manager.GetScriptObject("SceneInfo"))
         { }
 
+        [System.ComponentModel.Browsable(false)]
+        [Newtonsoft.Json.JsonIgnore]
         public override byte[] ScriptParametersData
         {
             get

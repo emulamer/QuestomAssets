@@ -64,6 +64,13 @@ namespace QuestomAssets.AssetOps
             context.Cache.PlaylistCache[song.Playlist.PackID].Songs.Remove(song.Song.LevelID);
             song.Playlist = toPlaylist.Playlist;
             toPlaylist.Songs.Add(song.Song.LevelID, new OrderedSong() { Song = song.Song, Order = toPlaylist.Songs.Count });
+
+            //if a song's been moved to a playlist, make sure it isn't going to be deleted
+            var qfos = context.Engine.QueuedFileOperations.Where(x => x.Tag == SongID && x.Type == QueuedFileOperationType.DeleteFolder || x.Type == QueuedFileOperationType.DeleteFile).ToList();
+            foreach (var q in qfos)
+            {
+                context.Engine.QueuedFileOperations.Remove(q);
+            }
         }
     }
 }

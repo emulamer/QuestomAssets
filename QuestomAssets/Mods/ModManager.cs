@@ -18,12 +18,15 @@ namespace QuestomAssets.Mods
         {
             get
             {
-                return !ModConfig.Matches(_originalModConfig);
+                lock (_cacheLock)
+                {
+                    return !_modConfig.Matches(_originalModConfig);
+                }
             }
         }
 
         public const string MOD_FILE_NAME = "beatonmod.json";
-        internal ModConfig ModConfig { get; private set; }
+        private ModConfig _modConfig;
         private ModConfig _originalModConfig;
         private QaeConfig _config;
         private Func<QuestomAssetsEngine> _getEngine;
@@ -31,8 +34,8 @@ namespace QuestomAssets.Mods
         {
             _config = config;
             _getEngine = getEngine;
-            ModConfig = ModConfig.Load(_config);
-            _originalModConfig = ModConfig.Clone();
+            _modConfig = ModConfig.Load(_config);
+            _originalModConfig = _modConfig.Clone();
         }
 
         public ModDefinition LoadDefinitionFromProvider(IFileProvider provider)
@@ -67,8 +70,9 @@ namespace QuestomAssets.Mods
 
         public void Save()
         {
-            ModConfig.Save(_config);
-            _originalModConfig.InstalledModIDs = ModConfig.InstalledModIDs.ToList();
+            _modConfig.Save(_config);
+            _originalModConfig.InstalledModIDs = _modConfig.InstalledModIDs.ToList();
+            _deletedModIDs.Clear();
         }
 
         private List<string> _deletedModIDs = new List<string>();
@@ -77,12 +81,15 @@ namespace QuestomAssets.Mods
 
         public void ResetCache()
         {
-            _modCache = null;
+            lock (_cacheLock)
+            {
+                _modCache = null;
+            }
         }
-
+        private object _cacheLock = new object();
         public void DeleteMod(ModDefinition def)
         {
-            if (ModConfig.InstalledModIDs.Contains(def.ID))
+            if (_modConfig.InstalledModIDs.Contains(def.ID))
             {
                 var ops = GetUninstallModOps(def);
                 ops.ForEach(x => _getEngine().OpManager.QueueOp(x));
@@ -104,61 +111,72 @@ namespace QuestomAssets.Mods
                 return;
             }
 
-            var qfo = new QueuedFileOp() { Type = QueuedFileOperationType.DeleteFolder, TargetPath = defPath };
+            var qfo = new QueuedFileOp() { Tag=def.id, Type = QueuedFileOperationType.DeleteFolder, TargetPath = defPath };
             _getEngine().QueuedFileOperations.Add(qfo);
             _deletedModIDs.Add(def.ID);
             ResetCache();
+        }
+
+        public void ModAdded(ModDefinition def)
+        {
+            if (_deletedModIDs.Contains(def.ID))
+                _deletedModIDs.Remove(def.ID);
+            var e = _getEngine();
+            e.QueuedFileOperations.RemoveAll(x => x.Tag == def.id);
         }
 
         public List<ModDefinition> Mods
         {
             get
             {
-                if ( _modCache == null)
+                lock (_cacheLock)
                 {
-                    _modCache = new List<ModDefinition>();
-                    foreach (var file in _config.RootFileProvider.FindFiles($"{_config.ModsSourcePath}/*/{MOD_FILE_NAME}"))
+                    if (_modCache == null)
                     {
-                        //todo: don't like having the root constant here
-                        var fulldir = file.GetDirectoryFwdSlash();
-                        if (!_config.RootFileProvider.FileExists(fulldir.CombineFwdSlash(MOD_FILE_NAME)))
+                        _modCache = new List<ModDefinition>();
+                        foreach (var file in _config.RootFileProvider.FindFiles($"{_config.ModsSourcePath}/*/{MOD_FILE_NAME}"))
                         {
-                            Log.LogErr($"Mod filename was found in path {file}, but nested paths arend supported so it will be skipped.");
-                            continue;
-                        }
-                        try
-                        {
-                            var modDef = LoadModDef(_config.RootFileProvider, fulldir);
-                            var dirName = fulldir.Substring(_config.ModsSourcePath.Length).Trim('/');
-                            if (modDef.ID != dirName)
+                            //todo: don't like having the root constant here
+                            var fulldir = file.GetDirectoryFwdSlash();
+                            if (!_config.RootFileProvider.FileExists(fulldir.CombineFwdSlash(MOD_FILE_NAME)))
                             {
-                                Log.LogErr($"Mod path {file} doesn't match the mod ID within the file, {modDef.ID}, skipping it.");
+                                Log.LogErr($"Mod filename was found in path {file}, but nested paths arend supported so it will be skipped.");
                                 continue;
                             }
+                            try
+                            {
+                                var modDef = LoadModDef(_config.RootFileProvider, fulldir);
+                                var dirName = fulldir.Substring(_config.ModsSourcePath.Length).Trim('/');
+                                if (modDef.ID != dirName)
+                                {
+                                    Log.LogErr($"Mod path {file} doesn't match the mod ID within the file, {modDef.ID}, skipping it.");
+                                    continue;
+                                }
 
-                            //check to see if the mod is queued to be deleted, don't include it if so
-                            if (_deletedModIDs.Contains(modDef.ID))
-                                continue;
+                                //check to see if the mod is queued to be deleted, don't include it if so
+                                if (_deletedModIDs.Contains(modDef.ID))
+                                    continue;
 
-                            if (ModConfig.InstalledModIDs.Contains(modDef.ID))
-                                modDef.Status = ModStatusType.Installed;
+                                if (_modConfig.InstalledModIDs.Contains(modDef.ID))
+                                    modDef.Status = ModStatusType.Installed;
 
-                            _modCache.Add(modDef);
-                        }
-                        catch (Exception ex)
-                        {
-                            Log.LogErr($"Mod in directory {fulldir} failed to load", ex);
+                                _modCache.Add(modDef);
+                            }
+                            catch (Exception ex)
+                            {
+                                Log.LogErr($"Mod in directory {fulldir} failed to load", ex);
+                            }
                         }
                     }
+                    foreach (var modDef in _modCache)
+                    {
+                        if (_modConfig.InstalledModIDs.Contains(modDef.ID))
+                            modDef.Status = ModStatusType.Installed;
+                        else
+                            modDef.Status = ModStatusType.NotInstalled;
+                    }
+                    return _modCache;
                 }
-                foreach (var modDef in _modCache)
-                {
-                    if (ModConfig.InstalledModIDs.Contains(modDef.ID))
-                        modDef.Status = ModStatusType.Installed;
-                    else
-                        modDef.Status = ModStatusType.NotInstalled;
-                }
-                return _modCache;
             }
         }
 
@@ -178,6 +196,38 @@ namespace QuestomAssets.Mods
             
             ops.AddRange(modDef.GetInstallOps(mc));
             return ops;
+        }
+
+        public void SetModStatus(ModDefinition definition, ModStatusType status)
+        {
+            lock (_cacheLock)
+            {
+                var def = Mods.FirstOrDefault(x => x.ID == definition.ID);
+                if (def != null)
+                {
+                    switch (status)
+                    {
+                        case ModStatusType.Installed:
+                            if (_modConfig.InstalledModIDs.Contains(definition.ID))
+                                Log.LogErr($"ModStatusOp was supposed to install mod ID {definition.ID} but it is already listed as installed.");
+                            else
+                                _modConfig.InstalledModIDs.Add(definition.ID);
+                            break;
+                        case ModStatusType.NotInstalled:
+                            if (!_modConfig.InstalledModIDs.Contains(definition.ID))
+                                Log.LogErr($"ModStatusOp was supposed to uninstall mod ID {definition.ID} but it doesn't appear to be installed.");
+                            else
+                                _modConfig.InstalledModIDs.Remove(definition.ID);
+                            break;
+                    }
+                    def.Status = status;
+                    definition.Status = status;
+                }
+                else
+                {
+                    Log.LogErr($"Mod ID was not found when trying to set its status to {status}!");
+                }
+            }
         }
 
         public List<AssetOp> GetUninstallModOps(ModDefinition modDef)

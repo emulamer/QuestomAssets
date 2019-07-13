@@ -53,5 +53,9 @@ namespace QuestomAssets.AssetsChanger
         [JsonIgnore]
         public ISmartPtr<GameObject> GameObject { get; set; } = null;
 
+        [System.ComponentModel.Browsable(false)]
+        [JsonIgnore]
+        public override byte[] Data { get => throw new InvalidOperationException("Data cannot be accessed from this class!"); set => throw new InvalidOperationException("Data cannot be accessed from this class!"); }
+
     }
 }

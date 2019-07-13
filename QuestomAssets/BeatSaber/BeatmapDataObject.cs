@@ -69,7 +69,19 @@ namespace QuestomAssets.BeatSaber
         [JsonProperty("_hasRequiredDataForLoad")]
         public bool HasRequiredDataForLoad { get; set; }
 
-
+        [System.ComponentModel.Browsable(false)]
+        [Newtonsoft.Json.JsonIgnore]
+        public override byte[] ScriptParametersData
+        {
+            get
+            {
+                throw new InvalidOperationException("Cannot access parameters data from this object.");
+            }
+            set
+            {
+                throw new InvalidOperationException("Cannot access parameters data from this object.");
+            }
+        }
 
     }
 }

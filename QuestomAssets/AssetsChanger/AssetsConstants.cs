@@ -22,6 +22,8 @@ namespace QuestomAssets.AssetsChanger
             public const int RectTransformClassID = 224;
             public const int AnimationClassID = 111;
             public const int SkinnedMeshRenderer = 137;
+            public const int MaterialClassID = 21;
+            public const int MeshRendererClassID = 23;
         }
 
     }

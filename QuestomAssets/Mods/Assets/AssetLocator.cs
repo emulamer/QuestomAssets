@@ -63,7 +63,7 @@ namespace QuestomAssets.Mods.Assets
                         filters.Add(x => typeof(IObjectInfo<Transform>).IsAssignableFrom(x.GetType()));
                         break;
                     default:
-                        throw new Exception($"Unhandled type value {TypeIs.Value.ToString()}");
+                        throw new ArgumentException($"Unhandled type value {TypeIs.Value.ToString()}");
                 }
             }
             if (NameIs != null)
@@ -74,7 +74,7 @@ namespace QuestomAssets.Mods.Assets
             if (PathIs != null)
             {
                 if (PathIs.AssetFilename == null)
-                    throw new Exception("AssetFilename must be specified when using PathIs locator.");
+                    throw new ArgumentException("AssetFilename must be specified when using PathIs locator.");
                 filters.Add(x => x.ParentFile.AssetsFilename == PathIs.AssetFilename && x.ObjectID == PathIs.PathID);
             }
 
@@ -82,12 +82,12 @@ namespace QuestomAssets.Mods.Assets
             {
                 var found = manager.MassFindAssets<AssetsObject>(x => !filters.Any(y => !y(x)), forceDeepSearch).SingleOrDefault()?.Object;
                 if (found == null)
-                    throw new Exception("Locator did not find any assets");
+                    throw new LocatorException("Locator did not find any assets");
                 return found;
             }
             catch (Exception ex)
             {
-                throw new Exception("The locator throw an exception, possibly because it returned more than one matching asset.", ex);
+                throw new LocatorException("The locator throw an exception, possibly because it returned more than one matching asset.", ex);
             }
             
         }

@@ -85,6 +85,7 @@ namespace QuestomAssets.Mods
         }
 
         private ModStatusType _status;
+
         /// <summary>
         /// Gets or sets the installation status of the mod
         /// </summary>
@@ -109,10 +110,16 @@ namespace QuestomAssets.Mods
         /// Unique identifier of this mod
         /// </summary>
         public string ID { get; set; }
+
         /// <summary>
         /// The (display) name of the mod
         /// </summary>
         public string Name { get; set; }
+
+        /// <summary>
+        /// The filename of the cover image of the mod.
+        /// </summary>
+        public string CoverImageFilename { get; set; }
 
         /// <summary>
         /// The author of the mod
@@ -189,7 +196,17 @@ namespace QuestomAssets.Mods
                 Name = value;
             }
         }
-
+        public string coverImageFilename
+        {
+            get
+            {
+                return CoverImageFilename;
+            }
+            set
+            {
+                CoverImageFilename = value;
+            }
+        }
         public string author { get
             {
                 return Author;

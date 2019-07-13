@@ -42,7 +42,9 @@ namespace QuestomAssets.BeatSaber
                 ptr.Write(writer);
             }
         }
-      
+
+        [System.ComponentModel.Browsable(false)]
+        [Newtonsoft.Json.JsonIgnore]
         public override byte[] ScriptParametersData
         {
             get

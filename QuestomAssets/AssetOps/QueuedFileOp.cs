@@ -37,6 +37,11 @@ namespace QuestomAssets.AssetOps
         /// </summary>
         public byte[] SourceData { get; set; }
 
+        /// <summary>
+        /// Tag used to track where it came from or what it is
+        /// </summary>
+        public string Tag { get; set; }
+
         internal void PerformFileOperation(QaeConfig config)
         {
             try

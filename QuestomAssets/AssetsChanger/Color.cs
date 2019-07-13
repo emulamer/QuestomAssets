@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace QuestomAssets.BeatSaber
+namespace QuestomAssets.AssetsChanger
 {
     public class Color
     {

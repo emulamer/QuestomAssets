@@ -6,6 +6,6 @@ namespace QuestomAssets.AssetsChanger
 {
     public interface IHaveName
     {
-        string Name { get; }
+        string Name { get; set; }
     }
 }

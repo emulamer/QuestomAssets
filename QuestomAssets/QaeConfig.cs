@@ -9,6 +9,7 @@ namespace QuestomAssets
     {
         public IFileProvider RootFileProvider { get; set; }
         public IFileProvider SongFileProvider { get; set; }
+        public IFileProvider EmbeddedResourcesFileProvider { get; set; }
 
         public string AssetsPath { get; set; }
 

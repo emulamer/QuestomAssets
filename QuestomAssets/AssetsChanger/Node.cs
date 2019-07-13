@@ -102,7 +102,93 @@ namespace QuestomAssets.AssetsChanger
                 node.AddNode(MakeNode(o, depth, trackedObjects));
             return node;
         }
+        public static void MakeNodeAndTypeName(object o, out string nodeName, out string typeName)
+        {
+            Type t = o.GetType();
+            if (typeof(IObjectInfo<AssetsObject>).IsAssignableFrom(t))
+            {
+                o = (o as IObjectInfo<AssetsObject>).Object;
+                t = o.GetType();
+            }
+            if (t.IsValueType)
+            {
+                nodeName = $"{o}";
+                typeName = t.Name;
+            }
+            else if (t == typeof(string))
+            {
+                nodeName = $"\"{o}\"";
+                typeName = t.Name;
+            }
+            else if (t.IsArray && (t.GetElementType().IsValueType || t.GetElementType() == typeof(string)))
+            {
+                nodeName = $"{o}";
+                typeName = t.Name;
+            }
+            else if (typeof(ISmartPtr<AssetsObject>).IsAssignableFrom(t))
+            {
+                ISmartPtr<AssetsObject> ptr = o as ISmartPtr<AssetsObject>;
 
+                nodeName = $"PtrTo F:{ptr.FileID} P:{ptr.PathID} ({o.GetType().GetGenericArguments()[0].Name})";
+                typeName = o.GetType().GetGenericArguments()[0].Name;
+                
+            }
+            else if (typeof(IEnumerable).IsAssignableFrom(t))
+            {
+                int i = 0;
+                var thisNodeName = "";
+                if (t.IsGenericType)
+                {
+                    thisNodeName = "[List<";
+                    //half assed, only 1 generic arg to keep it simple
+                    var genArg = t.GetGenericArguments()[0];
+
+                    if (genArg.IsGenericType)
+                    {
+                        thisNodeName += genArg.GetGenericTypeDefinition().Name;
+
+                        thisNodeName = thisNodeName.Substring(0, thisNodeName.LastIndexOf('`'));
+                        thisNodeName += "<";
+                        thisNodeName += genArg.GetGenericArguments()[0].Name;
+                        thisNodeName += ">";
+                        //nodeName = nodeName.Substring(0, nodeName.Length - 1);
+                        //nodeName += string.Join(", ", t.GetGenericArguments().Select(x => x.Name));
+                        //nodeName += ">";
+                    }
+                    else
+                    {
+                        thisNodeName += genArg.Name;
+                    }
+                    thisNodeName += ">]";
+                }
+                else
+                {
+                    thisNodeName = "[List]";
+                }
+                nodeName = thisNodeName;
+                typeName = t.Name;
+
+            }
+            else if (t.GetProperties().Count() > 0)
+            {
+                if (typeof(AssetsObject).IsAssignableFrom(t))
+                {
+                    var ao = o as AssetsObject;
+                    nodeName = $"{ao.ObjectInfo.ObjectID,5} {t.Name} {((o is IHaveName) ? (": " + (o as IHaveName)?.Name) : "")}";
+                    typeName = ao.GetType().Name;
+                }
+                else
+                {
+                    nodeName = o.GetType().Name;
+                    typeName = o.GetType().Name;
+                }
+            }
+            else
+            {
+                nodeName = $"{o}";
+                typeName = t.Name;
+            }
+        }
         public static Node MakeNode(object o, int depth = 0, Dictionary<object, Node> trackedObjects = null)
         {
             if (trackedObjects == null)
@@ -126,6 +212,7 @@ namespace QuestomAssets.AssetsChanger
                 o = (o as IObjectInfo<AssetsObject>).Object;
                 t = o.GetType();
             }
+                
             node = new Node(o, depth);
             if (!t.IsValueType && t != typeof(string) && !(t.IsArray && (t.GetElementType().IsValueType || t.GetElementType() == typeof(string)))
                 && trackedObjects.ContainsKey(o))
@@ -158,24 +245,14 @@ namespace QuestomAssets.AssetsChanger
                     trackedObjects.Add(o, node);
                 }
             }
-            
-            if (t.IsValueType)
-            {
-                node.Set($"{o}", t.Name);
-            }
-            else if (t == typeof(string))
-            {
-                node.Set($"\"{o}\"", t.Name);
-            }
-            else if (t.IsArray && (t.GetElementType().IsValueType || t.GetElementType() == typeof(string)))
-            {
-                node.Set($"{o}", t.Name);
-            }
-            else if (typeof(ISmartPtr<AssetsObject>).IsAssignableFrom(t))
+            string nodeName1;
+            string typeName1;
+            MakeNodeAndTypeName(o, out nodeName1, out typeName1);
+            node.Set(nodeName1, typeName1);
+            if (typeof(ISmartPtr<AssetsObject>).IsAssignableFrom(t))
             {
                 ISmartPtr<AssetsObject> ptr = o as ISmartPtr<AssetsObject>;
 
-                node.Set($"PtrTo F:{ptr.FileID} P:{ptr.PathID} ({o.GetType().GetGenericArguments()[0].Name})", o.GetType().GetGenericArguments()[0].Name);
                 var targetNode = MakeNode(ptr.Target.Object, depth, trackedObjects);
                 //targetNode.Text =  targetNode.Text;
                 //targetNode.TypeName = o.GetType().GetGenericArguments()[0].Name;
@@ -184,36 +261,7 @@ namespace QuestomAssets.AssetsChanger
             else if (typeof(IEnumerable).IsAssignableFrom(t))
             {
                 int i = 0;
-                var nodeName = "";
-                if (t.IsGenericType)
-                {
-                    nodeName = "[List<";
-                    //half assed, only 1 generic arg to keep it simple
-                    var genArg = t.GetGenericArguments()[0];
 
-                    if (genArg.IsGenericType)
-                    {
-                        nodeName += genArg.GetGenericTypeDefinition().Name;
-
-                        nodeName = nodeName.Substring(0, nodeName.LastIndexOf('`'));
-                        nodeName += "<";
-                        nodeName += genArg.GetGenericArguments()[0].Name;
-                        nodeName += ">";
-                        //nodeName = nodeName.Substring(0, nodeName.Length - 1);
-                        //nodeName += string.Join(", ", t.GetGenericArguments().Select(x => x.Name));
-                        //nodeName += ">";
-                    }
-                    else
-                    {
-                        nodeName += genArg.Name;
-                    }
-                    nodeName += ">]";
-                }
-                else
-                {
-                    nodeName = "[List]";
-                }
-                node.Set(nodeName, t.Name);
                 foreach (object obj in o as IEnumerable)
                 {
                     Node childNode = MakeNode(obj, depth, trackedObjects);
@@ -224,16 +272,6 @@ namespace QuestomAssets.AssetsChanger
             }
             else if (t.GetProperties().Count() > 0)
             {
-                if (typeof(AssetsObject).IsAssignableFrom(t))
-                {
-                    var ao = o as AssetsObject;
-                    node.Set($"{ao.ObjectInfo.ObjectID,5} {t.Name} {((o is IHaveName) ? (": " + (o as IHaveName)?.Name) : "")}", ao.GetType().Name);
-                }
-                else
-                {
-                    node.Set(o.GetType().Name, o.GetType().Name);
-                }
-
                 List<PropertyInfo> props = new List<PropertyInfo>(t.GetProperties());
 
                 foreach (PropertyInfo prop in props)
@@ -261,6 +299,10 @@ namespace QuestomAssets.AssetsChanger
                         continue;
                     }
 
+                    if (prop.PropertyType.IsValueType || prop.PropertyType == typeof(string) || (prop.PropertyType.IsArray && (prop.PropertyType.GetElementType().IsValueType || prop.PropertyType.GetElementType() == typeof(string))))
+                    {
+                        continue;
+                    }
                     var childNode = MakeNode(propValue, depth, trackedObjects);
                     childNode.ParentPropertyName = prop.Name;
                     //stupid place for this

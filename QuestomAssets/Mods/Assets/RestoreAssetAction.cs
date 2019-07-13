@@ -42,7 +42,30 @@ namespace QuestomAssets.Mods.Assets
                 Log.LogErr("Exception while restoring asset!", ex);
                 throw;
             }
-            yield return new ReplaceAssetOp(Locator, assetData);
+            AssetLocator locatorOverride = null;
+            try
+            {
+                var res = Locator.Locate(context.GetEngine().Manager, false);
+                if (res == null)
+                    throw new LocatorException("Unable to find asset.");
+            }
+            catch (LocatorException ex)
+            {
+                Log.LogErr($"The locator for restore threw an exception, attempting to locate against backup and identify path.", ex);
+                try
+                {
+                    var res = Locator.Locate(context.BackupEngine.Manager, false);
+                    if (res == null)
+                        throw new LocatorException("Unable to find asset, locator returned null");
+                    locatorOverride = new AssetLocator() { PathIs = new PathLocator() { AssetFilename = res.ObjectInfo.ParentFile.AssetsFilename, PathID = res.ObjectInfo.ObjectID } };
+                }
+                catch (Exception ex2)
+                {
+                    Log.LogErr($"Unable to find path in backup for the locator either", ex2);
+                    throw ex;
+                }
+            }
+            yield return new ReplaceAssetOp(locatorOverride??Locator, assetData, true);
 
         }
     }

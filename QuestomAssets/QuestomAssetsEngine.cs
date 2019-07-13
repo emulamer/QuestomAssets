@@ -973,7 +973,11 @@ namespace QuestomAssets
                         }
                         config.Playlists.Add(packModel);
                     }
-
+                    var cm = GetColorManager();
+                    var rc = cm.ColorB.Object.Color; 
+                    var lc = cm.ColorA.Object.Color;
+                    config.RightColor = new BeatSaberColor() { A = (byte)(255*rc.A), R = (byte)(255*rc.R), G = (byte)(rc.G*255), B = (byte)(rc.B*255) };
+                    config.LeftColor = new BeatSaberColor() { A = (byte)(255 * lc.A), R = (byte)(255 * lc.R), G = (byte)(lc.G * 255), B = (byte)(lc.B * 255) };
                     ModManager.Mods.ForEach(x => config.Mods.Add(x));
                     return config;
                 }
@@ -1078,15 +1082,15 @@ namespace QuestomAssets
 
             if (colorA != null)
             {
-                (manager.ColorA.Object as SimpleColorSO).color = colorA.color;
+                (manager.ColorA.Object as SimpleColorSO).Color = colorA.Color;
             }
             if (colorB != null)
-                (manager.ColorB.Object as SimpleColorSO).color = colorB.color;
+                (manager.ColorB.Object as SimpleColorSO).Color = colorB.Color;
             // Reset
             if (colorA == null && colorB == null)
             {
-                (manager.ColorA.Object as SimpleColorSO).color = BSConst.Colors.DefaultColorA;
-                (manager.ColorB.Object as SimpleColorSO).color = BSConst.Colors.DefaultColorB;
+                (manager.ColorA.Object as SimpleColorSO).Color = BSConst.Colors.DefaultColorA;
+                (manager.ColorB.Object as SimpleColorSO).Color = BSConst.Colors.DefaultColorB;
             }
         }
 

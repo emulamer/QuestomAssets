@@ -25,6 +25,8 @@ namespace Assplorer
         }
         public event EventHandler<TreeNodeMouseClickEventArgs> NodeRightClicked;
 
+        public event EventHandler<Node> NodeSelected;
+
         public TreeNode SelectedNode
         {
             get
@@ -47,7 +49,7 @@ namespace Assplorer
             }
         }
         public bool AutoExpand { get; set; } = true;
-        public Color HighlightColor { get; set; } = Color.AliceBlue;
+        public System.Drawing.Color HighlightColor { get; set; } = System.Drawing.Color.AliceBlue;
         private Node _dataSource;
         public Node DataSource
         {
@@ -79,7 +81,7 @@ namespace Assplorer
             if (n.StubToNode != null)
             {
                 //node.Text += ""
-                node.ForeColor = Color.DarkBlue;
+                node.ForeColor = System.Drawing.Color.DarkBlue;
                 node.Text = node.Text + " " + n.StubToNode.Text;
                 node.ImageIndex = 1;
                 node.SelectedImageIndex = 1;
@@ -92,7 +94,7 @@ namespace Assplorer
             }
             else if (isClone)
             {
-                node.ForeColor = Color.DarkBlue;
+                node.ForeColor = System.Drawing.Color.DarkBlue;
 
             }
             else
@@ -149,6 +151,7 @@ namespace Assplorer
             {
                 HighlightNodesByTag(node, selectedNode);
             }
+            NodeSelected?.Invoke(this, selectedNode);
         }
 
         private void HighlightNodesByTag(TreeNode node, Node tag)
@@ -160,7 +163,7 @@ namespace Assplorer
             }
             else
             {
-                node.BackColor = Color.White;
+                node.BackColor = System.Drawing.Color.White;
             }
             foreach (var n in node.Nodes)
             {
@@ -269,10 +272,10 @@ namespace Assplorer
                         cm.MenuItems.Add(new MenuItem("Export Raw", (o, ea) =>
                         {
                             SaveFileDialog sfd = new SaveFileDialog();
-                            var name = Path.GetFileNameWithoutExtension(ao.ObjectInfo.ParentFile.AssetsFilename) + "-" ao.ObjectInfo.ObjectID.ToString().PadLeft(4, '0');
+                            var name = Path.GetFileNameWithoutExtension(ao.ObjectInfo.ParentFile.AssetsFilename) + "-" + ao.ObjectInfo.ObjectID.ToString().PadLeft(4, '0');
                             if (ao as IHaveName != null)
                                 name = name + "-" + (ao as IHaveName).Name;
-                            sfd.FileName = name.Where(x => !System.IO.Path.GetInvalidFileNameChars().Contains(x)) + ".dat";
+                            sfd.FileName = new string(name.Where(x => !System.IO.Path.GetInvalidFileNameChars().Contains(x)).ToArray()) + ".dat";
                             sfd.OverwritePrompt = true;
                             if (sfd.ShowDialog() == DialogResult.Cancel)
                                 return;

@@ -9,9 +9,9 @@ namespace QuestomAssets.Models
     ///////////////////////////TODO HOOK UP PROPERTYCHANGED
     public class BeatSaberColor : INotifyPropertyChanged
     {
-        private float _r;
+        private byte _r;
         [JsonProperty("R")]
-        public float R
+        public byte R
         {
             get => _r;
             set
@@ -21,9 +21,9 @@ namespace QuestomAssets.Models
                 _r = value;
             }
         }
-        private float _g;
+        private byte _g;
         [JsonProperty("G")]
-        public float G
+        public byte G
         {
             get => _g;
             set
@@ -33,9 +33,9 @@ namespace QuestomAssets.Models
                 _g = value;
             }
         }
-        private float _b;
+        private byte _b;
         [JsonProperty("B")]
-        public float B
+        public byte B
         {
             get => _b;
             set
@@ -45,9 +45,9 @@ namespace QuestomAssets.Models
                 _b = value;
             }
         }
-        private float _a;
+        private byte _a;
         [JsonProperty("A")]
-        public float A
+        public byte A
         {
             get => _a;
             set

@@ -114,7 +114,7 @@ namespace Assplorer
                     }
                     catch (Exception ex)
                     {
-                        Log.LogErr("Couldn't load APK!", ex);
+                        Log.LogErr("Couldn't load folder!", ex);
                         MessageBox.Show("Failed to load!");
                         if (_fileProvider != null)
                         {
@@ -301,6 +301,39 @@ namespace Assplorer
             
             CloseStuff();
         }
-      
+        private Node selectedNode = null;
+        private void EtMain_NodeSelected(object sender, Node e)
+        {
+            if (e.Obj == null)
+            {
+                selectedNode = null;
+                pgAssetProps.SelectedObject = null;
+            } else
+            {
+                selectedNode = e;
+                pgAssetProps.SelectedObject = e.Obj;
+            }
+        }
+
+        private void PgAssetProps_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
+        {
+            if (selectedNode != null)
+            {
+                try
+                {
+                    string nodeName;
+                    string typeName;
+                    Node.MakeNodeAndTypeName(selectedNode.Obj, out nodeName, out typeName);
+                    selectedNode.Text = nodeName;
+                    var tn = selectedNode.ExtRef as TreeNode;
+                    if (tn != null)
+                        tn.Text = selectedNode.Text;
+                }
+                catch (Exception ex)
+                {
+                    Log.LogErr($"Exception updating node text", ex);
+                }
+            }
+        }
     }
 }

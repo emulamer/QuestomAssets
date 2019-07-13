@@ -21,26 +21,7 @@ namespace QuestomAssets.AssetOps
 
         internal override void PerformOp(OpContext context)
         {
-            switch (TargetModStatus)
-            {
-                case ModStatusType.Installed:
-                    if (context.Engine.ModManager.ModConfig.InstalledModIDs.Contains(Definition.ID))
-                        Log.LogErr($"ModStatusOp was supposed to install mod ID {Definition.ID} but it is already listed as installed.");
-                    else
-                        context.Engine.ModManager.ModConfig.InstalledModIDs.Add(Definition.ID);
-                    Definition.Status = ModStatusType.Installed;                    
-                    break;
-                case ModStatusType.NotInstalled:
-                    if (!context.Engine.ModManager.ModConfig.InstalledModIDs.Contains(Definition.ID))
-                        Log.LogErr($"ModStatusOp was supposed to uninstall mod ID {Definition.ID} but it doesn't appear to be installed.");
-                    else
-                        context.Engine.ModManager.ModConfig.InstalledModIDs.Remove(Definition.ID);
-                    Definition.Status = ModStatusType.NotInstalled;
-                    break;
-            }
-            var def = context.Engine.ModManager.Mods.FirstOrDefault(x => x.ID == Definition.ID);
-            if (def != null)
-                def.Status = Definition.Status;
+            context.Engine.ModManager.SetModStatus(Definition, TargetModStatus);
         }
     }
 

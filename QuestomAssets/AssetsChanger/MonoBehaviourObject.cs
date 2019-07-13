@@ -60,6 +60,7 @@ namespace QuestomAssets.AssetsChanger
             }
         }
 
+        [System.ComponentModel.Browsable(false)]
         [JsonIgnore]
         public override byte[] Data
         {

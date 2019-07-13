@@ -9,7 +9,7 @@ namespace QuestomAssets.BeatSaber
     public sealed class SimpleColorSO : MonoBehaviourObject, INeedAssetsMetadata
     {
         [JsonProperty("_color")]
-        public Color color;
+        public Color Color { get; set; }
 
         public SimpleColorSO(IObjectInfo<AssetsObject> objectInfo, AssetsReader reader) : base(objectInfo, reader)
         {
@@ -25,13 +25,27 @@ namespace QuestomAssets.BeatSaber
         public override void Parse(AssetsReader reader)
         {
             base.ParseBase(reader);
-            color = new Color(reader);
+            Color = new Color(reader);
         }
 
         protected override void WriteObject(AssetsWriter writer)
         {
             WriteBase(writer);
-            color.Write(writer);
+            Color.Write(writer);
+        }
+
+        [System.ComponentModel.Browsable(false)]
+        [Newtonsoft.Json.JsonIgnore]
+        public override byte[] ScriptParametersData
+        {
+            get
+            {
+                throw new InvalidOperationException("Cannot access parameters data from this object.");
+            }
+            set
+            {
+                throw new InvalidOperationException("Cannot access parameters data from this object.");
+            }
         }
     }
 }

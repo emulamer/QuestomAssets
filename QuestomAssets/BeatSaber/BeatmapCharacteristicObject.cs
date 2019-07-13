@@ -15,6 +15,8 @@ namespace QuestomAssets.BeatSaber
         public BeatmapCharacteristicObject(AssetsFile assetsFile) : base(assetsFile, assetsFile.Manager.GetScriptObject("BeatmapCharacteristicSO"))
         { }
 
+        [System.ComponentModel.Browsable(false)]
+        [Newtonsoft.Json.JsonIgnore]
         public override byte[] ScriptParametersData
         {
             get

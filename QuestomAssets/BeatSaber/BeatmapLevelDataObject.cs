@@ -27,6 +27,8 @@ namespace QuestomAssets.BeatSaber
 
         }
 
+        [System.ComponentModel.Browsable(false)]
+        [Newtonsoft.Json.JsonIgnore]
         public override byte[] ScriptParametersData
         {
             get
@@ -38,6 +40,7 @@ namespace QuestomAssets.BeatSaber
                 throw new InvalidOperationException("Cannot access parameters data from this object.");
             }
         }
+
         private string _levelID;
 
         [JsonProperty("_levelID")]

@@ -80,12 +80,17 @@ namespace QuestomAssets.BeatSaber
                     Log.LogErr($"failed to get audio for song at path {songPath}");
                     return null;
                 }
-                
+
+                var toRemoveSet = new List<DifficultyBeatmapSet>();
                 foreach (var difficultySet in beatmapLevel.DifficultyBeatmapSets)
                 {
                     //don't know what lightshow is, don't want it, but maps have it and fail to load.
                     if (difficultySet.BeatmapCharacteristicName == Characteristic.LightShow)
+                    {
+                        toRemoveSet.Add(difficultySet);
                         continue;
+                    }
+                        
 
                     difficultySet.BeatmapCharacteristic = GetCharacteristicAsset(difficultySet.BeatmapCharacteristicName).PtrFrom(beatmapLevel);
                     List<DifficultyBeatmap> toRemove = new List<DifficultyBeatmap>();
@@ -120,6 +125,7 @@ namespace QuestomAssets.BeatSaber
                         return null;
                     }
                 }
+                toRemoveSet.ForEach(x => beatmapLevel.DifficultyBeatmapSets.Remove(x));
 
                 _assetsFile.AddObject(audioAsset, true);
                 if (coverImage != null)
@@ -294,8 +300,6 @@ namespace QuestomAssets.BeatSaber
             _assetsFile.AddObject(coverAsset, true);
             return coverAsset;
         }
-
-        
 
         private static void SetFallbackCoverTexture(Texture2DObject texture)
         {

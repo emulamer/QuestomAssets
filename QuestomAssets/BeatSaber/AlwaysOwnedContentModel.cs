@@ -33,5 +33,19 @@ namespace QuestomAssets.BeatSaber
         public List<ISmartPtr<BeatmapLevelPackObject>> AlwaysOwnedPacks { get; set; } = new List<ISmartPtr<BeatmapLevelPackObject>>();
 
         public List<ISmartPtr<BeatmapLevelDataObject>> AlwaysOwnedBeatmapLevels { get; set; } = new List<ISmartPtr<BeatmapLevelDataObject>>();
+
+        [System.ComponentModel.Browsable(false)]
+        [Newtonsoft.Json.JsonIgnore]
+        public override byte[] ScriptParametersData
+        {
+            get
+            {
+                throw new InvalidOperationException("Cannot access parameters data from this object.");
+            }
+            set
+            {
+                throw new InvalidOperationException("Cannot access parameters data from this object.");
+            }
+        }
     }
 }

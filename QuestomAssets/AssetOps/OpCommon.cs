@@ -232,30 +232,72 @@ namespace QuestomAssets.AssetOps
                 //don't delete built in songs
                 if (!BSConst.KnownLevelIDs.Contains(songID))
                 {
-                    songsAssetFile.DeleteObject(song.Song.AudioClip.Object);
-                    songsAssetFile.DeleteObject(song.Song.CoverImageTexture2D.Object);
-                    song.Song.CoverImageTexture2D.Dispose();
-                    song.Song.DifficultyBeatmapSets.ForEach(x =>
+                    if (song.Song.AudioClip?.Target?.Object != null)
                     {
-                        x.DifficultyBeatmaps.ForEach(y =>
+                        songsAssetFile.DeleteObject(song.Song.AudioClip.Object);
+                    }
+                    else
+                    {
+                        Log.LogErr($"Trying to delete song ID {songID} and audio clip is null!");
+                    }
+                    if (song.Song?.CoverImageTexture2D?.Target?.Object != null)
+                    {
+                        songsAssetFile.DeleteObject(song.Song.CoverImageTexture2D.Object);
+                    }
+                    else
+                    {
+                        Log.LogErr($"Trying to delete song ID {songID} and cover image is null!");
+                    }
+                    if (song.Song.CoverImageTexture2D != null)
+                    {
+                        song.Song.CoverImageTexture2D.Dispose();
+                    }
+                    if (song?.Song?.DifficultyBeatmapSets == null)
+                    {
+                        Log.LogErr($"Trying to delete song id {songID}, but DifficultyBeatmapSets is null!");
+                    }
+                    else
+                    {
+                        song.Song.DifficultyBeatmapSets.ForEach(x =>
                         {
-                            if (y != null && y.BeatmapDataPtr != null)
+                            if (x?.DifficultyBeatmaps == null)
                             {
-                                songsAssetFile.DeleteObject(y.BeatmapDataPtr.Object);
-                                y.BeatmapDataPtr.Dispose();
+                                Log.LogErr($"Trying to delete song id {songID} beatmapset, but DifficultyBeatmaps is null!");
                             }
+                            else
+                            {
+                                x.DifficultyBeatmaps.ForEach(y =>
+                                {
+                                    if (y != null && y.BeatmapDataPtr != null)
+                                    {
+                                        if (y?.BeatmapDataPtr?.Object != null)
+                                        {
+                                            songsAssetFile.DeleteObject(y.BeatmapDataPtr.Object);
+                                        }
+                                        else
+                                        {
+                                            Log.LogErr($"Trying to delete song id {songID} but BeatmapDataPtr.Object is null!");
+                                        }
+                                        y.BeatmapDataPtr.Dispose();
+                                    }
+                                    else
+                                    {
+                                        Log.LogErr($"Trying to delete song id {songID} but BeatmapDataPtr is null!");
+                                    }
+                                });
+                            }
+                            x.BeatmapCharacteristic.Dispose();
                         });
-                        x.BeatmapCharacteristic.Dispose();
-                    });
+                    }
                     songsAssetFile.DeleteObject(song.Song);
-                    context.Engine.QueuedFileOperations.Add(new QueuedFileOp() { Type = QueuedFileOperationType.DeleteFolder, TargetPath = context.Config.SongsPath.CombineFwdSlash(songID) });
+                    context.Engine.QueuedFileOperations.Add(new QueuedFileOp() { Tag = song.Song.LevelID, Type = QueuedFileOperationType.DeleteFolder, TargetPath = context.Config.SongsPath.CombineFwdSlash(songID) });
                 }
                 context.Cache.SongCache.Remove(song.Song.LevelID);
                 context.Cache.PlaylistCache[song.Playlist.PackID].Songs.Remove(song.Song.LevelID);
             }
             catch ( Exception ex)
             {
-                Log.LogErr("Exception deleting song!", ex);
+                Log.LogErr($"Exception deleting song ID {songID}!", ex);
             }
         }
     }

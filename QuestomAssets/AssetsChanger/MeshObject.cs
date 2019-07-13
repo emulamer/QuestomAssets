@@ -8,31 +8,6 @@ namespace QuestomAssets.AssetsChanger
 {
     public class MeshObject : AssetsObject, IHaveName
     {
-        //public object SubMeshes { get; set; }
-
-        //public object Shapes { get; set; }
-        //public object BindPose { get; set; }
-        //public object BoneNameHashes { get; set; }
-        //public object RootBoneNameHash { get; set; }
-        //public object MeshCompression { get; set; }
-        //public object IsReadable { get; set; }
-        //public object KeepVertices { get; set; }
-        //public object KeepIndices { get; set; }
-        //public object IndexFormat { get; set; }
-        //public byte[] IndexBuffer { get; set; }
-        //public object VertexData { get; set; }
-        //public object CompressedMesh { get; set; }
-        //public object LocalAABB { get; set; }
-        //public object Center { get; set; }
-        //public object Extent { get; set; }
-        //public object MeshUsageFlags { get; set; }
-        //public object BakedConvexCollisionMesh { get; set; }
-        //public object BakedTriangleCollisionMesh { get; set; }
-        //public object MeshMetrics0 { get; set; }
-        //public object MeshMetrics1 { get; set; }
-        //public StreamingInfo StreamData { get; set; }
-
-
         public MeshObject(AssetsFile assetsFile) : base(assetsFile, AssetsConstants.ClassID.MeshAssetClassID)
         {
         }
@@ -49,6 +24,27 @@ namespace QuestomAssets.AssetsChanger
             Name = reader.ReadString();
             int readLen = ObjectInfo.DataSize - (reader.Position - startPosition);
             MeshData = reader.ReadBytes(readLen);
+            /* SubMeshes = reader.ReadArrayOf(r => new Submesh(r));
+            BlendShapeData = new BlendShapeData(reader);
+            BindPose = reader.ReadArrayOf(r => new Vector(r));
+            BoneNameHashes = reader.ReadArrayOf(r => new Vector(r));
+            RootBoneNameHash = reader.ReadUInt32();
+            MeshCompression = reader.ReadByte();
+            IsReadable = reader.ReadBoolean();
+            KeepVerticies = reader.ReadBoolean();
+            KeepIndicies = reader.ReadBoolean();
+            reader.AlignTo(4);
+            IndexFormat = reader.ReadInt32();
+            IndexBuffer = reader.ReadArrayOf(r => new Vector(r));
+            VertexData = new VertexData(reader);
+            CompressedMesh = new CompressedMesh(reader);
+            LocalAABB = new AABB(reader);
+            MeshUsageFlags = reader.ReadInt32();
+            BakedConvexCollisionMesh = reader.ReadArrayOf(r => new Vector(r));
+            BakedTriangleCollisionMesh = reader.ReadArrayOf(r => new Vector(r));
+            MeshMetrics1 = reader.ReadSingle();
+            MeshMetrics2 = reader.ReadSingle();
+            StreamData = new StreamingInfo(reader);*/
         }
 
         protected override void WriteObject(AssetsWriter writer)
@@ -56,24 +52,58 @@ namespace QuestomAssets.AssetsChanger
             base.WriteBase(writer);
             writer.Write(Name);
             writer.Write(MeshData);
+           /* writer.WriteArrayOf(SubMeshes, (o, w) => o.Write(w));
+            BlendShapeData.Write(writer);
+            writer.WriteArrayOf(BindPose, (o, w) => o.Write(w));
+            writer.WriteArrayOf(BoneNameHashes, (o, w) => o.Write(w));
+            writer.Write(RootBoneNameHash);
+            writer.Write(MeshCompression);
+            writer.Write(IsReadable);
+            writer.Write(KeepVerticies);
+            writer.Write(KeepIndicies);
+            writer.AlignTo(4);
+            writer.Write(IndexFormat);
+            writer.WriteArrayOf(IndexBuffer, (o, w) => o.Write(w));
+            VertexData.Write(writer);
+            CompressedMesh.Write(writer);
+            LocalAABB.Write(writer);
+            writer.Write(MeshUsageFlags);
+            writer.WriteArrayOf(BakedConvexCollisionMesh, (o, w) => o.Write(w));
+            writer.WriteArrayOf(BakedTriangleCollisionMesh, (o, w) => o.Write(w));
+            writer.Write(MeshMetrics1);
+            writer.Write(MeshMetrics2);
+            StreamData.Write(writer);*/
         }
 
         public string Name { get; set; }
-
+        /*
+        public List<Submesh> SubMeshes { get; set; }
+        public BlendShapeData BlendShapeData { get; set; }
+        //dont' know this type
+        public List<Vector> BindPose { get; set; }
+        //dont' know this type
+        public List<Vector> BoneNameHashes { get; set; }
+        public UInt32 RootBoneNameHash { get; set; }
+        public byte MeshCompression { get; set; }
+        public bool IsReadable { get; set; }
+        public bool KeepVerticies { get; set; }
+        public bool KeepIndicies { get; set; }
+        public int IndexFormat { get; set; }
+        public List<Vector> IndexBuffer { get; set; }
+        public VertexData VertexData { get; set; }
+        public CompressedMesh CompressedMesh { get; set; }
+        public AABB LocalAABB { get; set; }
+        public int MeshUsageFlags { get; set; }
+        public List<Vector> BakedConvexCollisionMesh { get; set; }
+        public List<Vector> BakedTriangleCollisionMesh { get; set; }
+        public Single MeshMetrics1 { get; set; }
+        public Single MeshMetrics2 { get; set; }
+        public StreamingInfo StreamData { get; set; }
+        */
         public byte[] MeshData { get; set; }
 
-        public override byte[] Data
-        {
-            get
-            {
-                throw new InvalidOperationException("Data cannot be accessed from this class.");
-            }
-            set
-            {
-                throw new InvalidOperationException("Data cannot be accessed from this class.");
-            }
-
-
-        }
+        [System.ComponentModel.Browsable(false)]
+        [Newtonsoft.Json.JsonIgnore]
+        public override byte[] Data { get => throw new InvalidOperationException("Data cannot be accessed from this class!"); set => throw new InvalidOperationException("Data cannot be accessed from this class!"); }
     }
 }

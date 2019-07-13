@@ -55,6 +55,13 @@ namespace QuestomAssets.AssetOps
             {
                 ordered[i].Order = i;
             }
+
+            //if a song's been moved in a playlist, make sure it isn't going to be deleted
+            var qfos = context.Engine.QueuedFileOperations.Where(x => x.Tag == SongID && x.Type == QueuedFileOperationType.DeleteFolder || x.Type == QueuedFileOperationType.DeleteFile).ToList();
+            foreach (var q in qfos)
+            {
+                context.Engine.QueuedFileOperations.Remove(q);
+            }
         }
     }
 }
