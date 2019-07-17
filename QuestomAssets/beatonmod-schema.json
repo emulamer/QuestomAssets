@@ -72,6 +72,10 @@
                 "Quest"
             ]
         },
+        "coverImageFilename": {
+            "description": "The cover image's filename",
+            "type": "string"
+        },
         "CanUninstall": {
             "description": "Can the mod be uninstalled",
             "type": "boolean"
