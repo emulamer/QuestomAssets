@@ -100,11 +100,18 @@
                         "type": "object",
                         "if": {
                             "properties": {
-                                "Type": {
-                                    "enum": ["AssetsMod"]
+                                "Components": {
+                                    "properties": {
+                                        "Type": {
+                                            "enum": ["AssetsMod"]
+                                        }
+                                    },
+                                    "required": [
+                                        "Type"
+                                    ]
                                 }
                             },
-                            "required": ["Type"]
+                            "required": ["Components"]
                         },
                         "then": {
                             "properties": {
@@ -155,11 +162,18 @@
                         "type": "object",
                         "if": {
                             "properties": {
-                                "Type": {
-                                    "enum": ["AssetsMod"]
+                                "Components": {
+                                    "properties": {
+                                        "Type": {
+                                            "enum": ["AssetsMod"]
+                                        }
+                                    },
+                                    "required": [
+                                        "Type"
+                                    ]
                                 }
                             },
-                            "required": ["Type"]
+                            "required": ["Components"]
                         },
                         "then": {
                             "properties": {
