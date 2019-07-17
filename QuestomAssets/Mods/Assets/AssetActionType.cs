@@ -9,6 +9,7 @@ namespace QuestomAssets.Mods.Assets
     [JsonConverter(typeof(StringEnumConverter))]
     public enum AssetActionType
     {
+        CreateAsset,
         ReplaceAsset,
         RestoreAsset
     }
