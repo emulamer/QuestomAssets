@@ -87,7 +87,7 @@
                         "description": "Type of the mod",
                         "type": "string",
                         "enum": [
-                            "AssetMod",
+                            "AssetsMod",
                             "HookMod"
                         ]
                     },
@@ -97,7 +97,7 @@
                         "if": {
                             "properties": {
                                 "Type": {
-                                    "enum": ["AssetMod"]
+                                    "enum": ["AssetsMod"]
                                 }
                             },
                             "required": ["Type"]
@@ -152,7 +152,7 @@
                         "if": {
                             "properties": {
                                 "Type": {
-                                    "enum": ["AssetMod"]
+                                    "enum": ["AssetsMod"]
                                 }
                             },
                             "required": ["Type"]
