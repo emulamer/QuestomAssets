@@ -86,36 +86,19 @@
             "type": "array",
             "items": {
                 "type": "object",
-                "properties": {
-                    "Type": {
-                        "description": "Type of the mod",
-                        "type": "string",
-                        "enum": [
-                            "AssetsMod",
-                            "HookMod"
-                        ]
+                "if": {
+                    "properties": {
+                        "Type": {
+                            "enum": ["AssetsMod"]
+                        }
                     },
-                    "InstallAction": {
-                        "description": "The actions to take for installing the mod",
-                        "type": "object",
-                        "if": {
-                            "properties": {
-                                "Components": {
-                                    "items": {
-                                        "properties": {
-                                            "Type": {
-                                                "enum": ["AssetsMod"]
-                                            }
-                                        },
-                                        "required": [
-                                            "Type"
-                                        ]
-                                    }
-                                }
-                            },
-                            "required": ["Components"]
-                        },
-                        "then": {
+                    "required": ["Type"]
+                },
+                "then": {
+                    "properties": {
+                        "InstallAction": {
+                            "description": "The actions to take for installing the mod",
+                            "type": "object",
                             "properties": {
                                 "PreloadFiles": {
                                     "description": "The asset files to preload before installing",
@@ -147,39 +130,9 @@
                                 "Actions"
                             ]
                         },
-                        "else": {
-                            "properties": {
-                                "InstallLibraryFile": {
-                                    "description": "The library file to install",
-                                    "type": "string"
-                                }
-                            },
-                            "required": [
-                                "InstallLibraryFile"
-                            ]
-                        }
-                    },
-                    "UninstallAction": {
-                        "description": "The actions to perform when uninstalling",
-                        "type": "object",
-                        "if": {
-                            "properties": {
-                                "Components": {
-                                    "items": {
-                                        "properties": {
-                                            "Type": {
-                                                "enum": ["AssetsMod"]
-                                            }
-                                        },
-                                        "required": [
-                                            "Type"
-                                        ]
-                                    }
-                                }
-                            },
-                            "required": ["Components"]
-                        },
-                        "then": {
+                        "UninstallAction": {
+                            "description": "The actions to perform when uninstalling",
+                            "type": "object",
                             "properties": {
                                 "PreloadFiles": {
                                     "description": "The asset files to preload before uninstalling",
@@ -210,8 +163,27 @@
                                 "PreloadFiles",
                                 "Actions"
                             ]
+                        }
+                    }
+                },
+                "else": {
+                    "properties": {
+                        "InstallAction": {
+                            "description": "The action to perform when installing the hook mod",
+                            "type": "object",
+                            "properties": {
+                                "InstallLibraryFile": {
+                                    "description": "The library file to install",
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "InstallLibraryFile"
+                            ]
                         },
-                        "else": {
+                        "UninstallAction": {
+                            "description": "The action to perform when uninstalling the hook mod",
+                            "type": "object",
                             "properties": {
                                 "RemoveLibraryFile": {
                                     "description": "The library file to uninstall",
