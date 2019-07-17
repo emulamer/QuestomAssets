@@ -13,7 +13,8 @@ namespace QuestomAssets.BeatSaber
         Standard,
         OneSaber,
         NoArrows,
-        LightShow
+        LightShow,
+        Lawless
     }
 }
 

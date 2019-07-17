@@ -158,7 +158,10 @@ namespace QuestomAssets.AssetsChanger
                 .FirstOrDefault();
             if (toFileType == null)
             {
-                throw new NotSupportedException($"Target file does not seem to have a type that matches the source file's type.  Adding in other type references isn't supported yet.");
+                //attempt to add a type reference.  Not sure the implications of this, e.g. circular references or something
+                Log.LogMsg($"Attempting to add type to file {AssetsFilename} likely as part of a clone...");
+                toFileType = type.CloneWithoutTypeTree();
+                this.Metadata.Types.Add(toFileType);
             }
             return Metadata.Types.IndexOf(toFileType);
         }
