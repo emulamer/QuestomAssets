@@ -15,6 +15,11 @@
             "description": "The name of the mod",
             "type": "string"
         },
+        "porter": {
+            "title": "Porter",
+            "description": "The name of the person who ported the mod to Quest",
+            "type": "string"
+        },
         "author": {
             "title": "Author",
             "description": "The author of the mod",
