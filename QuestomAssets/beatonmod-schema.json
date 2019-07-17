@@ -1,0 +1,224 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "beatonmod",
+    "$comment": "The BeatOn Mod Schema",
+    "title": "BeatOn Mod",
+    "type": "object",
+    "properties": {
+        "id": {
+            "title": "ID",
+            "description": "The ID of the mod",
+            "type": "string"
+        },
+        "name": {
+            "title": "Name",
+            "description": "The name of the mod",
+            "type": "string"
+        },
+        "author": {
+            "title": "Author",
+            "description": "The author of the mod",
+            "type": "string"
+        },
+        "description": {
+            "title": "Description",
+            "description": "The description of the mod. Each line is separated by a newline",
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "category": {
+            "title": "Category",
+            "description": "The category of the mod",
+            "type": "string",
+            "enum": [
+                "Saber",
+                "Gameplay",
+                "Other"
+            ]
+        },
+        "gameVersion": {
+            "title": "Beat Saber Version",
+            "description": "The Beat Saber Version for the mod",
+            "type": "string",
+            "enum": [
+                "1.1.0",
+                "1.0.2",
+                "1.0.1",
+                "1.0.0"
+            ]
+        },
+        "version": {
+            "title": "Version",
+            "description": "The version of the mod",
+            "type": "string"
+        },
+        "links": {
+            "description": "Links of the mod",
+            "type": "object",
+            "properties": {
+                "project-home": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "project-home"
+            ]
+        },
+        "platform": {
+            "type": "string",
+            "enum": [
+                "Quest"
+            ]
+        },
+        "CanUninstall": {
+            "description": "Can the mod be uninstalled",
+            "type": "boolean"
+        },
+        "Components": {
+            "title": "Components",
+            "description": "Components of the mod",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "Type": {
+                        "description": "Type of the mod",
+                        "type": "string",
+                        "enum": [
+                            "AssetMod",
+                            "HookMod"
+                        ]
+                    },
+                    "InstallAction": {
+                        "description": "The actions to take for installing the mod",
+                        "type": "object",
+                        "if": {
+                            "properties": {
+                                "Type": {
+                                    "enum": ["AssetMod"]
+                                }
+                            },
+                            "required": ["Type"]
+                        },
+                        "then": {
+                            "properties": {
+                                "PreloadFiles": {
+                                    "description": "The asset files to preload before installing",
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "Actions": {
+                                    "description": "Actions to take when installing asset mods",
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "Type": {
+                                                "description": "The type of the action",
+                                                "type": "string",
+                                                "enum": [
+                                                    "ReplaceAsset",
+                                                    "RestoreAsset"
+                                                ]
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "required": [
+                                "PreloadFiles",
+                                "Actions"
+                            ]
+                        },
+                        "else": {
+                            "properties": {
+                                "InstallLibraryFile": {
+                                    "description": "The library file to install",
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "InstallLibraryFile"
+                            ]
+                        }
+                    },
+                    "UninstallAction": {
+                        "description": "The actions to perform when uninstalling",
+                        "type": "object",
+                        "if": {
+                            "properties": {
+                                "Type": {
+                                    "enum": ["AssetMod"]
+                                }
+                            },
+                            "required": ["Type"]
+                        },
+                        "then": {
+                            "properties": {
+                                "PreloadFiles": {
+                                    "description": "The asset files to preload before uninstalling",
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "Actions": {
+                                    "description": "Actions to take when uninstalling asset mods",
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "Type": {
+                                                "description": "The type of the action",
+                                                "type": "string",
+                                                "enum": [
+                                                    "ReplaceAsset",
+                                                    "RestoreAsset"
+                                                ]
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "required": [
+                                "PreloadFiles",
+                                "Actions"
+                            ]
+                        },
+                        "else": {
+                            "properties": {
+                                "RemoveLibraryFile": {
+                                    "description": "The library file to uninstall",
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "RemoveLibraryFile"
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "Type",
+                    "InstallAction",
+                    "UninstallAction"
+                ]
+            }
+        }
+    },
+    "required": [
+        "id",
+        "name",
+        "author",
+        "description",
+        "category",
+        "gameVersion",
+        "version",
+        "platform",
+        "Components"
+    ]
+}
