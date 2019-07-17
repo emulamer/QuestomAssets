@@ -101,14 +101,16 @@
                         "if": {
                             "properties": {
                                 "Components": {
-                                    "properties": {
-                                        "Type": {
-                                            "enum": ["AssetsMod"]
-                                        }
-                                    },
-                                    "required": [
-                                        "Type"
-                                    ]
+                                    "items": {
+                                        "properties": {
+                                            "Type": {
+                                                "enum": ["AssetsMod"]
+                                            }
+                                        },
+                                        "required": [
+                                            "Type"
+                                        ]
+                                    }
                                 }
                             },
                             "required": ["Components"]
@@ -163,14 +165,16 @@
                         "if": {
                             "properties": {
                                 "Components": {
-                                    "properties": {
-                                        "Type": {
-                                            "enum": ["AssetsMod"]
-                                        }
-                                    },
-                                    "required": [
-                                        "Type"
-                                    ]
+                                    "items": {
+                                        "properties": {
+                                            "Type": {
+                                                "enum": ["AssetsMod"]
+                                            }
+                                        },
+                                        "required": [
+                                            "Type"
+                                        ]
+                                    }
                                 }
                             },
                             "required": ["Components"]
