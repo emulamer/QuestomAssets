@@ -125,6 +125,10 @@ namespace QuestomAssets.Mods
         /// The author of the mod
         /// </summary>
         public string Author { get; set; }
+        /// <summary>
+        /// The porter of the mod
+        /// </summary>
+        public string Porter { get; set; }
 
         /// <summary>
         /// The mod version
@@ -207,7 +211,20 @@ namespace QuestomAssets.Mods
                 CoverImageFilename = value;
             }
         }
-        public string author { get
+        public string porter
+        {
+            get
+            {
+                return Porter;
+            }
+            set
+            {
+                Porter = value;
+            }
+        }
+        public string author
+        {
+            get
             {
                 return Author;
             }
