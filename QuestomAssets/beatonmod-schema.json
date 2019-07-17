@@ -85,7 +85,7 @@
             "description": "Can the mod be uninstalled",
             "type": "boolean"
         },
-        "Components": {
+        "components": {
             "title": "Components",
             "description": "Components of the mod",
             "type": "array",
@@ -100,104 +100,45 @@
                     "required": ["Type"]
                 },
                 "then": {
-                    "properties": {
-                        "InstallAction": {
-                            "description": "The actions to take for installing the mod",
-                            "type": "object",
-                            "properties": {
-                                "PreloadFiles": {
-                                    "description": "The asset files to preload before installing",
-                                    "type": "array",
-                                    "items": {
-                                        "type": "string"
-                                    }
-                                },
-                                "Actions": {
-                                    "description": "Actions to take when installing asset mods",
-                                    "type": "array",
-                                    "items": {
-                                        "type": "object",
-                                        "properties": {
-                                            "Type": {
-                                                "description": "The type of the action",
-                                                "type": "string",
-                                                "enum": [
-                                                    "ReplaceAsset",
-                                                    "RestoreAsset"
-                                                ]
-                                            }
-                                        }
-                                    }
-                                }
-                            },
-                            "required": [
-                                "PreloadFiles",
-                                "Actions"
-                            ]
-                        },
-                        "UninstallAction": {
-                            "description": "The actions to perform when uninstalling",
-                            "type": "object",
-                            "properties": {
-                                "PreloadFiles": {
-                                    "description": "The asset files to preload before uninstalling",
-                                    "type": "array",
-                                    "items": {
-                                        "type": "string"
-                                    }
-                                },
-                                "Actions": {
-                                    "description": "Actions to take when uninstalling asset mods",
-                                    "type": "array",
-                                    "items": {
-                                        "type": "object",
-                                        "properties": {
-                                            "Type": {
-                                                "description": "The type of the action",
-                                                "type": "string",
-                                                "enum": [
-                                                    "ReplaceAsset",
-                                                    "RestoreAsset"
-                                                ]
-                                            }
-                                        }
-                                    }
-                                }
-                            },
-                            "required": [
-                                "PreloadFiles",
-                                "Actions"
-                            ]
-                        }
-                    }
+                    
                 },
                 "else": {
-                    "properties": {
-                        "InstallAction": {
-                            "description": "The action to perform when installing the hook mod",
-                            "type": "object",
-                            "properties": {
-                                "InstallLibraryFile": {
-                                    "description": "The library file to install",
-                                    "type": "string"
-                                }
-                            },
-                            "required": [
-                                "InstallLibraryFile"
-                            ]
+                    "if": {
+                        "properties": {
+                            "Type": {
+                                "enum": ["AssetsMod"]
+                            }
                         },
-                        "UninstallAction": {
-                            "description": "The action to perform when uninstalling the hook mod",
-                            "type": "object",
-                            "properties": {
-                                "RemoveLibraryFile": {
-                                    "description": "The library file to uninstall",
-                                    "type": "string"
-                                }
+                        "required": ["Type"]
+                    },
+                    "then": {
+                        "properties": {
+                            "InstallAction": {
+                                "description": "The action to perform when installing the hook mod",
+                                "type": "object",
+                                "properties": {
+                                    "InstallLibraryFile": {
+                                        "description": "The library file to install",
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "InstallLibraryFile"
+                                ]
                             },
-                            "required": [
-                                "RemoveLibraryFile"
-                            ]
+                            "UninstallAction": {
+                                "description": "The action to perform when uninstalling the hook mod",
+                                "type": "object",
+                                "properties": {
+                                    "RemoveLibraryFile": {
+                                        "description": "The library file to uninstall",
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "RemoveLibraryFile"
+                                ]
+                            }
                         }
                     }
                 },
@@ -218,6 +159,6 @@
         "gameVersion",
         "version",
         "platform",
-        "Components"
+        "components"
     ]
 }
