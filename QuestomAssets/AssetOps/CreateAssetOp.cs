@@ -1,4 +1,6 @@
-﻿using System;
+﻿using QuestomAssets.AssetsChanger;
+using QuestomAssets.Mods.Assets;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -9,16 +11,23 @@ namespace QuestomAssets.AssetOps
         public override bool IsWriteOp => true;
 
         private byte[] _replaceDataWith;
+        private AssetType _assetType;
+        private string _filename;
         private bool _allowOverwriteName;
-        public CreateAssetOp(byte[] replaceDataWith, bool allowOverwriteName)
+        public CreateAssetOp(byte[] replaceDataWith, AssetType type, string fileName, bool allowOverwriteName)
         {
             _replaceDataWith = replaceDataWith;
+            _assetType = type;
+            _filename = fileName;
             _allowOverwriteName = allowOverwriteName;
         }
 
         internal override void PerformOp(OpContext context)
         {
-            var asset = _locator.Locate(context.Manager, false);
+            AssetType.Unknown
+            var info = new IObjectInfo<>
+            var ao = new AssetsObject()
+            var asset = 
             string oldName = null;
             if (asset as IHaveName != null && !_allowOverwriteName)
             {

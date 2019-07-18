@@ -11,6 +11,8 @@ namespace QuestomAssets.Mods.Assets
 
         public string FromDataFile { get; set; }
 
+        public AssetType AssetType { get; set; }
+
         public bool AllowOverwriteName { get; set; } = false;
 
         public override IEnumerable<AssetOp> GetOps(ModContext context)
@@ -30,7 +32,7 @@ namespace QuestomAssets.Mods.Assets
                 throw new Exception($"ReplaceAssetAction could not read data file {FromDataFile}", ex);
             }
 
-            yield return new CreateAssetAction(assetData, AllowOverwriteName);
+            yield return new CreateAssetOp(assetData, AssetType, AllowOverwriteName);
         }
     }
 }
