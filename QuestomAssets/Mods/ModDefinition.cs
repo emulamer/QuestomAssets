@@ -125,6 +125,7 @@ namespace QuestomAssets.Mods
         /// The author of the mod
         /// </summary>
         public string Author { get; set; }
+
         /// <summary>
         /// The porter of the mod
         /// </summary>
@@ -211,6 +212,7 @@ namespace QuestomAssets.Mods
                 CoverImageFilename = value;
             }
         }
+
         public string porter
         {
             get
@@ -222,6 +224,7 @@ namespace QuestomAssets.Mods
                 Porter = value;
             }
         }
+
         public string author
         {
             get
@@ -264,8 +267,6 @@ namespace QuestomAssets.Mods
             }
         }
 
-
-
         /// <summary>
         /// The description of the mod
         /// </summary>
@@ -288,8 +289,6 @@ namespace QuestomAssets.Mods
                 description.AddRange(value.Split('\n'));
             }
         }
-
-
 
         /// <summary>
         /// The category this mod falls into for display and organizational purposes
