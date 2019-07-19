@@ -9,8 +9,12 @@ namespace QuestomAssets.Mods
     [JsonConverter(typeof(StringEnumConverter))]
     public enum ModCategory
     {
+        [ExclusiveMod]
         Saber,
         Gameplay,
+        [ExclusiveMod]
+        Note,
+        Library,
         Other
     }
 }

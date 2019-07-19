@@ -184,10 +184,9 @@ namespace QuestomAssets.Mods
         {
             List<AssetOp> ops = new List<AssetOp>();
             ModContext mc = new ModContext(_config.ModsSourcePath.CombineFwdSlash(modDef.ID), _config, _getEngine);
-            //don't really like to put category specific logic in here, but whatever.
-            if ( modDef.Category == ModCategory.Saber)
+            if (modDef.Category.IsExclusiveMod())
             {
-                var otherSabers = Mods.Where(x => x.Category == ModCategory.Saber && x.ID != modDef.ID && x.Status == ModStatusType.Installed);
+                var otherSabers = Mods.Where(x => x.Category == modDef.Category && x.ID != modDef.ID && x.Status == ModStatusType.Installed);
                 foreach (var otherSaber in otherSabers)
                 {
                     ops.AddRange(otherSaber.GetUninstallOps(mc));
