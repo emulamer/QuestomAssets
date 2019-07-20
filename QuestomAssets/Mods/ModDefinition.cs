@@ -213,6 +213,18 @@ namespace QuestomAssets.Mods
             }
         }
 
+        public string icon
+        {
+            get
+            {
+                return CoverImageFilename;
+            }
+            set
+            {
+                CoverImageFilename = value;
+            }
+        }
+
         public string porter
         {
             get
