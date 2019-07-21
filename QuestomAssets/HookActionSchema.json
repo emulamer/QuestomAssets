@@ -1,0 +1,19 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "HookActionSchema",
+    "title": "Hook Action",
+    "description": "An action to perform within a hook mod component",
+    "type": "object",
+    "properties": {
+        "InstallLibraryFile": {
+            "title": "Install Library File",
+            "description": "The library file to install",
+            "type": "string"
+        },
+        "RemoveLibraryFile": {
+            "title": "Remove Library File",
+            "description": "The library file to uninstall",
+            "type": "string"
+        }
+    }
+}
