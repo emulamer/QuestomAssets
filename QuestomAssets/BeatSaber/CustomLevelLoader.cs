@@ -383,12 +383,19 @@ namespace QuestomAssets.BeatSaber
                 //todo: text translation stuff
                 //lightshowAsset.CharacteristicName = characteristicName;
                 //lightshowAsset.HintText = hintText;
+                var allChar = _assetsFile.Manager.MassFirstOrDefaultAsset<BeatmapCharacteristicCollectionObject>(x => true);
+                if (allChar == null)
+                    throw new Exception("Unable to find AllBeatmapCharacteristics object!");
+                if (!allChar.Object.BeatmapCharacteristics.Any(x=> x.Object.Name == characteristicName))
+                {
+                    allChar.Object.BeatmapCharacteristics.Add(lightshowAsset.PtrFrom(allChar.Object));
+                }
                 try
                 {
                     byte[] lightshowIcon = _config.EmbeddedResourcesFileProvider.Read($"{characteristic}.png");
                     if (lightshowIcon == null || lightshowIcon.Length < 1)
                         throw new Exception($"{characteristic}.png read was null or empty!");
-                    ImageUtils.Instance.AssignImageToTexture(lightshowIcon, lightshowAsset.Icon.Object.Texture.Object, 256, 256, Int32.MaxValue, TextureConversionFormat.RGB24);
+                    ImageUtils.Instance.AssignImageToTexture(lightshowIcon, lightshowAsset.Icon.Object.Texture.Object, 256, 256, Int32.MaxValue, TextureConversionFormat.Auto);
                 }
                 catch (Exception ex)
                 {

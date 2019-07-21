@@ -90,6 +90,9 @@
     <Reference Include="SevenZip, Version=18.1.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\LZMA-SDK.18.1.0\lib\net20\SevenZip.dll</HintPath>
     </Reference>
+    <Reference Include="SharpAdbClient, Version=2.2.0.0, Culture=neutral, PublicKeyToken=d728076f5d82a2e8, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\SharpAdbClient.2.2.29\lib\net451\SharpAdbClient.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -103,6 +106,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AdbFileProvider.cs" />
     <Compile Include="ExploreTree.cs">
       <SubType>UserControl</SubType>
     </Compile>

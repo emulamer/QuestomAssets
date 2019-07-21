@@ -70,6 +70,7 @@ namespace QuestomAssets
                     "17c37b4ad5b2b5046be37e2524b67216",
                     "92d85d84be1369e4ab3b35188d1ea8b6",
                     "b79ca5d157a731a45a945697ad0820c8",
+                    "8e37fa14e51257645b7a2df8aecb19e1",
                     "sharedassets11.assets",
                     "sharedassets18.assets",
                     "sharedassets20.assets"
