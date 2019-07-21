@@ -69,4 +69,16 @@
     </EmbeddedResource>
 </ItemGroup>
 
+<ItemGroup>
+  <None Update="AssetsActionSchema.json">
+    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+  </None>
+  <None Update="beatonmod-schema.json">
+    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+  </None>
+  <None Update="HookActionSchema.json">
+    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+  </None>
+</ItemGroup>
+
 </Project>

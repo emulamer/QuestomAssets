@@ -20,7 +20,7 @@ namespace QuestomAssets.Mods
         [JsonProperty("components")]
         public List<ModComponent> Components { get; set; } = new List<ModComponent>();
 
-        public bool ShouldSerializeComponents()
+        public virtual bool ShouldSerializeComponents()
         {
             return false;
         }
@@ -317,6 +317,19 @@ namespace QuestomAssets.Mods
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
+
+        public virtual bool ShouldSerializePlatform() => true;
+        public virtual bool ShouldSerializeStatus() => true;
+        public virtual bool ShouldSerializeID() => true;
+        public virtual bool ShouldSerializeName() => true;
+        public virtual bool ShouldSerializeCoverImageFilename() => true;
+        public virtual bool ShouldSerializeAuthor() => true;
+        public virtual bool ShouldSerializePorter() => true;
+        public virtual bool ShouldSerializeVersion() => true;
+        public virtual bool ShouldSerializeTargetBeatSaberVersion() => true;
+        public virtual bool ShouldSerializeDescription() => true;
+        public virtual bool ShouldSerializeInfoUrl() => true;
+        public virtual bool ShouldSerializeCategory() => true;
     }
 
     [JsonConverter(typeof(StringEnumConverter))]

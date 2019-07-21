@@ -145,7 +145,13 @@
 											"Type",
 											"StepNumber",
 											"Locator"
-										]
+										],
+										"not": {
+											"required": [
+												"FromDataFile",
+												"AllowOverwriteName"
+											]
+										}
 									}
 								}
 							}
@@ -182,8 +188,7 @@
 					"Type",
 					"InstallAction",
 					"UninstallAction"
-				],
-				"additionalProperties": false
+				]
 			}
 		}
 	},

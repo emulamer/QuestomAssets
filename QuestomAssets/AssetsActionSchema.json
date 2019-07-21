@@ -100,6 +100,12 @@
                             }
                         ]
                     },
+                    "AllowOverwriteName": {
+                        "title": "Allow Overwrite Name",
+                        "description": "Whether to allow the name to be overwritten or not",
+                        "type": "boolean",
+                        "default": false
+                    },
                     "FromDataFile": {
                         "title": "Data File",
                         "description": "The .dat file to load the asset from",
