@@ -166,7 +166,7 @@ namespace Assplorer
                 foreach (string dirname in path.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries))
                 {
                     dir = dir.CombineFwdSlash(dirname);
-                    adb.AdbClient.Instance.ExecuteRemoteCommand($"mkdir \"{dir}\"", _device, receiver);
+                  //  adb.AdbClient.Instance.ExecuteRemoteCommand($"mkdir \"{dir}\"", _device, receiver);
                 }
             }
             

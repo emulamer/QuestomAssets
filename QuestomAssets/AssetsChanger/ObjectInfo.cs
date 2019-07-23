@@ -128,6 +128,18 @@ namespace QuestomAssets.AssetsChanger
 
         public static IObjectInfo<AssetsObject> FromClassID(AssetsFile assetsFile, int classID, AssetsObject assetsObject)
         {
+            var foundType = assetsFile.Metadata.Types.FirstOrDefault(x => x.ClassID == classID);
+            if (foundType == null)
+            {
+                
+                Log.LogMsg($"Type with class ID {classID} was not found in file {assetsFile.AssetsFilename}, it will be added.");
+                if (classID == AssetsConstants.ClassID.MonoBehaviourScriptType || classID == AssetsConstants.ClassID.MonoScriptType)
+                {
+                    Log.LogErr("Monoscripts and Monobehaviours can't be created in files that don't already have them by using a class ID.");
+                    throw new Exception("Class ID not found in file!");
+                }
+                assetsFile.Metadata.Types.Add(new AssetsType() { ClassID = classID });
+            }
             var typeIndex = assetsFile.Metadata.Types.IndexOf(assetsFile.Metadata.Types.First(x => x.ClassID == classID));
             return FromTypeIndex(assetsFile, typeIndex, assetsObject);
         }

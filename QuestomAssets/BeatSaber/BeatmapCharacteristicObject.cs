@@ -51,7 +51,7 @@ namespace QuestomAssets.BeatSaber
             writer.Write(SortingOrder);
         }
 
-        public SmartPtr<SpriteObject> Icon { get; set; }
+        public ISmartPtr<SpriteObject> Icon { get; set; }
         public string HintText { get; set; }
         public string CharacteristicName { get; set; }
         public string SerializedName { get; set; }

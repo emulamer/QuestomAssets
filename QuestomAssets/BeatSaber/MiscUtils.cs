@@ -28,8 +28,8 @@ namespace QuestomAssets.BeatSaber
                 case Characteristic.Standard:
                     name = "StandardBeatmapCharacteristic";
                     break;
-                case Characteristic.LightShow:
-                    name = "LightShowBeatmapCharacteristic";
+                case Characteristic.Lightshow:
+                    name = "LightshowBeatmapCharacteristic";
                     break;
                 case Characteristic.Lawless:
                     name = "LawlessBeatmapCharacteristic";

@@ -109,7 +109,6 @@ namespace QuestomAssets.AssetOps
                     }
                     finally
                     {
-                        
                         if (!threadAborting)
                         {
                             OpStatusChanged?.Invoke(this, op);
@@ -120,6 +119,7 @@ namespace QuestomAssets.AssetOps
             catch (ThreadAbortException)
             {
                 //Thread aborting, so let it
+                Log.LogErr("Op manager thread is aborting");
                 _thread = null;
                 return;
             }

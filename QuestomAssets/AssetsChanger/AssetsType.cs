@@ -44,7 +44,7 @@ namespace QuestomAssets.AssetsChanger
         {
             Parse(reader, hasTypeTrees);
         }
-        private AssetsType()
+        internal AssetsType()
         { }
 
         public void Write(AssetsWriter writer)
