@@ -989,6 +989,76 @@ namespace QuestomAssets
             }
         }
 
+        private void VerifyCharacteristics()
+        {
+
+            using (new LogTiming("Checking that custom characteristics exist"))
+            {
+                var lightshowName = MiscUtils.GetCharacteristicAssetName(Characteristic.LightShow);
+                var lawlessName = MiscUtils.GetCharacteristicAssetName(Characteristic.Lawless);
+
+                var lightshowAsset = Manager.MassFirstAsset<BeatmapCharacteristicObject>(x => x.Object.Name == lightshowName, false)?.Object;
+                var lawlessAsset = Manager.MassFirstAsset<BeatmapCharacteristicObject>(x => x.Object.Name == lawlessName, false)?.Object;
+
+                if (lightshowAsset == null || lawlessAsset == null)
+                {
+                    var standardName = MiscUtils.GetCharacteristicAssetName(Characteristic.Standard);
+                    BeatmapCharacteristicObject standardCharacteristic = Manager.MassFirstAsset<BeatmapCharacteristicObject>(x => x.Object.Name == standardName, false)?.Object;
+                    int count = Manager.MassFindAssets<BeatmapCharacteristicObject>(x => true, false).Count();
+                    if (standardCharacteristic == null)
+                    {
+                        Log.LogErr($"Unable to locate the standard beatmap characteristic while verifying characteristics!");
+                        return;
+                    }
+                    if (lightshowAsset == null)
+                    {
+                        Log.LogMsg("Lightshow characteristic wasn't found, creating it.");
+                        CreateCharacteristic(Characteristic.LightShow, standardCharacteristic, count);
+                        count++;
+                    }
+                    if (lawlessAsset == null)
+                    {
+                        Log.LogMsg("Lawless characteristic wasn't found, creating it.");
+                        CreateCharacteristic(Characteristic.Lawless, standardCharacteristic, count);
+                        count++;
+                    }
+                }
+            }
+        }
+
+        private void CreateCharacteristic(Characteristic characteristic, BeatmapCharacteristicObject baseToClone, int sort)
+        {
+            try
+            {
+                string characteristicName = $"LEVEL_{characteristic.ToString().ToUpper()}";
+                string hintText = $"{characteristicName}_HINT";
+                string assetName = MiscUtils.GetCharacteristicAssetName(Characteristic.LightShow);
+                var lightshowAsset = (BeatmapCharacteristicObject)baseToClone.ObjectInfo.DeepClone(baseToClone.ObjectInfo.ParentFile);
+                lightshowAsset.Name = assetName;
+                lightshowAsset.SerializedName = characteristic.ToString();
+                lightshowAsset.SortingOrder = sort;
+                //todo: text translation stuff
+                //lightshowAsset.CharacteristicName = characteristicName;
+                //lightshowAsset.HintText = hintText;
+                try
+                {
+                    byte[] lightshowIcon = _config.EmbeddedResourcesFileProvider.Read("Lightshow.png");
+                    if (lightshowIcon == null || lightshowIcon.Length < 1)
+                        throw new Exception("Lightshow.png read was null or empty!");
+                    ImageUtils.Instance.AssignImageToTexture(lightshowIcon, lightshowAsset.Icon.Object.Texture.Object, 256, 256, Int32.MaxValue, TextureConversionFormat.RGB24);
+                }
+                catch (Exception ex)
+                {
+                    Log.LogErr("Failed to load lightshow's png icon!", ex);
+                    throw;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.LogErr("Exception trying to create lightshow characteristic!", ex);
+            }
+        }
+
         private void PreloadFiles()
         {
             Stopwatch sw = new Stopwatch();

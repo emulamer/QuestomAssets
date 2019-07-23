@@ -1,0 +1,237 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema",
+	"$id": "beatonmod",
+	"$comment": "The BeatOn Mod Schema",
+	"title": "BeatOn Mod",
+	"type": "object",
+	"properties": {
+		"id": {
+			"title": "ID",
+			"description": "The ID of the mod, NO SPACES!",
+			"type": "string"
+		},
+		"name": {
+			"title": "Name",
+			"description": "The name of the mod",
+			"type": "string"
+		},
+		"porter": {
+			"title": "Porter",
+			"description": "The name of the person who ported the mod to Quest",
+			"type": "string"
+		},
+		"author": {
+			"title": "Author",
+			"description": "The author of the mod",
+			"type": "string"
+		},
+		"description": {
+			"title": "Description",
+			"description": "The description of the mod. Each line is separated by a newline",
+			"type": "array",
+			"items": {
+				"type": "string"
+			}
+		},
+		"category": {
+			"title": "Category",
+			"description": "The category of the mod",
+			"type": "string",
+			"enum": [
+				"Saber",
+				"Gameplay",
+				"Library",
+				"Note",
+				"Other"
+			]
+		},
+		"config": {
+			"title": "Config",
+			"description": "The config for the mod",
+			"type": "object"
+		},
+		"gameVersion": {
+			"title": "Beat Saber Version",
+			"description": "The Beat Saber Version for the mod",
+			"type": "string"
+		},
+		"version": {
+			"title": "Version",
+			"description": "The version of the mod (3 DIGITS!)",
+			"type": "string",
+			"pattern": "^\\d+.\\d+.\\d+$"
+		},
+		"links": {
+			"description": "Links of the mod",
+			"type": "object",
+			"properties": {
+				"project-home": {
+					"type": "string"
+				}
+			}
+		},
+		"platform": {
+			"type": "string",
+			"enum": [
+				"Quest"
+			]
+		},
+		"coverImageFilename": {
+			"description": "The cover image's filename",
+			"type": "string"
+		},
+		"icon": {
+			"title": "Icon",
+			"description": "The cover image's filename",
+			"type":  "string"
+		},
+		"components": {
+			"title": "Components",
+			"description": "Components of the mod",
+			"type": "array",
+			"items": {
+				"type": "object",
+				"properties": {
+					"Type": {
+						"title": "Type",
+						"description": "The type of the mod component",
+						"enum": [
+							"AssetsMod",
+							"HookMod"
+						]
+					}
+				},
+				"if": {
+					"properties": {
+						"Type": {
+							"enum": [ "AssetsMod" ]
+						}
+					},
+					"required": [ "Type" ]
+				},
+				"then": {
+					"properties": {
+						"InstallAction": {
+							"allOf": [
+								{
+									"$ref": "https://raw.githubusercontent.com/sc2ad/QuestStopgap/json_fix/QuestomAssets/AssetsActionSchema.json"
+								},
+								{
+									"properties": {
+										"Actions": {
+											"items": {
+												"properties": {
+													"Type": {
+														"enum": [
+															"ReplaceAsset",
+															"CreateAsset"
+														]
+													}
+												},
+												"required": [
+													"Type",
+													"StepNumber",
+													"Locator",
+													"FromDataFile"
+												]
+											}
+										}
+									}
+								}
+							]							
+						},
+						"UninstallAction": {
+							"allOf": [
+								{
+									"$ref": "https://raw.githubusercontent.com/sc2ad/QuestStopgap/json_fix/QuestomAssets/AssetsActionSchema.json"
+								},
+								{
+									"properties": {
+										"Actions": {
+											"items": {
+												"properties": {
+													"Type": {
+														"enum": [
+															"RestoreAsset"
+														]
+													}
+												},
+												"required": [
+													"Type",
+													"StepNumber",
+													"Locator"
+												],
+												"not": {
+													"required": [
+														"FromDataFile",
+														"AllowOverwriteName"
+													]
+												}
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				},
+				"else": {
+					"if": {
+						"properties": {
+							"Type": {
+								"enum": [ "HookMod" ]
+							}
+						},
+						"required": [ "Type" ]
+					},
+					"then": {
+						"properties": {
+							"InstallAction": {
+								"allOf": [
+									{
+										"$ref": "https://raw.githubusercontent.com/sc2ad/QuestStopgap/json_fix/QuestomAssets/HookActionSchema.json"
+									},
+									{
+										"required": [
+											"InstallLibraryFile"
+										]
+									}
+								]
+							},
+							"UninstallAction": {
+								"allOf": [
+									{
+										"$ref": "https://raw.githubusercontent.com/sc2ad/QuestStopgap/json_fix/QuestomAssets/HookActionSchema.json"
+									},
+									{
+										"required": [
+											"RemoveLibraryFile"
+										]
+									}
+								]
+							}
+						}
+					}
+				},
+				"required": [
+					"Type",
+					"InstallAction",
+					"UninstallAction"
+				]
+			}
+		}
+	},
+	"required": [
+		"id",
+		"name",
+		"author",
+		"description",
+		"category",
+		"gameVersion",
+		"version",
+		"platform",
+		"links",
+		"components"
+	],
+	"additionalProperties": false
+}

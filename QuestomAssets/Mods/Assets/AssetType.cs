@@ -19,6 +19,7 @@ namespace QuestomAssets.Mods.Assets
         MeshFilter,
         Component,
         MonoBehaviour,
+        Material,
         Unknown
     }
 }

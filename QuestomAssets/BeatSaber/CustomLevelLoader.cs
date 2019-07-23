@@ -84,14 +84,6 @@ namespace QuestomAssets.BeatSaber
                 var toRemoveSet = new List<DifficultyBeatmapSet>();
                 foreach (var difficultySet in beatmapLevel.DifficultyBeatmapSets)
                 {
-                    //don't know what lightshow is, don't want it, but maps have it and fail to load.
-                    if (difficultySet.BeatmapCharacteristicName == Characteristic.LightShow)
-                    {
-                        toRemoveSet.Add(difficultySet);
-                        continue;
-                    }
-                        
-
                     difficultySet.BeatmapCharacteristic = GetCharacteristicAsset(difficultySet.BeatmapCharacteristicName).PtrFrom(beatmapLevel);
                     List<DifficultyBeatmap> toRemove = new List<DifficultyBeatmap>();
                     foreach (var difficultyBeatmap in difficultySet.DifficultyBeatmaps)
@@ -347,23 +339,17 @@ namespace QuestomAssets.BeatSaber
         
         private BeatmapCharacteristicObject GetCharacteristicAsset(Characteristic characteristic)
         {
-            string name = "StandardBeatmapCharacteristic";
-            switch (characteristic)
-            {
-                case Characteristic.OneSaber:
-                    name = "OneColorBeatmapCharacteristic";
-                    break;
-                case Characteristic.NoArrows:
-                    name = "NoArrowsBeatmapCharacteristic";
-                    break;
-                case Characteristic.Standard:
-                    name = "StandardBeatmapCharacteristic";
-                    break;
-            }
+            string name = MiscUtils.GetCharacteristicAssetName(characteristic);
+            if (name == null)
+                name = "StandardBeatmapCharacteristic";
             BeatmapCharacteristicObject charObj = null;
             if (!_characteristicCache.ContainsKey(name))
             {
-                charObj = _assetsFile.Manager.MassFirstAsset<BeatmapCharacteristicObject>(x => x.Object.Name == name).Object;
+                charObj = _assetsFile.Manager.MassFirstOrDefaultAsset<BeatmapCharacteristicObject>(x => x.Object.Name == name)?.Object;
+                if (charObj == null)
+                    charObj = CreateCharacteristic(characteristic);
+                if (charObj == null)
+                    return null;
                 _characteristicCache.Add(name, charObj);
             }
             else
@@ -371,6 +357,51 @@ namespace QuestomAssets.BeatSaber
                 charObj = _characteristicCache[name];
             }
             return charObj;
-        }        
+        }
+
+        private BeatmapCharacteristicObject CreateCharacteristic(Characteristic characteristic)
+        {
+            if (characteristic == Characteristic.Standard)
+                throw new Exception("Tried to create standard beatmap characteristic which means it's missing.  Assets are broken.");
+
+            BeatmapCharacteristicObject standardCharacteristic = GetCharacteristicAsset(Characteristic.Standard);
+            if (standardCharacteristic == null)
+            {
+                Log.LogErr($"Unable to locate the standard beatmap characteristic while verifying characteristics!");
+                throw new Exception("Could not locate standard beatmap characteristic!");
+            }
+            int count = _assetsFile.Manager.MassFindAssets<BeatmapCharacteristicObject>(x => true, false).Count();
+            try
+            {
+                string characteristicName = $"LEVEL_{characteristic.ToString().ToUpper()}";
+                string hintText = $"{characteristicName}_HINT";
+                string assetName = MiscUtils.GetCharacteristicAssetName(Characteristic.LightShow);
+                var lightshowAsset = (BeatmapCharacteristicObject)standardCharacteristic.ObjectInfo.DeepClone(standardCharacteristic.ObjectInfo.ParentFile);
+                lightshowAsset.Name = assetName;
+                lightshowAsset.SerializedName = characteristic.ToString();
+                lightshowAsset.SortingOrder = count;
+                //todo: text translation stuff
+                //lightshowAsset.CharacteristicName = characteristicName;
+                //lightshowAsset.HintText = hintText;
+                try
+                {
+                    byte[] lightshowIcon = _config.EmbeddedResourcesFileProvider.Read($"{characteristic}.png");
+                    if (lightshowIcon == null || lightshowIcon.Length < 1)
+                        throw new Exception($"{characteristic}.png read was null or empty!");
+                    ImageUtils.Instance.AssignImageToTexture(lightshowIcon, lightshowAsset.Icon.Object.Texture.Object, 256, 256, Int32.MaxValue, TextureConversionFormat.RGB24);
+                }
+                catch (Exception ex)
+                {
+                    Log.LogErr($"Failed to load {characteristic}'s png icon!", ex);
+                    //eat it, it should fall back to the standard one which is better than failing.
+                }
+                return lightshowAsset;
+            }
+            catch (Exception ex)
+            {
+                Log.LogErr($"Exception trying to create {characteristic} characteristic!", ex);
+                throw new Exception($"Error trying to create characteristic {characteristic}!", ex);
+            }
+       }
     }
 }

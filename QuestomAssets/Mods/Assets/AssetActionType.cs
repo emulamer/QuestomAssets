@@ -11,6 +11,7 @@ namespace QuestomAssets.Mods.Assets
     {
         CreateAsset,
         ReplaceAsset,
+        DeleteAsset,
         RestoreAsset
     }
 }

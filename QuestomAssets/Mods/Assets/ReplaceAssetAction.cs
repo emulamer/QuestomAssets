@@ -5,13 +5,11 @@ using QuestomAssets.AssetOps;
 
 namespace QuestomAssets.Mods.Assets
 {
-    public class ReplaceAssetAction : AssetAction
+    public class ReplaceAssetAction : LocatorAssetAction
     {
         public override AssetActionType Type => AssetActionType.ReplaceAsset;
 
         public string FromDataFile { get; set; }
-
-        public AssetLocator Locator { get; set; }
 
         public bool AllowOverwriteName { get; set; } = false;
 

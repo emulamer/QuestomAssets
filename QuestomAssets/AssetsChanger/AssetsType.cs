@@ -44,6 +44,8 @@ namespace QuestomAssets.AssetsChanger
         {
             Parse(reader, hasTypeTrees);
         }
+        private AssetsType()
+        { }
 
         public void Write(AssetsWriter writer)
         {
@@ -75,6 +77,21 @@ namespace QuestomAssets.AssetsChanger
             {
                 TypeTree = new TypeTree(reader);
             }
+        }
+
+        public AssetsType CloneWithoutTypeTree()
+        {
+            var clone = new AssetsType()
+            {
+                ClassID = this.ClassID,
+                TypeHash = this.TypeHash,
+                Unknown1 = this.Unknown1,
+                Unknown2 = this.Unknown2
+            };
+            if (IsScriptType)
+                clone.ScriptHash = this.ScriptHash;
+
+            return clone;
         }
     }
 

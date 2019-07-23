@@ -1,0 +1,122 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "title": "Assets Action",
+    "description": "An action to perform within an assets mod component",
+    "type": "object",
+    "properties": {
+        "PreloadFiles": {
+            "title": "Preload Files",
+            "description": "Asset files to preload for locating assets",
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "minItems": 1
+        },
+        "Actions": {
+            "title": "Actions",
+            "description": "Actions to perform on the assets",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "Type": {
+                        "title": "Type",
+                        "description": "Type of the action",
+                        "type": "string",
+                        "enum": [
+                            "ReplaceAsset",
+                            "RestoreAsset",
+                            "CreateAsset"
+                        ]
+                    },
+                    "StepNumber": {
+                        "title": "StepNumber",
+                        "description": "The index of the step to take",
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    "Locator": {
+                        "title": "Locator",
+                        "description": "How to locate the asset to perform the action on",
+                        "type": "object",
+                        "properties": {
+                            "TypeIs": {
+                                "title": "Type Is",
+                                "description": "Describes a matching type. Uses the first match found",
+                                "type": "string",
+                                "enum": [
+                                    "AudioClip",
+                                    "Component",
+                                    "GameObject",
+                                    "Mesh",
+                                    "MeshFilter",
+                                    "MonoBehaviour",
+                                    "Sprite",
+                                    "Text",
+                                    "Texture2D",
+                                    "Transform",
+                                    "Material"
+                                ]
+                            },
+                            "NameIs": {
+                                "title": "Name Is",
+                                "description": "Describes a matching name. Uses the first match found",
+                                "type": "string"
+                            },
+                            "PathIs": {
+                                "title": "Path Is",
+                                "description": "Describes a matching filename and PathID",
+                                "type": "object",
+                                "properties": {
+                                    "AssetFilename": {
+                                        "title": "Asset Filename",
+                                        "description": "The filename of the asset",
+                                        "type": "string"
+                                    },
+                                    "PathID": {
+                                        "title": "PathID",
+                                        "description": "The PathID of the asset",
+                                        "type": "integer"
+                                    }
+                                }
+                            }
+                        },
+                        "anyOf": [
+                            {
+                                "required": [
+                                    "TypeIs"
+                                ]
+                            },
+                            {
+                                "required": [
+                                    "NameIs"
+                                ]
+                            },
+                            {
+                                "required": [
+                                    "PathIs"
+                                ]
+                            }
+                        ]
+                    },
+                    "AllowOverwriteName": {
+                        "title": "Allow Overwrite Name",
+                        "description": "Whether to allow the name to be overwritten or not",
+                        "type": "boolean",
+                        "default": false
+                    },
+                    "FromDataFile": {
+                        "title": "Data File",
+                        "description": "The .dat file to load the asset from",
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    },
+    "required": [
+        "PreloadFiles",
+        "Actions"
+    ]
+}

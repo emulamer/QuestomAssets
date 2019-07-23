@@ -62,6 +62,9 @@ namespace QuestomAssets.Mods.Assets
                     case AssetType.Transform:
                         filters.Add(x => typeof(IObjectInfo<Transform>).IsAssignableFrom(x.GetType()));
                         break;
+                    case AssetType.Material:
+                        filters.Add(x => typeof(IObjectInfo<MaterialObject>).IsAssignableFrom(x.GetType()));
+                        break;
                     default:
                         throw new ArgumentException($"Unhandled type value {TypeIs.Value.ToString()}");
                 }
