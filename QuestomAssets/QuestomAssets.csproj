@@ -71,13 +71,13 @@
 
 <ItemGroup>
   <None Update="AssetsActionSchema.json">
-    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
   </None>
   <None Update="beatonmod-schema.json">
-    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
   </None>
   <None Update="HookActionSchema.json">
-    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
   </None>
 </ItemGroup>
 
