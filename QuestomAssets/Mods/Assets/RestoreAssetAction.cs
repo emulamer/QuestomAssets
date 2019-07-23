@@ -8,11 +8,9 @@ using System.Text;
 
 namespace QuestomAssets.Mods.Assets
 {
-    public class RestoreAssetAction : AssetAction
+    public class RestoreAssetAction : LocatorAssetAction
     {
-        public override AssetActionType Type => AssetActionType.ReplaceAsset;
-
-        public AssetLocator Locator { get; set; }
+        public override AssetActionType Type => AssetActionType.RestoreAsset;
 
         public override IEnumerable<AssetOp> GetOps(ModContext context)
         {

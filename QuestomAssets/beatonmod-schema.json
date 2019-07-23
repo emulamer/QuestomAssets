@@ -45,6 +45,11 @@
 				"Other"
 			]
 		},
+		"config": {
+			"title": "Config",
+			"description": "The config for the mod",
+			"type": "object"
+		},
 		"gameVersion": {
 			"title": "Beat Saber Version",
 			"description": "The Beat Saber Version for the mod",
@@ -107,54 +112,66 @@
 				"then": {
 					"properties": {
 						"InstallAction": {
-							"$ref": "AssetsActionSchema.json",
-							"properties": {
-								"Actions": {
-									"items": {
-										"properties": {
-											"Type": {
-												"enum": [
-													"ReplaceAsset",
-													"CreateAsset"
+							"allOf": [
+								{
+									"$ref": "AssetsActionSchema.json"
+								},
+								{
+									"properties": {
+										"Actions": {
+											"items": {
+												"properties": {
+													"Type": {
+														"enum": [
+															"ReplaceAsset",
+															"CreateAsset"
+														]
+													}
+												},
+												"required": [
+													"Type",
+													"StepNumber",
+													"Locator",
+													"FromDataFile"
 												]
 											}
-										},
-										"required": [
-											"Type",
-											"StepNumber",
-											"Locator",
-											"FromDataFile"
-										]
-									}
-								}
-							}
-						},
-						"UninstallAction": {
-							"$ref": "AssetsActionSchema.json",
-							"properties": {
-								"Actions": {
-									"items": {
-										"properties": {
-											"Type": {
-												"enum": [
-													"RestoreAsset"
-												]
-											}
-										},
-										"required": [
-											"Type",
-											"StepNumber",
-											"Locator"
-										],
-										"not": {
-											"required": [
-												"FromDataFile",
-												"AllowOverwriteName"
-											]
 										}
 									}
 								}
-							}
+							]							
+						},
+						"UninstallAction": {
+							"allOf": [
+								{
+									"$ref": "AssetsActionSchema.json"
+								},
+								{
+									"properties": {
+										"Actions": {
+											"items": {
+												"properties": {
+													"Type": {
+														"enum": [
+															"RestoreAsset"
+														]
+													}
+												},
+												"required": [
+													"Type",
+													"StepNumber",
+													"Locator"
+												],
+												"not": {
+													"required": [
+														"FromDataFile",
+														"AllowOverwriteName"
+													]
+												}
+											}
+										}
+									}
+								}
+							]
 						}
 					}
 				},
@@ -170,15 +187,27 @@
 					"then": {
 						"properties": {
 							"InstallAction": {
-								"$ref": "HookActionSchema.json",
-								"required": [
-									"InstallLibraryFile"
+								"allOf": [
+									{
+										"$ref": "HookActionSchema.json"
+									},
+									{
+										"required": [
+											"InstallLibraryFile"
+										]
+									}
 								]
 							},
 							"UninstallAction": {
-								"$ref": "HookActionSchema.json",
-								"required": [
-									"RemoveLibraryFile"
+								"allOf": [
+									{
+										"$ref": "HookActionSchema.json"
+									},
+									{
+										"required": [
+											"RemoveLibraryFile"
+										]
+									}
 								]
 							}
 						}
