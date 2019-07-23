@@ -1,0 +1,19 @@
+{
+    "title": "AssetType",
+    "description": "Describes a matching type",
+    "type": "string",
+    "enum": [
+        "AudioClip",
+        "Component",
+        "GameObject",
+        "Mesh",
+        "MeshFilter",
+        "MonoBehaviour",
+        "Sprite",
+        "Text",
+        "Texture2D",
+        "Transform",
+        "Material",
+        "Unknown"
+    ]
+}

@@ -27,7 +27,8 @@
                         "enum": [
                             "ReplaceAsset",
                             "RestoreAsset",
-                            "CreateAsset"
+                            "CreateAsset",
+                            "RemoveAsset"
                         ]
                     },
                     "StepNumber": {
@@ -42,22 +43,7 @@
                         "type": "object",
                         "properties": {
                             "TypeIs": {
-                                "title": "Type Is",
-                                "description": "Describes a matching type. Uses the first match found",
-                                "type": "string",
-                                "enum": [
-                                    "AudioClip",
-                                    "Component",
-                                    "GameObject",
-                                    "Mesh",
-                                    "MeshFilter",
-                                    "MonoBehaviour",
-                                    "Sprite",
-                                    "Text",
-                                    "Texture2D",
-                                    "Transform",
-                                    "Material"
-                                ]
+                                "$ref": "https://raw.githubusercontent.com/sc2ad/QuestStopgap/json_fix/QuestomAssets/AssetTypeSchema.json"
                             },
                             "NameIs": {
                                 "title": "Name Is",
@@ -110,6 +96,24 @@
                         "title": "Data File",
                         "description": "The .dat file to load the asset from",
                         "type": "string"
+                    },
+                    "FileName": {
+                        "title": "File Name",
+                        "description": "The assets file to modify",
+                        "type": "string"
+                    },
+                    "ClassID": {
+                        "title": "Class ID",
+                        "description": "Class ID of the asset to add, if AssetType is Unknown or Component",
+                        "type": "integer"
+                    },
+                    "ScriptName": {
+                        "title": "Script Name",
+                        "description": "Script Name of the asset to add, if AssetType is MonoBehaviour",
+                        "type": "string"
+                    },
+                    "AssetType": {
+                        "$ref": "https://raw.githubusercontent.com/sc2ad/QuestStopgap/json_fix/QuestomAssets/AssetTypeSchema.json"
                     }
                 }
             }
