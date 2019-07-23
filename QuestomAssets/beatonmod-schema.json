@@ -114,7 +114,7 @@
 						"InstallAction": {
 							"allOf": [
 								{
-									"$ref": "AssetsActionSchema.json"
+									"$ref": "https://raw.githubusercontent.com/sc2ad/QuestStopgap/json_fix/QuestomAssets/AssetsActionSchema.json"
 								},
 								{
 									"properties": {
@@ -143,7 +143,7 @@
 						"UninstallAction": {
 							"allOf": [
 								{
-									"$ref": "AssetsActionSchema.json"
+									"$ref": "https://raw.githubusercontent.com/sc2ad/QuestStopgap/json_fix/QuestomAssets/AssetsActionSchema.json"
 								},
 								{
 									"properties": {
@@ -189,7 +189,7 @@
 							"InstallAction": {
 								"allOf": [
 									{
-										"$ref": "HookActionSchema.json"
+										"$ref": "https://raw.githubusercontent.com/sc2ad/QuestStopgap/json_fix/QuestomAssets/HookActionSchema.json"
 									},
 									{
 										"required": [
@@ -201,7 +201,7 @@
 							"UninstallAction": {
 								"allOf": [
 									{
-										"$ref": "HookActionSchema.json"
+										"$ref": "https://raw.githubusercontent.com/sc2ad/QuestStopgap/json_fix/QuestomAssets/HookActionSchema.json"
 									},
 									{
 										"required": [
