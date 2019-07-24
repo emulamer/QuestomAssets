@@ -50,6 +50,29 @@
 			"description": "The config for the mod",
 			"type": "object"
 		},
+		"ui": {
+			"title": "UI",
+			"description": "The UI to use for each config key",
+			"type": "object",
+			"additionalProperties": {
+				"type": "object",
+				"properties": {
+					"uiType": {
+						"title": "UI Type",
+						"description": "The UI type to display for this key",
+						"type": "string",
+						"enum": [
+							"radial",
+							"select",
+							"multiselect",
+							"color-picker",
+							"input",
+							"hidden"
+						]
+					}
+				}
+			}
+		},
 		"gameVersion": {
 			"title": "Beat Saber Version",
 			"description": "The Beat Saber Version for the mod",
@@ -216,11 +239,11 @@
 									"$ref": "https://raw.githubusercontent.com/sc2ad/QuestStopgap/json_fix/QuestomAssets/AssetsActionSchema.json"
 								},
 								{
-									"anyOf": [
-										{
-											"properties": {
-												"Actions": {
-													"items": {
+									"properties": {
+										"Actions": {
+											"items": {
+												"anyOf": [
+													{
 														"properties": {
 															"Type": {
 																"enum": [
@@ -228,25 +251,28 @@
 																]
 															}
 														},
-														"required": [
-															"Type",
-															"StepNumber",
-															"Locator"
-														],
-														"not": {
-															"required": [
-																"FromDataFile",
-																"AllowOverwriteName"
-															]
-														}
-													}
-												}
-											}
-										},
-										{
-											"properties": {
-												"Actions": {
-													"items": {
+														"allOf": [
+															{
+																"required": [
+																	"Type",
+																	"StepNumber",
+																	"Locator"
+																]
+															},
+															{
+																"not": {
+																	"required": [
+																		"FromDataFile",
+																		"AllowOverwriteName",
+																		"ClassID",
+																		"AssetType",
+																		"FileName"
+																	]
+																}
+															}
+														]
+													},
+													{
 														"properties": {
 															"Type": {
 																"enum": [
@@ -254,25 +280,31 @@
 																]
 															}
 														},
-														"required": [
-															"Type",
-															"StepNumber",
-															"Locator",
-															"FileName"
-														],
-														"not": {
-															"required": [
-																"FromDataFile",
-																"AllowOverwriteName",
-																"AssetType",
-																"ClassID"
-															]
-														}
+														"allOf": [
+															{
+																"required": [
+																	"Type",
+																	"StepNumber",
+																	"Locator",
+																	"FileName"
+																]
+															},
+															{
+																"not": {
+																	"required": [
+																		"FromDataFile",
+																		"AllowOverwriteName",
+																		"AssetType",
+																		"ClassID"
+																	]
+																}
+															}
+														]
 													}
-												}
+												]
 											}
 										}
-									]
+									}
 								}
 							]
 						}
