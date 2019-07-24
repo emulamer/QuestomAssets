@@ -124,15 +124,85 @@
 													"Type": {
 														"enum": [
 															"ReplaceAsset",
-															"CreateAsset"
+															"CreateAsset",
+															"RemoveAsset"
 														]
 													}
 												},
-												"required": [
-													"Type",
-													"StepNumber",
-													"Locator",
-													"FromDataFile"
+												"anyOf": [
+													{
+														"properties": {
+															"Type": {
+																"enum": [ "ReplaceAsset" ]
+															}
+														},
+														"required": [
+															"Type",
+															"StepNumber",
+															"Locator",
+															"FromDataFile"
+														]
+													},
+													{
+														"properties": {
+															"Type": {
+																"enum": [ "CreateAsset" ]
+															}
+														},
+														"not": {
+															"properties": {
+																"AssetType": {
+																	"enum": [
+																		"Component",
+																		"Unknown"
+																	]
+																}
+															}
+														},
+														"required": [
+															"Type",
+															"StepNumber",
+															"FromDataFile",
+															"FileName",
+															"AssetType"
+														]
+													},
+													{
+														"properties": {
+															"Type": {
+																"enum": [ "CreateAsset" ]
+															},
+															"AssetType": {
+																"enum": [
+																	"Component",
+																	"Unknown"
+																]
+															}
+														},
+														"required": [
+															"Type",
+															"StepNumber",
+															"FromDataFile",
+															"FileName",
+															"AssetType",
+															"ClassID"
+														]
+													},
+													{
+														"properties": {
+															"Type": {
+																"enum": [ "MonoBehaviour" ]
+															}
+														},
+														"required": [
+															"Type",
+															"StepNumber",
+															"FromDataFile",
+															"FileName",
+															"AssetType",
+															"ClassID"
+														]
+													}
 												]
 											}
 										}
@@ -146,30 +216,63 @@
 									"$ref": "https://raw.githubusercontent.com/sc2ad/QuestStopgap/json_fix/QuestomAssets/AssetsActionSchema.json"
 								},
 								{
-									"properties": {
-										"Actions": {
-											"items": {
-												"properties": {
-													"Type": {
-														"enum": [
-															"RestoreAsset"
-														]
+									"anyOf": [
+										{
+											"properties": {
+												"Actions": {
+													"items": {
+														"properties": {
+															"Type": {
+																"enum": [
+																	"RestoreAsset"
+																]
+															}
+														},
+														"required": [
+															"Type",
+															"StepNumber",
+															"Locator"
+														],
+														"not": {
+															"required": [
+																"FromDataFile",
+																"AllowOverwriteName"
+															]
+														}
 													}
-												},
-												"required": [
-													"Type",
-													"StepNumber",
-													"Locator"
-												],
-												"not": {
-													"required": [
-														"FromDataFile",
-														"AllowOverwriteName"
-													]
+												}
+											}
+										},
+										{
+											"properties": {
+												"Actions": {
+													"items": {
+														"properties": {
+															"Type": {
+																"enum": [
+																	"RemoveAsset"
+																]
+															}
+														},
+														"required": [
+															"Type",
+															"StepNumber",
+															"Locator",
+															"FileName"
+														],
+														"not": {
+															"required": [
+																"FromDataFile",
+																"AllowOverwriteName",
+																"AssetType",
+																"ClassID"
+															]
+														}
+													}
 												}
 											}
 										}
-									}
+									]
 								}
 							]
 						}

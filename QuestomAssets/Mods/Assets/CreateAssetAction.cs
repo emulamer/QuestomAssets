@@ -18,8 +18,6 @@ namespace QuestomAssets.Mods.Assets
 
         public AssetType AssetType { get; set; }
 
-        public bool AllowOverwriteName { get; set; } = false;
-
         // Only used when AssetType == AssetType.Unknown || AssetType == AssetType.Component
         public int ClassID { get; set; }
 
