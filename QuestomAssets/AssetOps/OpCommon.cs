@@ -87,8 +87,8 @@ namespace QuestomAssets.AssetOps
             if (!BSConst.KnownLevelPackIDs.Contains(playlist.Playlist.PackID))
             {
                 var plParent = playlist.Playlist.ObjectInfo.ParentFile;
-                plParent.DeleteObject(playlist.Playlist.CoverImage.Object.Texture.Object);
-                playlist.Playlist.CoverImage.Object.Texture.Dispose();
+                plParent.DeleteObject(playlist.Playlist.CoverImage.Object.RenderData.Texture.Object);
+                playlist.Playlist.CoverImage.Object.RenderData.Texture.Dispose();
                 plParent.DeleteObject(playlist.Playlist.CoverImage.Object);
                 plParent.DeleteObject(playlist.Playlist);
                 playlist.Playlist.CoverImage.Dispose();
@@ -131,7 +131,7 @@ namespace QuestomAssets.AssetOps
                 Log.LogMsg($"Loading cover art for playlist ID '{playlist.PlaylistID}'");
 
                 var oldCoverImage = playlist?.LevelPackObject?.CoverImage;
-                var oldTex = playlist?.LevelPackObject?.CoverImage?.Object?.Texture;
+                var oldTex = playlist?.LevelPackObject?.CoverImage?.Object?.RenderData?.Texture;
 
                 //todo: verify this is a good place to delete stuff      
                 try
@@ -201,7 +201,7 @@ namespace QuestomAssets.AssetOps
             //try queueing a file write op to output the playlist cover image
             try
             {
-                var tex = playlist.LevelPackObject?.CoverImage?.Object?.Texture?.Object;
+                var tex = playlist.LevelPackObject?.CoverImage?.Object?.RenderData?.Texture?.Object;
                 if (tex == null)
                     throw new Exception("Texture couldn't be loaded from the playlist even though it should have just been set...");
 

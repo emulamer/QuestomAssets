@@ -70,6 +70,7 @@ namespace QuestomAssets
                     "17c37b4ad5b2b5046be37e2524b67216",
                     "92d85d84be1369e4ab3b35188d1ea8b6",
                     "b79ca5d157a731a45a945697ad0820c8",
+                    "8e37fa14e51257645b7a2df8aecb19e1",
                     "sharedassets11.assets",
                     "sharedassets18.assets",
                     "sharedassets20.assets"
@@ -354,7 +355,7 @@ namespace QuestomAssets
                 Log.LogMsg($"Loading cover art for playlist ID '{playlist.PlaylistID}'");
 
                 var oldCoverImage = playlist?.LevelPackObject?.CoverImage;
-                var oldTex = playlist?.LevelPackObject?.CoverImage?.Object?.Texture;
+                var oldTex = playlist?.LevelPackObject?.CoverImage?.Object?.RenderData?.Texture;
 
                 //todo: verify this is a good place to delete stuff                
                 playlist.CoverArtSprite = loader.LoadPackCover(playlist.PlaylistID, playlist.CoverImageBytes);
@@ -558,7 +559,7 @@ namespace QuestomAssets
             Log.LogMsg($"Removing assets for playlist ID '{ levelPack.PackID}'");
             var collection = levelPack.BeatmapLevelCollection.Object;
             var sprite = levelPack.CoverImage.Object;
-            var texture = sprite.Texture.Object;
+            var texture = sprite.RenderData.Texture.Object;
             songsAssetFile.DeleteObject(levelPack);
             songsAssetFile.DeleteObject(collection);
             songsAssetFile.DeleteObject(texture);
@@ -994,7 +995,7 @@ namespace QuestomAssets
 
             using (new LogTiming("Checking that custom characteristics exist"))
             {
-                var lightshowName = MiscUtils.GetCharacteristicAssetName(Characteristic.LightShow);
+                var lightshowName = MiscUtils.GetCharacteristicAssetName(Characteristic.Lightshow);
                 var lawlessName = MiscUtils.GetCharacteristicAssetName(Characteristic.Lawless);
 
                 var lightshowAsset = Manager.MassFirstAsset<BeatmapCharacteristicObject>(x => x.Object.Name == lightshowName, false)?.Object;
@@ -1013,7 +1014,7 @@ namespace QuestomAssets
                     if (lightshowAsset == null)
                     {
                         Log.LogMsg("Lightshow characteristic wasn't found, creating it.");
-                        CreateCharacteristic(Characteristic.LightShow, standardCharacteristic, count);
+                        CreateCharacteristic(Characteristic.Lightshow, standardCharacteristic, count);
                         count++;
                     }
                     if (lawlessAsset == null)
@@ -1032,7 +1033,7 @@ namespace QuestomAssets
             {
                 string characteristicName = $"LEVEL_{characteristic.ToString().ToUpper()}";
                 string hintText = $"{characteristicName}_HINT";
-                string assetName = MiscUtils.GetCharacteristicAssetName(Characteristic.LightShow);
+                string assetName = MiscUtils.GetCharacteristicAssetName(Characteristic.Lightshow);
                 var lightshowAsset = (BeatmapCharacteristicObject)baseToClone.ObjectInfo.DeepClone(baseToClone.ObjectInfo.ParentFile);
                 lightshowAsset.Name = assetName;
                 lightshowAsset.SerializedName = characteristic.ToString();
@@ -1045,7 +1046,7 @@ namespace QuestomAssets
                     byte[] lightshowIcon = _config.EmbeddedResourcesFileProvider.Read("Lightshow.png");
                     if (lightshowIcon == null || lightshowIcon.Length < 1)
                         throw new Exception("Lightshow.png read was null or empty!");
-                    ImageUtils.Instance.AssignImageToTexture(lightshowIcon, lightshowAsset.Icon.Object.Texture.Object, 256, 256, Int32.MaxValue, TextureConversionFormat.RGB24);
+                    ImageUtils.Instance.AssignImageToTexture(lightshowIcon, lightshowAsset.Icon.Object.RenderData.Texture.Object, 256, 256, Int32.MaxValue, TextureConversionFormat.RGB24);
                 }
                 catch (Exception ex)
                 {

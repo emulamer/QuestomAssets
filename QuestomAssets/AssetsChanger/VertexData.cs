@@ -6,7 +6,7 @@ namespace QuestomAssets.AssetsChanger
 {
     public class VertexData
     {
-        /*
+        
         public VertexData()
         { }
         public VertexData(AssetsReader reader)
@@ -17,7 +17,7 @@ namespace QuestomAssets.AssetsChanger
         public void Parse(AssetsReader reader)
         {
             VertexCount = reader.ReadUInt32();
-            reader.ReadArrayOf(r => new Vector(r));
+            Channels = reader.ReadArrayOf(r => new Channel(r));
             Data = reader.ReadArray();
             reader.AlignTo(4);
         }
@@ -27,10 +27,11 @@ namespace QuestomAssets.AssetsChanger
             writer.Write(VertexCount);
             writer.WriteArrayOf(Channels, (o, w) => o.Write(w));
             writer.WriteArray(Data);
+            writer.AlignTo(4);
         }
 
         public UInt32 VertexCount { get; set; }
-        public List<Vector> Channels { get; set; }
-        public byte[] Data { get; set; }*/
+        public List<Channel> Channels { get; set; }
+        public byte[] Data { get; set; }
     }
 }

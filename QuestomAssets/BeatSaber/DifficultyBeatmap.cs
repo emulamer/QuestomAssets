@@ -28,6 +28,9 @@ namespace QuestomAssets.BeatSaber
         [JsonProperty("_beatmapData")]
         public BeatmapDataObject BeatmapData { get; set; }
 
+        [JsonProperty("_beatmapFilename")]
+        public string BeatmapFilename { get; set; }
+
         //unity assets format only
         [JsonIgnore]
         public ISmartPtr<BeatmapDataObject> BeatmapDataPtr { get; set; }

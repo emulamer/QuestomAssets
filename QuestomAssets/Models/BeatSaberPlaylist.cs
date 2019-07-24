@@ -108,7 +108,7 @@ namespace QuestomAssets.Models
                         return null;
                     }
                     bool texLoaded = LevelPackObject.CoverImage.Target.IsLoaded;
-                    var tex = LevelPackObject.CoverImage?.Object?.Texture?.Object;
+                    var tex = LevelPackObject.CoverImage?.Object?.RenderData?.Texture?.Object;
 
                     if (tex == null)
                     {

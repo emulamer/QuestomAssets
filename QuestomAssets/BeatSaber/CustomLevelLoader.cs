@@ -84,11 +84,30 @@ namespace QuestomAssets.BeatSaber
                 var toRemoveSet = new List<DifficultyBeatmapSet>();
                 foreach (var difficultySet in beatmapLevel.DifficultyBeatmapSets)
                 {
-                    difficultySet.BeatmapCharacteristic = GetCharacteristicAsset(difficultySet.BeatmapCharacteristicName).PtrFrom(beatmapLevel);
+                    var characteristic = GetCharacteristicAsset(difficultySet.BeatmapCharacteristicName)?.PtrFrom(beatmapLevel);
+                    if (characteristic == null)
+                    {
+                        Log.LogErr($"Characteristic {difficultySet.BeatmapCharacteristicName} couldn't be found.  Set will be removed.");
+                        toRemoveSet.Add(difficultySet);
+                        continue;
+                    }
+                    difficultySet.BeatmapCharacteristic = characteristic;
                     List<DifficultyBeatmap> toRemove = new List<DifficultyBeatmap>();
                     foreach (var difficultyBeatmap in difficultySet.DifficultyBeatmaps)
                     {
-                        var dataFile = songPath.CombineFwdSlash($"{difficultyBeatmap.Difficulty.ToString()}.dat");
+                        string dataFile = null;
+                        if (!string.IsNullOrWhiteSpace(difficultyBeatmap.BeatmapFilename))
+                        {
+                            dataFile = songPath.CombineFwdSlash(difficultyBeatmap.BeatmapFilename);
+                            if (!_config.SongFileProvider.FileExists(dataFile))
+                            {
+                                Log.LogErr($"BeatmapFilename was set to {dataFile} but the file didn't exist, will try to fall back to difficulty name.");
+                                dataFile = null;
+                            }
+                        }
+                        if (dataFile == null)
+                            dataFile = songPath.CombineFwdSlash($"{difficultyBeatmap.Difficulty.ToString()}.dat");
+
                         if (!_config.SongFileProvider.FileExists(dataFile))
                         {
                             Log.LogErr(dataFile + " is missing, skipping this difficulty");
@@ -113,12 +132,17 @@ namespace QuestomAssets.BeatSaber
                     toRemove.ForEach(x => difficultySet.DifficultyBeatmaps.Remove(x));
                     if (difficultySet.DifficultyBeatmaps.Count < 1)
                     {
-                        Log.LogErr($"Song at path {songPath} has no valid beatmaps for any difficulty, skipping song");
-                        return null;
+                        Log.LogErr($"Song at path {songPath} has no valid beatmaps for any difficulty on set {difficultySet.BeatmapCharacteristicName}, removing it");
+                        toRemoveSet.Add(difficultySet);
+                        continue;
                     }
                 }
                 toRemoveSet.ForEach(x => beatmapLevel.DifficultyBeatmapSets.Remove(x));
-
+                if (beatmapLevel.DifficultyBeatmapSets.Count < 1)
+                {
+                    Log.LogErr($"Song at path {songPath} has no valid characterstics, it will not be imported");
+                    return null;
+                }
                 _assetsFile.AddObject(audioAsset, true);
                 if (coverImage != null)
                 {
@@ -288,7 +312,7 @@ namespace QuestomAssets.BeatSaber
             var extrasCover = _assetsFile.Manager.MassFirstAsset<SpriteObject>(x => x.Object.Name == "ExtrasCover");
             SpriteObject coverAsset = extrasCover.Clone();
             coverAsset.Name = assetName;
-            coverAsset.Texture = packCover.PtrFrom(coverAsset);
+            coverAsset.RenderData.Texture = packCover.PtrFrom(coverAsset);
             _assetsFile.AddObject(coverAsset, true);
             return coverAsset;
         }
@@ -339,6 +363,9 @@ namespace QuestomAssets.BeatSaber
         
         private BeatmapCharacteristicObject GetCharacteristicAsset(Characteristic characteristic)
         {
+            //TODO: fix the lightshow and stuff
+            if (characteristic == Characteristic.Lightshow || characteristic == Characteristic.Lawless)
+                return null;
             string name = MiscUtils.GetCharacteristicAssetName(characteristic);
             if (name == null)
                 name = "StandardBeatmapCharacteristic";
@@ -375,25 +402,49 @@ namespace QuestomAssets.BeatSaber
             {
                 string characteristicName = $"LEVEL_{characteristic.ToString().ToUpper()}";
                 string hintText = $"{characteristicName}_HINT";
-                string assetName = MiscUtils.GetCharacteristicAssetName(Characteristic.LightShow);
-                var lightshowAsset = (BeatmapCharacteristicObject)standardCharacteristic.ObjectInfo.DeepClone(standardCharacteristic.ObjectInfo.ParentFile);
+                string assetName = MiscUtils.GetCharacteristicAssetName(characteristic);
+                var lightshowAsset = (BeatmapCharacteristicObject)standardCharacteristic.ObjectInfo.Clone(standardCharacteristic.ObjectInfo.ParentFile);
+                
                 lightshowAsset.Name = assetName;
                 lightshowAsset.SerializedName = characteristic.ToString();
                 lightshowAsset.SortingOrder = count;
+                lightshowAsset.CompoundIdPartName = characteristic.ToString();
                 //todo: text translation stuff
                 //lightshowAsset.CharacteristicName = characteristicName;
                 //lightshowAsset.HintText = hintText;
+                var allChar = _assetsFile.Manager.MassFirstOrDefaultAsset<BeatmapCharacteristicCollectionObject>(x => true);
+                if (allChar == null)
+                    throw new Exception("Unable to find AllBeatmapCharacteristics object!");
+                if (!allChar.Object.BeatmapCharacteristics.Any(x=> x.Object.Name == lightshowAsset.Name))
+                {
+                    allChar.Object.BeatmapCharacteristics.Add(lightshowAsset.PtrFrom(allChar.Object));
+                }
                 try
                 {
                     byte[] lightshowIcon = _config.EmbeddedResourcesFileProvider.Read($"{characteristic}.png");
                     if (lightshowIcon == null || lightshowIcon.Length < 1)
                         throw new Exception($"{characteristic}.png read was null or empty!");
-                    ImageUtils.Instance.AssignImageToTexture(lightshowIcon, lightshowAsset.Icon.Object.Texture.Object, 256, 256, Int32.MaxValue, TextureConversionFormat.RGB24);
+                    var clonedSprite = (SpriteObject)standardCharacteristic.Icon.Object.ObjectInfo.Clone(standardCharacteristic.ObjectInfo.ParentFile);
+                    var newTexture =new Texture2DObject(standardCharacteristic.ObjectInfo.ParentFile)
+                    {
+                        Name = assetName
+                    };
+                    clonedSprite.RenderData.AtlasRectOffset.X = -1;
+                    clonedSprite.RenderData.AtlasRectOffset.Y = -1;
+                    clonedSprite.RenderData.TextureRect.X = 0;
+                    clonedSprite.RenderData.TextureRect.Y = 0;
+                    clonedSprite.RenderData.Texture = newTexture.PtrFrom(clonedSprite);
+                    clonedSprite.Name = assetName + "Icon";
+                    ImageUtils.Instance.AssignImageToTexture(lightshowIcon, newTexture, 128, 128, Int32.MaxValue, TextureConversionFormat.Auto);
+                    lightshowAsset.Icon = clonedSprite.PtrFrom(lightshowAsset);
+                    standardCharacteristic.ObjectInfo.ParentFile.AddObject(clonedSprite);
+                    standardCharacteristic.ObjectInfo.ParentFile.AddObject(newTexture);
+                    standardCharacteristic.ObjectInfo.ParentFile.AddObject(lightshowAsset);
                 }
                 catch (Exception ex)
                 {
                     Log.LogErr($"Failed to load {characteristic}'s png icon!", ex);
-                    //eat it, it should fall back to the standard one which is better than failing.
+                    throw;
                 }
                 return lightshowAsset;
             }
