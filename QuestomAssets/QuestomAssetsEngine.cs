@@ -153,17 +153,19 @@ namespace QuestomAssets
                 //TODO: something broke
                 //UpdateTextConfig(manager, config.TextChanges);
                 List<AssetOp> ops = new List<AssetOp>();
-                if (config.Mods != null)
-                {
-                    using (new LogTiming("Diffing mod config"))
-                    {
-                        ops.AddRange(DiffModConfig(config));
-                    }
-                }
-                else
-                {
-                    Log.LogMsg("Mods config is null, not changing mods");
-                }
+
+                //todo: eval if this is good to have here.  disabling it for now to help QuickFix fix things
+                //if (config.Mods != null)
+                //{
+                //    using (new LogTiming("Diffing mod config"))
+                //    {
+                //        ops.AddRange(DiffModConfig(config));
+                //    }
+                //}
+                //else
+                //{
+                //    Log.LogMsg("Mods config is null, not changing mods");
+                //}
 
                 if (config.Playlists != null)
                 {
@@ -864,7 +866,9 @@ namespace QuestomAssets
         {
             List<AssetOp> ops = new List<AssetOp>();
             Func<string, bool> IgnoreSongID = (songId) => {
-                if (HideOriginalPlaylists)
+
+                //todo: because updates put new stuff in, don't mess with built in ones
+                if (true)//HideOriginalPlaylists)
                 {
                     return BSConst.KnownLevelIDs.Contains(songId);
                 } else
@@ -874,7 +878,8 @@ namespace QuestomAssets
             };
 
             Func<string, bool> IgnorePackID = (packId) => {
-                if (HideOriginalPlaylists)
+                //todo: because updates put new stuff in, don't mess with built in ones
+                if (true)//HideOriginalPlaylists)
                 {
                     return BSConst.KnownLevelPackIDs.Contains(packId);
                 }
@@ -906,14 +911,14 @@ namespace QuestomAssets
                 lt = new LogTiming("make delete song ops");
                 //find any songs that have been removed from everywhere and make a song delete op for each of them.  song delete op will handle removing it from the playlist
                 //  check whether it should be ignored (i.e. leave OST stuff alone)
-                var removedSongIDs = MusicCache.SongCache.Keys.Where(x => !allConfigSongs.Any(y => y.SongID == x) && !IgnoreSongID(x)).ToList();
+                var removedSongIDs = MusicCache.SongCache.Keys.Where(x => !allConfigSongs.Any(y => y.SongID == x) && !IgnoreSongID(x) && !IgnorePackID(MusicCache.SongCache[x].Playlist.PackID)).ToList();
                 removedSongIDs.ForEach(x => ops.Add(new DeleteSongOp(x)));
                 lt.Dispose();
                 Log.LogMsg("Removing song IDs: " + string.Join(", ", removedSongIDs.ToArray()));
 
                 lt = new LogTiming("make move song ops");
                 //find any song/playlist tuples whose playlist doesn't match what's in the cache for that song (i.e. a song was moved to a different playlist)
-                var movedSongs = allConfigSongs.Where(x => MusicCache.SongCache.ContainsKey(x.SongID) && MusicCache.SongCache[x.SongID].Playlist.PackID != x.PlaylistID).ToList();
+                var movedSongs = allConfigSongs.Where(x => MusicCache.SongCache.ContainsKey(x.SongID) && MusicCache.SongCache[x.SongID].Playlist.PackID != x.PlaylistID && !IgnorePackID(MusicCache.SongCache[x.SongID].Playlist.PackID) && !IgnoreSongID(x.SongID)).ToList();
                 movedSongs.ForEach(x => ops.Add(new MoveSongToPlaylistOp(x.SongID, x.PlaylistID, null)));
                 lt.Dispose();
                 Log.LogMsg("Moving song IDs to playlists: " + string.Join(", ", movedSongs.Select(x => x.SongID + " -> " + x.PlaylistID).ToArray()));

@@ -29,11 +29,28 @@ namespace QuestomAssets.AssetOps
 
         public void QueueOp(AssetOp op)
         {
+            if (_threadAborted)
+                throw new Exception("Thread has already been aborted for this op manager!");
             op.SetStatus(OpStatus.Queued);
             _opQueue.Enqueue(op);
             OpStatusChanged?.Invoke(this, op);            
             lock (_threadLock)
-            {                
+            {
+                if (_thread != null && !_thread.IsAlive)
+                {
+                    Log.LogErr("Thread in opmanager was stopped but not null!");
+                    try
+                    {
+                        _thread.Abort();
+                        _opQueue.Where(x => x.Status == OpStatus.Started).ToList().ForEach(x => {
+                            x.SetStatus(OpStatus.Failed, new Exception("Op was in a Started state when the thread died.  Failing it."));
+                            Log.LogErr("Op was found in a started state while the thread had died!");
+                            });
+                        _thread = null;
+                    }
+                    catch
+                    { }
+                }
                 if (_thread == null)
                 {
                     _thread = new Thread(WorkerThreadProc);

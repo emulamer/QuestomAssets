@@ -22,12 +22,13 @@ namespace QuestomAssets.AssetsChanger
             UV = new PackedSingleVector(reader);
             Normals = new PackedSingleVector(reader);
             Tangents = new PackedSingleVector(reader);
-            Weights = new PackedSingleVector(reader);
-            NormalSigns = new PackedSingleVector(reader);
-            TangentSigns = new PackedSingleVector(reader);
+            Weights = new PackedIntVector(reader);
+            NormalSigns = new PackedIntVector(reader);
+            TangentSigns = new PackedIntVector(reader);
             FloatColors = new PackedSingleVector(reader);
-            BoneIndicies = new PackedSingleVector(reader);
-            Triangles = new PackedSingleVector(reader);
+            BoneIndicies = new PackedIntVector(reader);
+            Triangles = new PackedIntVector(reader);
+            UVInfo = reader.ReadUInt32();
         }
 
         public void Write(AssetsWriter writer)
@@ -42,18 +43,20 @@ namespace QuestomAssets.AssetsChanger
             FloatColors.Write(writer);
             BoneIndicies.Write(writer);
             Triangles.Write(writer);
+            writer.Write(UVInfo);
         }
 
         public PackedSingleVector Verticies { get; set; }
         public PackedSingleVector UV { get; set; }
         public PackedSingleVector Normals { get; set; }
         public PackedSingleVector Tangents { get; set; }
-        public PackedSingleVector Weights { get; set; }
-        public PackedSingleVector NormalSigns { get; set; }
-        public PackedSingleVector TangentSigns { get; set; }
+        public PackedIntVector Weights { get; set; }
+        public PackedIntVector NormalSigns { get; set; }
+        public PackedIntVector TangentSigns { get; set; }
         public PackedSingleVector FloatColors { get; set; }
-        public PackedSingleVector BoneIndicies { get; set; }
-        public PackedSingleVector Triangles { get; set; }
+        public PackedIntVector BoneIndicies { get; set; }
+        public PackedIntVector Triangles { get; set; }
+        public UInt32 UVInfo { get; set; }
 
     }
 }
