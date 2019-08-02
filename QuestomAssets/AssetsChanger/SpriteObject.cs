@@ -55,7 +55,7 @@ namespace QuestomAssets.AssetsChanger
             writer.Write(RenderDataKey.Second);
             writer.WriteArrayOf(AtlasTags, (o, w) => w.Write(o));
             SpriteAtlas.Write(writer);
-            RenderData.Write(writer);
+            RenderData.Write(this, writer);
             writer.WriteArrayOf(PhysicsShape, (o, w) => w.WriteArrayOf(o, (o2, w2) => o2.Write(w2)));
             writer.WriteArrayOf(Bones, (o, w) => o.Write(w));
         }
@@ -81,6 +81,8 @@ namespace QuestomAssets.AssetsChanger
         public List<List<Vector2F>> PhysicsShape { get; set; }
         public List<ISmartPtr<Transform>> Bones { get; set; }
 
+        
+
         [System.ComponentModel.Browsable(false)]
         [Newtonsoft.Json.JsonIgnore]
         public override byte[] Data { get => throw new InvalidOperationException("Data cannot be accessed from this class!"); set => throw new InvalidOperationException("Data cannot be accessed from this class!"); }
@@ -103,6 +105,10 @@ namespace QuestomAssets.AssetsChanger
                 reader.AlignTo(4);
                 VertexData = new VertexData(reader);
                 BindPose = reader.ReadArrayOf(r => r.ReadSingle());
+                if (owner.ObjectInfo.ParentFile.Metadata.VersionLte("2018.2"))
+                {
+                    SourceSkin = reader.ReadArrayOf(r => new BoneWeights(r));
+                }
                 TextureRect = new RectF(reader);
                 TextureRectOffset = new Vector2F(reader);
                 AtlasRectOffset = new Vector2F(reader);
@@ -110,7 +116,7 @@ namespace QuestomAssets.AssetsChanger
                 UVTransform = new Vector4F(reader);
                 DownscaleMultiplier = reader.ReadSingle();
             }
-            public void Write(AssetsWriter writer)
+            public void Write(AssetsObject owner, AssetsWriter writer)
             {
                 Texture.Write(writer);
                 AlphaTexture.Write(writer);
@@ -119,6 +125,10 @@ namespace QuestomAssets.AssetsChanger
                 writer.AlignTo(4);
                 VertexData.Write(writer);
                 writer.WriteArrayOf(BindPose, (o, w) => w.Write(o));
+                if (owner.ObjectInfo.ParentFile.Metadata.VersionLte("2018.2"))
+                {
+                    writer.WriteArrayOf(SourceSkin, (o, w) => o.Write(w));
+                }
                 TextureRect.Write(writer);
                 TextureRectOffset.Write(writer);
                 AtlasRectOffset.Write(writer);
@@ -132,6 +142,7 @@ namespace QuestomAssets.AssetsChanger
             public byte[] IndexBuffer { get; set; }
             public VertexData VertexData { get; set; }
             public List<Single> BindPose { get; set; }
+            public List<BoneWeights> SourceSkin { get; set; }
             public RectF TextureRect { get; set; }
             public Vector2F TextureRectOffset { get; set; }
             public Vector2F AtlasRectOffset { get; set; }

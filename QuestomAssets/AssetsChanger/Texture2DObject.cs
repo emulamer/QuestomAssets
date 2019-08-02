@@ -6,35 +6,42 @@ using System.Text;
 
 namespace QuestomAssets.AssetsChanger
 {
-    public sealed class Texture2DObject : AssetsObject, IHaveName
+    public class Texture2DObject : TextureBase, IHaveName
     {
         public Texture2DObject(IObjectInfo<AssetsObject> objectInfo, AssetsReader reader) : base(objectInfo)
         {
             Parse(reader);
         }
 
-        //public Texture2DObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
-        //{ }
-
         public Texture2DObject(AssetsFile assetsFile) : base(assetsFile, AssetsConstants.ClassID.Texture2DClassID)
         { }
 
-        public override void Parse(AssetsReader reader)
+        protected Texture2DObject(AssetsFile assetsFile, int classID) : base(assetsFile, classID)
+        { }
+
+        protected Texture2DObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
+        {
+        }
+
+        protected override void ParseBase(AssetsReader reader)
         {
             base.ParseBase(reader);
-            Name = reader.ReadString();
-            ForcedFallbackFormat = reader.ReadInt32();
-            DownscaleFallback = reader.ReadBoolean();
-            reader.AlignTo(4);
             Width = reader.ReadInt32();
             Height = reader.ReadInt32();
             CompleteImageSize = reader.ReadInt32();
             TextureFormat = (TextureFormatType)reader.ReadInt32();
             MipCount = reader.ReadInt32();
             IsReadable = reader.ReadBoolean();
-            StreamingMipmaps = reader.ReadBoolean();
-            reader.AlignTo(4);
-            StreamingMipmapsPriority = reader.ReadInt32();
+            if (ObjectInfo.ParentFile.Metadata.VersionGte("2018.2"))
+            {
+                StreamingMipmaps = reader.ReadBoolean();
+                reader.AlignTo(4);
+                StreamingMipmapsPriority = reader.ReadInt32();
+            }
+            else
+            {
+                reader.AlignTo(4);
+            }
             ImageCount = reader.ReadInt32();
             TextureDimension = reader.ReadInt32();
             TextureSettings = new GLTextureSettings(reader);
@@ -45,22 +52,26 @@ namespace QuestomAssets.AssetsChanger
             reader.AlignTo(4);
             StreamData = new StreamingInfo(reader);
         }
-        protected override void WriteObject(AssetsWriter writer)
+
+        protected override void WriteBase(AssetsWriter writer)
         {
             base.WriteBase(writer);
-            writer.Write(Name);
-            writer.Write(ForcedFallbackFormat);
-            writer.Write(DownscaleFallback);
-            writer.AlignTo(4);
             writer.Write(Width);
             writer.Write(Height);
             writer.Write(CompleteImageSize);
             writer.Write((int)TextureFormat);
             writer.Write(MipCount);
             writer.Write(IsReadable);
-            writer.Write(StreamingMipmaps);
-            writer.AlignTo(4);
-            writer.Write(StreamingMipmapsPriority);
+            if (ObjectInfo.ParentFile.Metadata.VersionGte("2018.2"))
+            {
+                writer.Write(StreamingMipmaps);
+                writer.AlignTo(4);
+                writer.Write(StreamingMipmapsPriority);
+            }
+            else
+            {
+                writer.AlignTo(4);
+            }
             writer.Write(ImageCount);
             writer.Write(TextureDimension);
             TextureSettings.Write(writer);
@@ -70,6 +81,14 @@ namespace QuestomAssets.AssetsChanger
             writer.Write(ImageData);
             writer.AlignTo(4);
             StreamData.Write(writer);
+        }
+        public override void Parse(AssetsReader reader)
+        {
+            this.ParseBase(reader);            
+        }
+        protected override void WriteObject(AssetsWriter writer)
+        {
+            this.WriteBase(writer);            
         }
 
 

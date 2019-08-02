@@ -13,6 +13,7 @@ namespace QuestomAssets.AssetsChanger
             public const int MonoBehaviourScriptType = 114;
             public const int AudioClipClassID = 83;
             public const int Texture2DClassID = 28;
+            public const int CubeMapClassID = 89;
             public const int SpriteClassID = 213;
             public const int GameObjectClassID = 1;
             public const int TextAssetClassID = 0x31;

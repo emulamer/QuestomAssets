@@ -21,12 +21,13 @@ namespace QuestomAssets.AssetsChanger
         {
             base.ParseBase(reader);
             int startPosition = reader.Position;
+            var id = ObjectInfo.ObjectID;
             Name = reader.ReadString();
             //int readLen = ObjectInfo.DataSize - (reader.Position - startPosition);
             //MeshData = reader.ReadBytes(readLen);
             SubMeshes = reader.ReadArrayOf(r => new Submesh(r));
             BlendShapeData = new BlendShapeData(reader);
-            BindPose = reader.ReadArrayOf(r => reader.ReadSingle());
+            BindPose = reader.ReadArrayOf(r => new Matrix4(r));
             BoneNameHashes = reader.ReadArrayOf(r => r.ReadUInt32());
             RootBoneNameHash = reader.ReadUInt32();
             MeshCompression = reader.ReadByte();
@@ -37,6 +38,10 @@ namespace QuestomAssets.AssetsChanger
             IndexFormat = reader.ReadInt32();
             IndexBuffer = reader.ReadArray();
             reader.AlignTo(4);
+            if (ObjectInfo.ParentFile.Metadata.VersionLte("2018.2"))
+            {
+                Skin = reader.ReadArrayOf(x => new BoneWeights(reader));
+            }
             VertexData = new VertexData(reader);
             CompressedMesh = new CompressedMesh(reader);
             LocalAABB = new AABB(reader);
@@ -45,9 +50,16 @@ namespace QuestomAssets.AssetsChanger
             reader.AlignTo(4);
             BakedTriangleCollisionMesh = reader.ReadArray();
             reader.AlignTo(4);
-            MeshMetrics1 = reader.ReadSingle();
-            MeshMetrics2 = reader.ReadSingle();
-            StreamData = new StreamingInfo(reader);
+            if (ObjectInfo.ParentFile.Metadata.VersionGte("2018.2"))
+            {
+                MeshMetrics1 = reader.ReadSingle();
+                MeshMetrics2 = reader.ReadSingle();
+            }
+            if (ObjectInfo.ParentFile.Metadata.VersionGte("2018.3"))
+            {
+                reader.AlignTo(4);
+                StreamData = new StreamingInfo(reader);
+            }
         }
 
         protected override void WriteObject(AssetsWriter writer)
@@ -57,7 +69,7 @@ namespace QuestomAssets.AssetsChanger
             //writer.Write(MeshData);
             writer.WriteArrayOf(SubMeshes, (o, w) => o.Write(w));
             BlendShapeData.Write(writer);
-            writer.WriteArrayOf(BindPose, (o, w) => w.Write(o));
+            writer.WriteArrayOf(BindPose, (o, w) => o.Write(w));
             writer.WriteArrayOf(BoneNameHashes, (o, w) => w.Write(o));
             writer.Write(RootBoneNameHash);
             writer.Write(MeshCompression);
@@ -68,6 +80,10 @@ namespace QuestomAssets.AssetsChanger
             writer.Write(IndexFormat);
             writer.WriteArray(IndexBuffer);
             writer.AlignTo(4);
+            if (ObjectInfo.ParentFile.Metadata.VersionLte("2018.2"))
+            {
+                writer.WriteArrayOf(Skin, (o, w) => o.Write(w));
+            }
             VertexData.Write(writer);
             CompressedMesh.Write(writer);
             LocalAABB.Write(writer);
@@ -76,16 +92,23 @@ namespace QuestomAssets.AssetsChanger
             writer.AlignTo(4);
             writer.WriteArray(BakedTriangleCollisionMesh);
             writer.AlignTo(4);
-            writer.Write(MeshMetrics1);
-            writer.Write(MeshMetrics2);
-            StreamData.Write(writer);
+            if (ObjectInfo.ParentFile.Metadata.VersionGte("2018.2"))
+            {
+                writer.Write(MeshMetrics1);
+                writer.Write(MeshMetrics2);
+            }
+            if (ObjectInfo.ParentFile.Metadata.VersionGte("2018.3"))
+            {
+                writer.AlignTo(4);
+                StreamData.Write(writer);
+            }
         }
 
         public string Name { get; set; }
         
         public List<Submesh> SubMeshes { get; set; }
         public BlendShapeData BlendShapeData { get; set; }
-        public List<Single> BindPose { get; set; }
+        public List<Matrix4> BindPose { get; set; }
         public List<UInt32> BoneNameHashes { get; set; }
         public UInt32 RootBoneNameHash { get; set; }
         public byte MeshCompression { get; set; }
@@ -104,6 +127,7 @@ namespace QuestomAssets.AssetsChanger
         public Single MeshMetrics2 { get; set; }
         public StreamingInfo StreamData { get; set; }
         
+        public List<BoneWeights> Skin { get; set; }
       //  public byte[] MeshData { get; set; }
 
         [System.ComponentModel.Browsable(false)]

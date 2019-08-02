@@ -11,7 +11,7 @@ namespace QuestomAssets.AssetsChanger
         public AssetsMetadata(AssetsFile owner)
         {
             Types = new List<AssetsType>();
-            ObjectInfos = new List<IObjectInfo<AssetsObject>>();
+            ObjectInfos = new Dictionary<long, IObjectInfo<AssetsObject>>();
             Adds = new List<RawPtr>();
             ExternalFiles = new List<ExternalFile>();
             ParentFile = owner;
@@ -22,7 +22,8 @@ namespace QuestomAssets.AssetsChanger
         public Int32 Platform { get; set; }
         public bool HasTypeTrees { get; set; }
         public List<AssetsType> Types { get; set; }
-        public List<IObjectInfo<AssetsObject>> ObjectInfos { get; set; }
+        public Dictionary<long, IObjectInfo<AssetsObject>> ObjectInfos { get; set; }
+        //public List<IObjectInfo<AssetsObject>> ObjectInfos { get; set; }
         //TODO: figure out what adds are
         public List<RawPtr> Adds { get; set; }
         public List<ExternalFile> ExternalFiles { get; set; }
@@ -50,6 +51,29 @@ namespace QuestomAssets.AssetsChanger
                         return false;
                 }
             }            
+            return true;
+        }
+
+        public bool VersionLte(string checkVer)
+        {
+            if (versionSplit == null)
+                versionSplit = Version.Split('.');
+            var checkSplit = checkVer.Split('.');
+            for (int i = 0; i < versionSplit.Length && i < checkSplit.Length; i++)
+            {
+                int v;
+                int c;
+                if (Int32.TryParse(versionSplit[i], out v) && Int32.TryParse(checkSplit[i], out c))
+                {
+                    if (v > c)
+                        return false;
+                }
+                else
+                {
+                    if (checkSplit[i].CompareTo(versionSplit[i]) > 0)
+                        return false;
+                }
+            }
             return true;
         }
 
@@ -109,7 +133,7 @@ namespace QuestomAssets.AssetsChanger
             foreach (var record in records.OrderBy(x=> PreloadObjectOrder(x)).ThenBy(x=> x.ObjectID))
             {
                 var obj = ObjectInfo<AssetsObject>.Parse(ParentFile, record);
-                ObjectInfos.Add(obj);
+                ObjectInfos.Add(obj.ObjectID, obj);
                 if (ShouldForceLoadObject(record))
                 {
                     var o = obj.Object;
@@ -125,7 +149,7 @@ namespace QuestomAssets.AssetsChanger
             writer.Write(Types.Count());
             Types.ForEach(x => x.Write(writer));
             writer.Write(ObjectInfos.Count());
-            ObjectInfos.ForEach(x => {
+            ObjectInfos.Values.ToList().ForEach(x => {
                 writer.AlignTo(4);
                 x.Write(writer);
                 });

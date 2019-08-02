@@ -84,8 +84,19 @@ namespace QuestomAssets.AssetsChanger
             var trackedObjects = new Dictionary<object, Node>();
             var node = new Node() { Text = "All Assets", TypeName = manager.GetType().Name, Obj = manager, Depth = 0};
             foreach (var f in manager.OpenFiles.OrderBy(x => x.AssetsFilename))
+            {
+                PreloadFileObjects(f);
+            }
+
+            foreach (var f in manager.OpenFiles.OrderBy(x => x.AssetsFilename))
                 node.AddNode(MakeNode(f, 0, trackedObjects));
             return node;
+        }
+        private static void PreloadFileObjects(AssetsFile file)
+        {
+            int y = 0;
+            foreach (var o in file.Metadata.ObjectInfos.Values.Select(x => x.Object))
+            { y++; };
         }
         public static Node MakeNode(AssetsFile file, int depth = 0, Dictionary<object, Node> trackedObjects = null)
         {
@@ -98,7 +109,7 @@ namespace QuestomAssets.AssetsChanger
                 depth += 1;
             }
             var node = new Node() { Text = file.AssetsFilename, TypeName = file.GetType().Name, Obj = file, Depth = depth };
-            foreach (var o in file.Metadata.ObjectInfos.Select(x => x.Object))
+            foreach (var o in file.Metadata.ObjectInfos.Values.Select(x => x.Object))
                 node.AddNode(MakeNode(o, depth, trackedObjects));
             return node;
         }
@@ -207,12 +218,13 @@ namespace QuestomAssets.AssetsChanger
                 return node;
             }
             Type t = o.GetType();
+            
             if (typeof(IObjectInfo<AssetsObject>).IsAssignableFrom(t))
             {
                 o = (o as IObjectInfo<AssetsObject>).Object;
                 t = o.GetType();
             }
-                
+            bool btest = typeof(ISmartPtr<AssetsObject>).IsAssignableFrom(t);
             node = new Node(o, depth);
             if (!t.IsValueType && t != typeof(string) && !(t.IsArray && (t.GetElementType().IsValueType || t.GetElementType() == typeof(string)))
                 && trackedObjects.ContainsKey(o))
@@ -253,7 +265,7 @@ namespace QuestomAssets.AssetsChanger
             {
                 ISmartPtr<AssetsObject> ptr = o as ISmartPtr<AssetsObject>;
 
-                var targetNode = MakeNode(ptr.Target.Object, depth, trackedObjects);
+                var targetNode = MakeNode(ptr, depth, trackedObjects);
                 //targetNode.Text =  targetNode.Text;
                 //targetNode.TypeName = o.GetType().GetGenericArguments()[0].Name;
                 node.AddNode(targetNode);
@@ -306,7 +318,7 @@ namespace QuestomAssets.AssetsChanger
                     var childNode = MakeNode(propValue, depth, trackedObjects);
                     childNode.ParentPropertyName = prop.Name;
                     //stupid place for this
-                    if (typeof(IEnumerable).IsAssignableFrom(propValue?.GetType()))
+                    if (childNode.StubToNode != null && typeof(IEnumerable).IsAssignableFrom(propValue?.GetType()))
                     {
                         foreach ( Node n in childNode.Nodes)
                         {

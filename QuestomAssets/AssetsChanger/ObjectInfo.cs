@@ -189,6 +189,9 @@ namespace QuestomAssets.AssetsChanger
                 case AssetsConstants.ClassID.Texture2DClassID:
                     type = typeof(Texture2DObject);
                     break;
+                case AssetsConstants.ClassID.CubeMapClassID:
+                    type = typeof(CubemapObject);
+                    break;
                 case AssetsConstants.ClassID.GameObjectClassID:
                     type = typeof(GameObject);
                     break;

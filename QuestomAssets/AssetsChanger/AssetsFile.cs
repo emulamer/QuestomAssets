@@ -76,7 +76,7 @@ namespace QuestomAssets.AssetsChanger
             }
             if (!Manager.LazyLoad)
             {
-                foreach (var oi in Metadata.ObjectInfos)
+                foreach (var oi in Metadata.ObjectInfos.Values)
                 {
                     var o = oi.Object;
                 }
@@ -101,7 +101,7 @@ namespace QuestomAssets.AssetsChanger
             return Metadata.ExternalFiles.IndexOf(file) + 1;
         }
 
-        private List<ISmartPtr<AssetsObject>> _knownPointers = new List<ISmartPtr<AssetsObject>>();
+        private HashSet<ISmartPtr<AssetsObject>> _knownPointers = new HashSet<ISmartPtr<AssetsObject>>();
 
         public void AddPtrRef(ISmartPtr<AssetsObject> ptr)
         {
@@ -135,11 +135,9 @@ namespace QuestomAssets.AssetsChanger
                 {
                     return true;
                 }
-                var newObjInfos = Metadata.ObjectInfos.Where(x => x.IsNew).ToList();
-                if (newObjInfos.Any())
-                {
+                if (Metadata.ObjectInfos.Values.Any(x => x.IsNew))
                     return true;
-                }
+                
                 return false;
             }
             set
@@ -209,7 +207,7 @@ namespace QuestomAssets.AssetsChanger
                         using (AssetsWriter writer = new AssetsWriter(objectsMS))
                         {
                             int ctr = 0;
-                            foreach (var obj in Metadata.ObjectInfos)
+                            foreach (var obj in Metadata.ObjectInfos.Values)
                             {
                                 ctr++;
                                 var offset = (int)objectsMS.Position;
@@ -328,10 +326,10 @@ namespace QuestomAssets.AssetsChanger
 
         public long GetNextObjectID()
         {
-            long nextID = Metadata.ObjectInfos.Max(x => x.ObjectID);
+            long nextID = Metadata.ObjectInfos.Keys.Max();
             //if they're all negative, make a MORE negative one
             if (nextID < 0)
-                return Metadata.ObjectInfos.Min(x => x.ObjectID) - 1;
+                return Metadata.ObjectInfos.Keys.Min() - 1;
 
             return nextID + 1;
         }
@@ -347,10 +345,10 @@ namespace QuestomAssets.AssetsChanger
             }
             if (assetsObject.ObjectInfo.ObjectID < 1)
                 throw new ArgumentException("ObjectInfo.ObjectID must be > 0.");
-            if (Metadata.ObjectInfos.Exists(x => x.ObjectID == assetsObject.ObjectInfo.ObjectID))
+            if (Metadata.ObjectInfos.ContainsKey(assetsObject.ObjectInfo.ObjectID))
                 throw new ArgumentException("ObjectInfo.ObjectID already exists in this file.");
 
-            Metadata.ObjectInfos.Add(assetsObject.ObjectInfo);
+            Metadata.ObjectInfos.Add(assetsObject.ObjectInfo.ObjectID, assetsObject.ObjectInfo);
         }
 
         public string GetFilenameForFileID(int fileID)
@@ -382,19 +380,22 @@ namespace QuestomAssets.AssetsChanger
 
         public IEnumerable<IObjectInfo<T>> FindAssets<T>(Func<IObjectInfo<T>, bool> filter) where T: AssetsObject
         {
-            return Metadata.ObjectInfos.Where(x => typeof(IObjectInfo<T>).IsAssignableFrom(x.GetType()) && filter((IObjectInfo<T>)x)).Select(x => (x as IObjectInfo<T>));
+            return Metadata.ObjectInfos.Values.Where(x => typeof(IObjectInfo<T>).IsAssignableFrom(x.GetType()) && filter((IObjectInfo<T>)x)).Select(x => (x as IObjectInfo<T>));
         }
 
         public T GetAssetByID<T>(long objectID) where T : AssetsObject
         {
-            return Metadata.ObjectInfos.Where(x => x is ObjectInfo<T> && x.ObjectID == objectID).Cast<ObjectInfo<T>>().FirstOrDefault()?.Object;
+            if (!Metadata.ObjectInfos.ContainsKey(objectID))
+                return null;
+            var oi = Metadata.ObjectInfos[objectID] as IObjectInfo<T>;
+            return oi?.Object;
         }
 
         public IObjectInfo<T> GetObjectInfo<T>(int fileID, Int64 pathID)
         {
             if (fileID == 0)
             {
-                var objInfo = Metadata.ObjectInfos.FirstOrDefault(x => x.ObjectID == pathID);
+                var objInfo = Metadata.ObjectInfos.ContainsKey(pathID) ? Metadata.ObjectInfos[pathID] : null;
                 if (objInfo == null)
                 {
                     Log.LogErr($"Object info could not be found for path id {pathID} in file {AssetsFilename}!!!!");
@@ -449,14 +450,17 @@ namespace QuestomAssets.AssetsChanger
         {
             Log.LogMsg($"Deleting object of type {assetsObject.GetType().Name}");
             //TODO: implement dispose on these or something?
-            var obj = Metadata.ObjectInfos.FirstOrDefault(x => x == assetsObject.ObjectInfo);
-            if (obj == null)
+
+            IObjectInfo<AssetsObject> oi = null;
+            if (Metadata.ObjectInfos.ContainsKey(assetsObject.ObjectInfo.ObjectID))
+                oi = Metadata.ObjectInfos[assetsObject.ObjectInfo.ObjectID];
+            if (oi == null)
             {
                 Log.LogErr("Tried to delete an object that wasn't part of this file");
                 return;
             }
             
-            Metadata.ObjectInfos.Remove(assetsObject.ObjectInfo);
+            Metadata.ObjectInfos.Remove(assetsObject.ObjectInfo.ObjectID);
             //TODO: IDs need to be shored up at all?  reflection loop through all objects looking for refs?
 
             CleanupPtrs(assetsObject.ObjectInfo);
