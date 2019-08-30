@@ -66,11 +66,13 @@ namespace QuestomAssets
                     "globalgamemanagers",
                     "globalgamemanagers.assets",
                     "sharedassets1.assets",
+                    "sharedassets0.assets",
                     "231368cb9c1d5dd43988f2a85226e7d7",
-                    "17c37b4ad5b2b5046be37e2524b67216",
-                    "92d85d84be1369e4ab3b35188d1ea8b6",
-                    "b79ca5d157a731a45a945697ad0820c8",
-                    "8e37fa14e51257645b7a2df8aecb19e1",
+                    // <= 1.2.0
+                    //"17c37b4ad5b2b5046be37e2524b67216",
+                    //"92d85d84be1369e4ab3b35188d1ea8b6",
+                    //"b79ca5d157a731a45a945697ad0820c8",
+                    //"8e37fa14e51257645b7a2df8aecb19e1",
                     "sharedassets11.assets",
                     "sharedassets18.assets",
                     "sharedassets20.assets"
@@ -308,12 +310,12 @@ namespace QuestomAssets
             return _songsAssetsFileCache;
         }
 
-        private AlwaysOwnedContentModel _aoModelCache;
-        internal AlwaysOwnedContentModel GetAlwaysOwnedModel()
+        private AlwaysOwnedContent _aoModelCache;
+        internal AlwaysOwnedContent GetAlwaysOwnedModel()
         {
             if (_aoModelCache == null)
             {
-                var aoModel = _manager.MassFirstOrDefaultAsset<AlwaysOwnedContentModel>(x => x.Object.Name == "DefaultAlwaysOwnedContentModel", false);
+                var aoModel = _manager.MassFirstOrDefaultAsset<AlwaysOwnedContent>(x => x.Object.Name == "DefaultAlwaysOwnedContent", false);
                 if (aoModel == null)
                     throw new Exception("Unable to find AlwaysOwnedContentModel!");
                 _aoModelCache = aoModel.Object;
@@ -979,11 +981,20 @@ namespace QuestomAssets
                         }
                         config.Playlists.Add(packModel);
                     }
-                    var cm = GetColorManager();
-                    var rc = cm.ColorB.Object.Color; 
-                    var lc = cm.ColorA.Object.Color;
-                    config.RightColor = new BeatSaberColor() { A = (byte)(255*rc.A), R = (byte)(255*rc.R), G = (byte)(rc.G*255), B = (byte)(rc.B*255) };
-                    config.LeftColor = new BeatSaberColor() { A = (byte)(255 * lc.A), R = (byte)(255 * lc.R), G = (byte)(lc.G * 255), B = (byte)(lc.B * 255) };
+                    try
+                    {
+                        var cm = GetColorManager();
+                        if (cm != null)
+                        {
+                            var rc = cm.ColorB.Object.Color;
+                            var lc = cm.ColorA.Object.Color;
+                            config.RightColor = new BeatSaberColor() { A = (byte)(255 * rc.A), R = (byte)(255 * rc.R), G = (byte)(rc.G * 255), B = (byte)(rc.B * 255) };
+                            config.LeftColor = new BeatSaberColor() { A = (byte)(255 * lc.A), R = (byte)(255 * lc.R), G = (byte)(lc.G * 255), B = (byte)(lc.B * 255) };
+                        }
+                    } catch (Exception ex)
+                    {
+                        Log.LogMsg("Exception getting color manager, probably it's version 1.3");
+                    }
                     ModManager.Mods.ForEach(x => config.Mods.Add(x));
                     return config;
                 }
@@ -1184,9 +1195,9 @@ namespace QuestomAssets
 
         private ColorManager GetColorManager()
         {
-            var colorManager = _manager.MassFirstOrDefaultAsset<ColorManager>(x => true)?.Object;
-            if (colorManager == null)
-                throw new Exception("Unable to find the color manager asset!");
+            var colorManager = _manager.MassFirstOrDefaultAsset<ColorManager>(x => true, false)?.Object;
+           // if (colorManager == null)
+            //    throw new Exception("Unable to find the color manager asset!");
             return colorManager;
         }
 

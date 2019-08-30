@@ -84,7 +84,7 @@ namespace QuestomAssets.BeatSaber
             scriptHashToTypes.Add("BeatmapLevelSO", typeof(BeatmapLevelDataObject));
             scriptHashToTypes.Add("SimpleColorSO", typeof(SimpleColorSO));
             scriptHashToTypes.Add("ColorManager", typeof(ColorManager));
-            scriptHashToTypes.Add("AlwaysOwnedContentModelSO", typeof(AlwaysOwnedContentModel));
+            scriptHashToTypes.Add("AlwaysOwnedContentSO", typeof(AlwaysOwnedContent));
             scriptHashToTypes.Add("SceneInfo", typeof(EnvironmentSceneInfoObject));
             scriptHashToTypes.Add("BeatmapCharacteristicSO", typeof(BeatmapCharacteristicObject));
             scriptHashToTypes.Add("BeatmapCharacteristicCollectionSO", typeof(BeatmapCharacteristicCollectionObject));
@@ -94,6 +94,7 @@ namespace QuestomAssets.BeatSaber
         public static List<string> KnownLevelPackIDs { get; } = new List<string>() {
             "OstVol1",
             "OstVol2",
+            "OstVol3",
             "Extras",
             "Monstercat",
             "ImagineDragons"

@@ -5,13 +5,13 @@ using System.Text;
 
 namespace QuestomAssets.BeatSaber
 {
-    public sealed class AlwaysOwnedContentModel : MonoBehaviourObject, INeedAssetsMetadata
+    public sealed class AlwaysOwnedContent : MonoBehaviourObject, INeedAssetsMetadata
     {
 
-        public AlwaysOwnedContentModel(AssetsFile assetsFile) : base(assetsFile, assetsFile.Manager.GetScriptObject("AlwaysOwnedContentModelSO"))
+        public AlwaysOwnedContent(AssetsFile assetsFile) : base(assetsFile, assetsFile.Manager.GetScriptObject("AlwaysOwnedContentSO"))
         { }
 
-        public AlwaysOwnedContentModel(IObjectInfo<AssetsObject> objectInfo, AssetsReader reader) : base(objectInfo)
+        public AlwaysOwnedContent(IObjectInfo<AssetsObject> objectInfo, AssetsReader reader) : base(objectInfo)
         {
             Parse(reader);
         }

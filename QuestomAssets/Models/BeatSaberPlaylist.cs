@@ -90,7 +90,7 @@ namespace QuestomAssets.Models
         {
             get
             {
-                return LevelPackObject != null && LevelPackObject.CoverImage.Target.IsLoaded;
+                return LevelPackObject != null && (LevelPackObject?.CoverImage?.Target?.IsLoaded??false);
             }
         }
         private object _coverLock = new object();
