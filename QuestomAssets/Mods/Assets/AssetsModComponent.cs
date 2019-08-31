@@ -85,6 +85,10 @@ namespace QuestomAssets.Mods.Assets
                         if (UninstallAction.PreloadFiles != null)
                             UninstallAction.PreloadFiles.ForEach(x => backupQae.Manager.GetAssetsFile(x));
                     }
+                    using (new LogTiming("preloading asset files that are loaded in the main engine"))
+                    {
+                        context.GetEngine().Manager.OpenFiles.ForEach(x => backupQae.Manager.GetAssetsFile(x.AssetsFilename));
+                    }
                     context.BackupEngine = backupQae;
                     foreach (var action in UninstallAction.Actions.OrderBy(x => x.StepNumber))
                     {

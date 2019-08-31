@@ -86,6 +86,7 @@ namespace QuestomAssets.BeatSaber
             scriptHashToTypes.Add("ColorManager", typeof(ColorManager));
             scriptHashToTypes.Add("AlwaysOwnedContentSO", typeof(AlwaysOwnedContent));
             scriptHashToTypes.Add("SceneInfo", typeof(EnvironmentSceneInfoObject));
+            scriptHashToTypes.Add("EnvironmentInfoSO", typeof(EnvironmentInfoObject));
             scriptHashToTypes.Add("BeatmapCharacteristicSO", typeof(BeatmapCharacteristicObject));
             scriptHashToTypes.Add("BeatmapCharacteristicCollectionSO", typeof(BeatmapCharacteristicCollectionObject));
             return scriptHashToTypes;

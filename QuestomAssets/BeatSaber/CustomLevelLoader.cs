@@ -176,7 +176,7 @@ namespace QuestomAssets.BeatSaber
                         throw new Exception("Unable to find the default environment!");
                 }
 
-                beatmapLevel.EnvironmentSceneInfo = environment.PtrFrom(beatmapLevel);
+                beatmapLevel.EnvironmentInfo = environment.PtrFrom(beatmapLevel);
                 _assetsFile.AddObject(beatmapLevel, true);
                 return beatmapLevel;
             }
@@ -186,13 +186,13 @@ namespace QuestomAssets.BeatSaber
                 return null;
             }
         }
-        private Dictionary<string, EnvironmentSceneInfoObject> _environmentCache = new Dictionary<string, EnvironmentSceneInfoObject>();
-        private EnvironmentSceneInfoObject GetEnvironment(string name)
+        private Dictionary<string, EnvironmentInfoObject> _environmentCache = new Dictionary<string, EnvironmentInfoObject>();
+        private EnvironmentInfoObject GetEnvironment(string name)
         {
             if (_environmentCache.ContainsKey(name))
                 return _environmentCache[name];
 
-            var environment = _assetsFile.Manager.MassFirstOrDefaultAsset<EnvironmentSceneInfoObject>(x => x.Object.Name == $"{name}SceneInfo")?.Object;
+            var environment = _assetsFile.Manager.MassFirstOrDefaultAsset<EnvironmentInfoObject>(x => x.Object.SerializedName == $"{name}Environment" || x.Object.SerializedName == $"{name}")?.Object;
             if (environment != null)
                 _environmentCache.Add(name, environment);
 

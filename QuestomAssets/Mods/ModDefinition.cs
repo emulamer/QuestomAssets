@@ -30,6 +30,7 @@ namespace QuestomAssets.Mods
             List<AssetOp> ops = new List<AssetOp>();
             using (new LogTiming($"Installing mod ID {ID}"))
             {
+                
                 if (Components == null || Components.Count < 1)
                 {
                     Log.LogErr($"The mod with ID {ID} has no components to install.");
@@ -48,9 +49,58 @@ namespace QuestomAssets.Mods
                     throw new Exception($"Mod ID {ID} failed to install.", ex);
                 }
             }
-            ops.Add(new ModStatusOp(this, ModStatusType.Installed));
+            List<AssetOp> checkList = new List<AssetOp>();
+            bool failures = false;
+            bool successes = false;
+            checkList.AddRange(ops);
+            EventHandler<AssetOp> ev = null;
+            ev = new EventHandler<AssetOp>((e, a) =>
+            {
+                bool done = false;
+                if (a.Status == OpStatus.Complete)
+                {
+                    successes = true;
+                    done = true;
+                }
+                if (a.Status == OpStatus.Failed)
+                {
+                    failures = true;
+                    done = true;
+                }
+                if (done)
+                {
+                    a.OpFinished -= ev;
+                    checkList.Remove(a);
+                }
+
+                if (checkList.Count < 1)
+                {
+                    if (!failures)
+                    {
+                        context.GetEngine().OpManager.QueueOp(new ModStatusOp(this, ModStatusType.Installed));
+                    } else
+                    {
+                        if (successes)
+                        {
+                            Log.LogErr("Mod install had failures, but some ops succeeded.  Trying to uninstall whatever components will uninstall.");
+                        }
+                        try
+                        {
+                            context.GetEngine().ModManager.GetUninstallModOps(this).ForEach(x => context.GetEngine().OpManager.QueueOp(x));
+                        } catch (Exception ex)
+                        {
+                            Log.LogErr("Exception trying to uninstall failed mod components.  Not entirely unexpected since it failed to install to begin with.");
+                        }
+                        
+                        context.GetEngine().OpManager.QueueOp(new ModStatusOp(this, ModStatusType.NotInstalled));
+                    }
+                }
+            });
+            checkList.ForEach(x => x.OpFinished += ev);
+            
             return ops;
         }
+
 
         public List<AssetOp> GetUninstallOps(ModContext context)
         {
@@ -72,7 +122,8 @@ namespace QuestomAssets.Mods
                 catch (Exception ex)
                 {
                     Log.LogErr($"Mod ID {ID} threw an exception while uninstalling.", ex);
-                    throw new Exception($"Mod ID {ID} failed to uninstall.", ex);
+                    //TODO: decide if this is better than letting it be screwed up or not.
+                    //throw new Exception($"Mod ID {ID} failed to uninstall.", ex);
                 }
             }
             ops.Add(new ModStatusOp(this, ModStatusType.NotInstalled));

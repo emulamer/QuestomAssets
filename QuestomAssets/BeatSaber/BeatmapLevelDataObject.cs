@@ -109,8 +109,11 @@ namespace QuestomAssets.BeatSaber
         [JsonIgnore]
         public ISmartPtr<Texture2DObject> CoverImageTexture2D { get; set; }
 
+        //[JsonIgnore]
+        //public ISmartPtr<AssetsObject> EnvironmentSceneInfo { get; set; }
+
         [JsonIgnore]
-        public ISmartPtr<AssetsObject> EnvironmentSceneInfo { get; set; }
+        public ISmartPtr<AssetsObject> EnvironmentInfo { get; set; }
 
         [JsonIgnore]
         public ISmartPtr<AudioClipObject> AudioClip { get; set; }
@@ -132,7 +135,7 @@ namespace QuestomAssets.BeatSaber
             writer.Write(PreviewStartTime);
             writer.Write(PreviewDuration);
             CoverImageTexture2D.Write(writer);
-            EnvironmentSceneInfo.Write(writer);
+            EnvironmentInfo.Write(writer);
             writer.Write(DifficultyBeatmapSets.Count);
             foreach (var bms in DifficultyBeatmapSets)
             {
@@ -156,7 +159,7 @@ namespace QuestomAssets.BeatSaber
             PreviewStartTime = reader.ReadSingle();
             PreviewDuration = reader.ReadSingle();
             CoverImageTexture2D = SmartPtr<Texture2DObject>.Read(ObjectInfo.ParentFile, this, reader);
-            EnvironmentSceneInfo = SmartPtr<AssetsObject>.Read(ObjectInfo.ParentFile, this, reader);
+            EnvironmentInfo = SmartPtr<AssetsObject>.Read(ObjectInfo.ParentFile, this, reader);
             DifficultyBeatmapSets = reader.ReadArrayOf(x => new DifficultyBeatmapSet(ObjectInfo.ParentFile, this, x));
         }
     }
