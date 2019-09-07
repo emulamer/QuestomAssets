@@ -332,7 +332,7 @@ namespace QuestomAssets.Tests
                     };
                     bool calledStatusChangeStarted = false;
                     bool calledStatusChangeComplete = false;
-                    var newSongOp = new AddNewSongToPlaylistOp(song, "someplaylist0");
+                    var newSongOp = new AddNewSongToPlaylistOp(song, "someplaylist0", false);
                     qae.OpManager.OpStatusChanged += (sender, op) =>
                      {
                          if (op.Status == OpStatus.Started)

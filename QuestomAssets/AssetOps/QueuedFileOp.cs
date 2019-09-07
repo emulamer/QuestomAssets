@@ -55,6 +55,9 @@ namespace QuestomAssets.AssetOps
                     case QueuedFileOperationProviderType.ModLibs:
                         provider = config.ModLibsFileProvider;
                         break;
+                    case QueuedFileOperationProviderType.FileSystemRoot:
+                        provider = new FolderFileProvider("/", false);
+                        break;
                     default:
                         throw new NotImplementedException($"Provider type {ProviderType} is not implemented in QueuedFileOp.");
                 }
@@ -118,6 +121,7 @@ namespace QuestomAssets.AssetOps
     public enum QueuedFileOperationProviderType
     {
         Root,
-        ModLibs
+        ModLibs,
+        FileSystemRoot
     }
 }

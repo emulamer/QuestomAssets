@@ -19,7 +19,8 @@ namespace QuestomAssets.Mods
 
         private static Dictionary<ModComponentType, Type> _classMap = new Dictionary<ModComponentType, Type>()
         { {ModComponentType.HookMod, typeof(HookModComponent)},
-            {ModComponentType.AssetsMod, typeof(Assets.AssetsModComponent) }
+            {ModComponentType.AssetsMod, typeof(Assets.AssetsModComponent) },
+            {ModComponentType.FileCopyMod, typeof(FileCopyModComponent) }
             };
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)

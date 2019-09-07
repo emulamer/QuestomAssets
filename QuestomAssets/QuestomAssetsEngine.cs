@@ -928,7 +928,7 @@ namespace QuestomAssets
                 lt = new LogTiming("make new song ops");
                 //find any new songs, add an op to add them
                 var newSongs = allConfigSongs.Where(x => !MusicCache.SongCache.ContainsKey(x.SongID)).ToList();
-                newSongs.ForEach(x => ops.Add(new AddNewSongToPlaylistOp(x.Song, x.PlaylistID)));
+                newSongs.ForEach(x => ops.Add(new AddNewSongToPlaylistOp(x.Song, x.PlaylistID, false)));
                 lt.Dispose();
                 Log.LogMsg("Adding new songs to playlists: " + string.Join(", ", newSongs.Select(x => x.SongID + " -> " + x.PlaylistID)));
 

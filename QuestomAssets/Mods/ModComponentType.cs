@@ -10,6 +10,7 @@ namespace QuestomAssets.Mods
     public enum ModComponentType
     {
         HookMod,
-        AssetsMod
+        AssetsMod,
+        FileCopyMod
     }
 }

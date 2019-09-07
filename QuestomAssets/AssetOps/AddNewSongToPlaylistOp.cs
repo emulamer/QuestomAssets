@@ -13,14 +13,17 @@ namespace QuestomAssets.AssetOps
     {
         public override bool IsWriteOp => true;
 
-        public AddNewSongToPlaylistOp(BeatSaberSong song, string playlistID)
+        public AddNewSongToPlaylistOp(BeatSaberSong song, string playlistID, bool overwriteIfExists)
         {
             Song = song;
             PlaylistID = playlistID;
+            OverwriteIfExists = overwriteIfExists;
         }
 
         public string PlaylistID { get; private set; }
         public BeatSaberSong Song { get; private set; }
+
+        public bool OverwriteIfExists { get; private set; }
         internal override void PerformOp(OpContext context)
         {
             if (string.IsNullOrEmpty(Song.SongID))
@@ -29,8 +32,17 @@ namespace QuestomAssets.AssetOps
                 throw new InvalidOperationException("CustomSongPath must be set on the song!");
             if (!context.Cache.PlaylistCache.ContainsKey(PlaylistID))
                 throw new KeyNotFoundException($"PlaylistID {PlaylistID} not found in the cache!");
-            if (context.Cache.SongCache.ContainsKey(Song.SongID))
+            bool exists = context.Cache.SongCache.ContainsKey(Song.SongID);
+            if (exists && !OverwriteIfExists)
                 throw new AddSongException( AddSongFailType.SongExists, $"SongID {Song.SongID} already exists!");
+
+            if (exists && OverwriteIfExists)
+            {
+                OpCommon.DeleteSong(context, Song.SongID);
+            }
+            
+            if (context.Cache.SongCache.ContainsKey(Song.SongID))
+                throw new AddSongException(AddSongFailType.SongExists, $"SongID {Song.SongID} already exists, even though it should have been deleted to be replaced!");
 
             BeatmapLevelDataObject level = null;
             try
