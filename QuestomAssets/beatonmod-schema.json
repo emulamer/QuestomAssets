@@ -8,29 +8,34 @@
         "id": {
             "title": "ID",
             "description": "The ID of the mod",
-            "type": "string"
+            "type": "string",
+            "pattern": "^[0-9A-Za-z-_]+$"
         },
         "name": {
             "title": "Name",
             "description": "The name of the mod",
-            "type": "string"
+            "type": "string",
+            "pattern": "^[^\n\r\t]+$"
         },
         "porter": {
             "title": "Porter",
             "description": "The name of the person who ported the mod to Quest",
-            "type": "string"
+            "type": "string",
+            "pattern": "^[^\n\r\t]+$"
         },
         "author": {
             "title": "Author",
             "description": "The author of the mod",
-            "type": "string"
+            "type": "string",
+            "pattern": "^[^\n\r\t]+$"
         },
         "description": {
             "title": "Description",
             "description": "The description of the mod. Each line is separated by a newline",
             "type": "array",
             "items": {
-                "type": "string"
+                "type": "string",
+                "pattern": "^[^\n\r]*$"
             }
         },
         "category": {
@@ -47,24 +52,22 @@
             "title": "Beat Saber Version",
             "description": "The Beat Saber Version for the mod",
             "type": "string",
-            "enum": [
-                "1.1.0",
-                "1.0.2",
-                "1.0.1",
-                "1.0.0"
-            ]
+            "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+([p-][0-9A-Za-z-.]+)?$"
         },
         "version": {
             "title": "Version",
             "description": "The version of the mod",
-            "type": "string"
+            "type": "string",
+            "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z-.]+)?$"
         },
         "links": {
             "description": "Links of the mod",
             "type": "object",
             "properties": {
                 "project-home": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "uri",
+                    "pattern": "^https?:\\/\\/.+$"
                 }
             },
             "required": [
