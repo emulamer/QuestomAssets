@@ -14,9 +14,11 @@ namespace QuestomAssets.AssetsChanger
         public AssetsManager Manager { get; private set; }
         public string AssetsFilename { get; private set; }
         public string AssetsRootPath { get; private set; }
-        public IAssetsFileProvider FileProvider { get; private set; }
+        public IFileProvider FileProvider { get; private set; }
+        public bool FileWasSplit { get; private set; }
+        public Stream BaseStream { get; private set; }
 
-        public AssetsFile(AssetsManager manager, IAssetsFileProvider fileProvider, string assetsRootPath, string assetsFileName, bool loadData = true)
+        public AssetsFile(AssetsManager manager, IFileProvider fileProvider, string assetsRootPath, string assetsFileName, bool loadData = true)
         {
             Manager = manager;
             FileProvider = fileProvider;
@@ -40,9 +42,11 @@ namespace QuestomAssets.AssetsChanger
 
         private void OpenBaseStream()
         {
-            var assetsFileStream = FileProvider.ReadCombinedAssets(AssetsRootPath + AssetsFilename);
+            bool wasCombined;
+            var assetsFileStream = FileProvider.ReadCombinedAssets(AssetsRootPath.CombineFwdSlash(AssetsFilename), out wasCombined);
             if (!assetsFileStream.CanSeek)
                 throw new NotSupportedException("Stream must support seeking!");
+            FileWasSplit = wasCombined;
             BaseStream = assetsFileStream;
         }
 
@@ -140,7 +144,7 @@ namespace QuestomAssets.AssetsChanger
             }
             set
             {
-                _hasChanges = true;
+                _hasChanges = value;
             }
         }
 
@@ -154,95 +158,171 @@ namespace QuestomAssets.AssetsChanger
                 .FirstOrDefault();
             if (toFileType == null)
             {
-                throw new NotSupportedException($"Target file does not seem to have a type that matches the source file's type.  Adding in other type references isn't supported yet.");
+                //attempt to add a type reference.  Not sure the implications of this, e.g. circular references or something
+                Log.LogMsg($"Attempting to add type to file {AssetsFilename} likely as part of a clone...");
+                toFileType = type.CloneWithoutTypeTree();
+                this.Metadata.Types.Add(toFileType);
             }
             return Metadata.Types.IndexOf(toFileType);
         }
 
-        public Stream BaseStream { get; private set; }
+        //not enough ram on the quest... have to do it to the filesystem.  this should probably be an option to use memory
+        //      assuming this lib keeps working on pc
+        private bool UseFileCache = true;
+        private List<string> tempFiles = new List<string>();
 
-        public void Write()
+        private Stream GetTempStream()
         {
-            MemoryStream objectsMS = new MemoryStream();
-            MemoryStream metaMS = new MemoryStream();
-            using (AssetsWriter writer = new AssetsWriter(objectsMS))
+            if (UseFileCache)
             {
-                int ctr = 0;
-                foreach (var obj in Metadata.ObjectInfos)
-                {
-                    ctr++;
-                    obj.DataOffset = (int)objectsMS.Position;
-                    obj.GetObjectForWrite().Write(writer);
-                    writer.Flush();
-                    var origSize = obj.DataSize;
-                    obj.DataSize = (int)(objectsMS.Position - obj.DataOffset);
-                    writer.AlignTo(8);
-                }
-            }
-            using (AssetsWriter writer = new AssetsWriter(metaMS))
-            {
-                Metadata.Write(writer);
-            }
-
-            Header.FileSize = Header.HeaderSize + (int)objectsMS.Length + (int)metaMS.Length;
-            Header.ObjectDataOffset = Header.HeaderSize + (int)metaMS.Length;
-
-            int diff;
-            int alignment = 16; //or 32, I don't know which
-            //data has to be at least 4096 inward from the start of the file
-            if (Header.ObjectDataOffset < 4096)
-            {
-                diff = 4096 - Header.ObjectDataOffset;
+                string tempFile = Path.GetTempFileName();
+                tempFiles.Add(tempFile);
+                return File.Open(tempFile, FileMode.Create, FileAccess.ReadWrite);
             }
             else
             {
-                diff = alignment - (Header.ObjectDataOffset % alignment);
-                if (diff == alignment)
-                    diff = 0;
+                return new MemoryStream();
             }
-
-            if (diff > 0)
+        }
+        private void CleanupTempFiles()
+        {
+            foreach (string temp in tempFiles.ToList())
             {
-                Header.ObjectDataOffset += diff;
-                Header.FileSize += diff;
+                try
+                {
+                    File.Delete(temp);
+                    tempFiles.Remove(temp);
+                }
+                catch (Exception ex)
+                { Log.LogErr("Unable to delete temp file created during asset save!", ex); }
             }
+        }
 
-            Header.MetadataSize = (int)metaMS.Length;
-            objectsMS.Seek(0, SeekOrigin.Begin);
-            metaMS.Seek(0, SeekOrigin.Begin);
+        public void Write()
+        {
             try
             {
-                CloseBaseStream();
-
-                FileProvider.DeleteFiles(AssetsRootPath + AssetsFilename + ".split*");
-
-                using (MemoryStream outputStream = new MemoryStream())
+                using (Stream objectsMS = GetTempStream())
                 {
-                    using (AssetsWriter writer = new AssetsWriter(outputStream))
+                    using (Stream metaMS = GetTempStream())
                     {
-                        Header.Write(writer);
+                        using (AssetsWriter writer = new AssetsWriter(objectsMS))
+                        {
+                            int ctr = 0;
+                            foreach (var obj in Metadata.ObjectInfos)
+                            {
+                                ctr++;
+                                var offset = (int)objectsMS.Position;
+                                obj.GetObjectForWrite().Write(writer);
+                                writer.Flush();
+                                obj.DataOffset = offset;
+                                var origSize = obj.DataSize;
+                                obj.DataSize = (int)(objectsMS.Position - obj.DataOffset);
+                                writer.AlignTo(8);
+                            }
+                        }
+                        using (AssetsWriter writer = new AssetsWriter(metaMS))
+                        {
+                            Metadata.Write(writer);
+                        }
+
+                        Header.FileSize = Header.HeaderSize + (int)objectsMS.Length + (int)metaMS.Length;
+                        Header.ObjectDataOffset = Header.HeaderSize + (int)metaMS.Length;
+
+                        int diff;
+                        int alignment = 16; //or 32, I don't know which
+                                            //data has to be at least 4096 inward from the start of the file
+                        if (Header.ObjectDataOffset < 4096)
+                        {
+                            diff = 4096 - Header.ObjectDataOffset;
+                        }
+                        else
+                        {
+                            diff = alignment - (Header.ObjectDataOffset % alignment);
+                            if (diff == alignment)
+                                diff = 0;
+                        }
+
+                        if (diff > 0)
+                        {
+                            Header.ObjectDataOffset += diff;
+                            Header.FileSize += diff;
+                        }
+
+                        Header.MetadataSize = (int)metaMS.Length;
+                        objectsMS.Seek(0, SeekOrigin.Begin);
+                        metaMS.Seek(0, SeekOrigin.Begin);
+                        lock (this)
+                        {
+                            try
+                            {
+                                CloseBaseStream();
+
+
+                                FileProvider.DeleteFiles(AssetsRootPath.CombineFwdSlash(AssetsFilename + ".split*"));
+
+                                using (Stream outputStream = GetTempStream())
+                                {
+                                    using (AssetsWriter writer = new AssetsWriter(outputStream))
+                                    {
+                                        Header.Write(writer);
+                                    }
+                                    metaMS.CopyTo(outputStream);
+
+
+                                    if (diff > 0)
+                                    {
+                                        outputStream.Write(new byte[diff], 0, diff);
+                                    }
+
+                                    objectsMS.CopyTo(outputStream);
+
+                                    outputStream.Seek(0, SeekOrigin.Begin);
+                                    if (FileWasSplit)
+                                    {
+                                        int splitCtr = 0;
+                                        byte[] buffer = new byte[1024 * 1024];
+                                        do
+                                        {
+                                            Stream outFile = FileProvider.GetWriteStream($"{AssetsRootPath.CombineFwdSlash(AssetsFilename)}.split{splitCtr}");
+                                            var readLen = (int)(outputStream.Length - outputStream.Position);
+                                            if (readLen < buffer.Length)
+                                            {
+                                                outputStream.Read(buffer, 0, readLen);
+                                                outFile.Write(buffer, 0, readLen);
+                                                break;
+                                            }
+                                            outputStream.Read(buffer, 0, buffer.Length);
+                                            outFile.Write(buffer, 0, buffer.Length);
+                                            splitCtr++;
+                                        } while (true);
+
+                                    }
+                                    else
+                                    {
+                                        Stream writeStream = FileProvider.GetWriteStream(AssetsRootPath.CombineFwdSlash(AssetsFilename));
+                                        outputStream.CopyTo(writeStream);
+                                    }
+                                }
+                                FileProvider.Save();
+                                _hasChanges = false;
+                                foreach (var ptr in _knownPointers.Where(x => x.Owner.ObjectInfo.ParentFile == this && x.IsNew))
+                                {
+                                    ptr.IsNew = false;
+                                }
+                                OpenBaseStream();
+                            }
+                            catch (Exception ex)
+                            {
+                                throw new Exception("CRITICAL: writing and reopening the file failed, the file is possibly destroyed and this object is in an unknown state.", ex);
+                            }
+                        }
                     }
-                    metaMS.CopyTo(outputStream);
-
-
-                    if (diff > 0)
-                    {
-                        outputStream.Write(new byte[diff], 0, diff);
-                    }
-
-                    objectsMS.CopyTo(outputStream);
-
-                    outputStream.Seek(0, SeekOrigin.Begin);
-                    FileProvider.Write(AssetsRootPath + AssetsFilename, outputStream.ToArray(), true, true);
                 }
-
-                _hasChanges = false;
-                FileProvider.Save();
-                OpenBaseStream();                
             }
-            catch (Exception ex)
+            finally
             {
-                throw new Exception("CRITICAL: writing and reopening the file failed, the file is possibly destroyed and this object is in an unknown state.", ex);
+                CleanupTempFiles();
             }
         }
 
@@ -285,9 +365,13 @@ namespace QuestomAssets.AssetsChanger
 
         public int GetFileIDForFilename(string filename)
         {
-            var file = Metadata.ExternalFiles.First(x => x.FileName == filename);
+            var file = Metadata.ExternalFiles.FirstOrDefault(x => x.FileName == filename);
             if (file == null)
-                throw new Exception($"Filename {filename} does not exist in the file list!");
+            {
+                Log.LogMsg($"External file {filename} is not already references from this file {AssetsFilename}.  Adding reference with what is hopefully the correct values.");
+                file = new ExternalFile() { AssetName = "", FileName = filename, ID = Guid.Empty, Type = 0 };
+                Metadata.ExternalFiles.Add(file);
+            }
             return Metadata.ExternalFiles.IndexOf(file)+1;
         }
 
@@ -363,8 +447,9 @@ namespace QuestomAssets.AssetsChanger
 
         public void DeleteObject(AssetsObject assetsObject)
         {
+            Log.LogMsg($"Deleting object of type {assetsObject.GetType().Name}");
             //TODO: implement dispose on these or something?
-            var obj = Metadata.ObjectInfos.FirstOrDefault(x => x.Object == assetsObject);
+            var obj = Metadata.ObjectInfos.FirstOrDefault(x => x == assetsObject.ObjectInfo);
             if (obj == null)
             {
                 Log.LogErr("Tried to delete an object that wasn't part of this file");

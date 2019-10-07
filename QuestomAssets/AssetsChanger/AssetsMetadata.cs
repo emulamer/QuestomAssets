@@ -28,6 +28,31 @@ namespace QuestomAssets.AssetsChanger
         public List<ExternalFile> ExternalFiles { get; set; }
         public AssetsFile ParentFile { get; set; }
 
+        private string[] versionSplit;
+        //this is crap, but should work for unity probably, or I can fix it later
+        public bool VersionGte(string checkVer)
+        {
+            if (versionSplit == null)
+                versionSplit = Version.Split('.');
+            var checkSplit = checkVer.Split('.');
+            for (int i = 0; i < versionSplit.Length && i < checkSplit.Length; i++)
+            {
+                int v;
+                int c;
+                if (Int32.TryParse(versionSplit[i], out v) && Int32.TryParse(checkSplit[i], out c))
+                {
+                    if (v < c)
+                        return false;
+                }
+                else
+                {
+                    if (checkSplit[i].CompareTo(versionSplit[i]) < 0)
+                        return false;
+                }
+            }            
+            return true;
+        }
+
         private int PreloadObjectOrder(ObjectRecord record)
         {
             switch (Types[record.TypeIndex].ClassID)

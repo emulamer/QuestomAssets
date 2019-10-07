@@ -5,20 +5,20 @@ using System.Text;
 
 namespace QuestomAssets.BeatSaber
 {
-    public class AlwaysOwnedContentModel : MonoBehaviourObject, INeedAssetsMetadata
+    public sealed class AlwaysOwnedContent : MonoBehaviourObject, INeedAssetsMetadata
     {
 
-        public AlwaysOwnedContentModel(AssetsFile assetsFile) : base(assetsFile, assetsFile.Manager.GetScriptObject("AlwaysOwnedContentModelSO"))
+        public AlwaysOwnedContent(AssetsFile assetsFile) : base(assetsFile, assetsFile.Manager.GetScriptObject("AlwaysOwnedContentSO"))
         { }
 
-        public AlwaysOwnedContentModel(IObjectInfo<AssetsObject> objectInfo, AssetsReader reader) : base(objectInfo)
+        public AlwaysOwnedContent(IObjectInfo<AssetsObject> objectInfo, AssetsReader reader) : base(objectInfo)
         {
             Parse(reader);
         }
 
-        protected override void Parse(AssetsReader reader)
+        public override void Parse(AssetsReader reader)
         {
-            base.Parse(reader);
+            base.ParseBase(reader);
             AlwaysOwnedPacks = reader.ReadArrayOf<ISmartPtr<BeatmapLevelPackObject>>(x => SmartPtr<BeatmapLevelPackObject>.Read(ObjectInfo.ParentFile, this, reader));
             AlwaysOwnedBeatmapLevels = reader.ReadArrayOf<ISmartPtr<BeatmapLevelDataObject>>(x => SmartPtr<BeatmapLevelDataObject>.Read(ObjectInfo.ParentFile, this, reader));
         }
@@ -33,5 +33,19 @@ namespace QuestomAssets.BeatSaber
         public List<ISmartPtr<BeatmapLevelPackObject>> AlwaysOwnedPacks { get; set; } = new List<ISmartPtr<BeatmapLevelPackObject>>();
 
         public List<ISmartPtr<BeatmapLevelDataObject>> AlwaysOwnedBeatmapLevels { get; set; } = new List<ISmartPtr<BeatmapLevelDataObject>>();
+
+        [System.ComponentModel.Browsable(false)]
+        [Newtonsoft.Json.JsonIgnore]
+        public override byte[] ScriptParametersData
+        {
+            get
+            {
+                throw new InvalidOperationException("Cannot access parameters data from this object.");
+            }
+            set
+            {
+                throw new InvalidOperationException("Cannot access parameters data from this object.");
+            }
+        }
     }
 }

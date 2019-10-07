@@ -18,8 +18,6 @@ namespace QuestomAssets.BeatSaber
         {
             Parse(reader);
         }
-        //public BeatmapLevelPackObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
-        //{ }
 
         public string PackID { get; set; }
 
@@ -40,15 +38,17 @@ namespace QuestomAssets.BeatSaber
             BeatmapLevelCollection.Write(writer);
         }
 
-        protected override void Parse(AssetsReader reader)
+        public override void Parse(AssetsReader reader)
         {
-            base.Parse(reader);
+            base.ParseBase(reader);
             PackID = reader.ReadString();
             PackName = reader.ReadString();
             CoverImage = SmartPtr<SpriteObject>.Read(ObjectInfo.ParentFile, this, reader);
             BeatmapLevelCollection = SmartPtr<BeatmapLevelCollectionObject>.Read(ObjectInfo.ParentFile, this, reader);
         }
 
+        [System.ComponentModel.Browsable(false)]
+        [Newtonsoft.Json.JsonIgnore]
         public override byte[] ScriptParametersData
         {
             get

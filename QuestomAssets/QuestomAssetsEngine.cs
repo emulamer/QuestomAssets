@@ -6,36 +6,59 @@ using System.Collections.Generic;
 using System.Linq;
 using QuestomAssets.Utils;
 using Newtonsoft.Json;
+using QuestomAssets.Models;
+using System.Diagnostics;
+using System.Threading;
+using System.Collections.Concurrent;
+using System.Threading.Tasks;
+using QuestomAssets.AssetOps;
+using QuestomAssets.Mods;
 
 namespace QuestomAssets
 {
 
-    public class QuestomAssetsEngine
+    public class QuestomAssetsEngine : IDisposable
     {
-        private bool _readOnly;
-        private string _pemData;
+        public bool HasChanges
+        {
+            get
+            {
+                return Manager.HasChanges || ModManager.HasChanges || QueuedFileOperations.Count > 0;
+            }
+        }
+        private CustomLevelLoader _loader;
         private List<string> _assetsLoadOrder = new List<string>();
         private AssetsManager _manager;
+        internal AssetsManager Manager { get => _manager;  }
+        internal MusicConfigCache MusicCache { get => _musicCache; }
+        public ModManager ModManager { get; private set; }
+        private MusicConfigCache _musicCache;
+        internal List<ModDefinition> _modCache;
+        private AssetOpManager _opManager;
+        public AssetOpManager OpManager { get => _opManager; }
+        public IFileProvider FileProvider
+        {
+            get
+            {
+                return _config.RootFileProvider;
+            }
+        }
 
-        public IAssetsFileProvider FileProvider { get; private set; }
+        //public string AssetsRootPath { get; private set; }
 
-        public string AssetsRootPath { get; private set; }
+        public bool HideOriginalPlaylists { get; private set; } = false;
+        private QaeConfig _config;
+        internal QaeConfig Config { get => _config; }
 
-        public bool HideOriginalPlaylists { get; private set; } = true;
-
+        internal List<QueuedFileOp> QueuedFileOperations { get; } = new List<QueuedFileOp>();
+        
         /// <summary>
         /// Create a new instance of the class and open the apk file
         /// </summary>
-        /// <param name="apkFilename">The path to the Beat Saber APK file</param>
-        /// <param name="readOnly">True to open the APK read only</param>
-        /// <param name="pemCertificateData">The contents of the PEM certificate that will be used to sign the APK.  If omitted, a new self signed cert will be generated.</param>
-        public QuestomAssetsEngine(IAssetsFileProvider fileProvider, string assetsRootPath, bool readOnly = false, string pemCertificateData = BSConst.DebugCertificatePEM)
+        public QuestomAssetsEngine(QaeConfig config)
         {
-            FileProvider = fileProvider;
-            _readOnly = readOnly;
-            _pemData = pemCertificateData;
+            _config = config;
             _assetsLoadOrder = GetAssetsLoadOrderFile();
-            AssetsRootPath = assetsRootPath;
             if (_assetsLoadOrder == null)
             {
                 _assetsLoadOrder = new List<string>()
@@ -43,147 +66,270 @@ namespace QuestomAssets
                     "globalgamemanagers",
                     "globalgamemanagers.assets",
                     "sharedassets1.assets",
+                    "sharedassets0.assets",
                     "231368cb9c1d5dd43988f2a85226e7d7",
+                    // <= 1.2.0
+                    //"17c37b4ad5b2b5046be37e2524b67216",
+                    //"92d85d84be1369e4ab3b35188d1ea8b6",
+                    //"b79ca5d157a731a45a945697ad0820c8",
+                    //"8e37fa14e51257645b7a2df8aecb19e1",
                     "sharedassets11.assets",
                     "sharedassets18.assets",
                     "sharedassets20.assets"
                 };
             }
-            _manager = new AssetsManager(FileProvider, assetsRootPath, BSConst.GetAssetTypeMap());
+            Stopwatch sw = new Stopwatch();
+            _manager = new AssetsManager(_config.RootFileProvider, _config.AssetsPath, BSConst.GetAssetTypeMap());
+            Log.LogMsg("Preloading files...");
+            sw.Start();
+            PreloadFiles();
+            sw.Stop();
+            Log.LogMsg($"Preload files took {sw.ElapsedMilliseconds}ms");
+            _musicCache = new MusicConfigCache(GetMainLevelPack());
+            _opManager = new AssetOpManager(new OpContext(this));
+            ModManager = new ModManager(_config, () => this);
         }
 
-        public BeatSaberQuestomConfig GetCurrentConfig(bool suppressImages = false)
+        public BeatSaberQuestomConfig GetCurrentConfig()
         {
-            PreloadFiles();
-            var config = GetConfig(suppressImages);
+            var config = GetConfig();
 
-            //clear out any of the internal refs that were used so the GC can clean things up
-            foreach (var p in config.Playlists)
-            {
-                p.CoverArtSprite = null;
-                p.LevelPackObject = null;
-                foreach (var song in p.SongList)
-                {
-                    song.LevelData = null;
-                    song.SourceOgg = null;
-                }
-            }
-            //config.Saber = new SaberModel()
-            //{
-            //    SaberID = GetCurrentSaberID(manager)
-            //};
             return config;
+        }
+
+        //for some reason, I think this is a bad idea.
+        public bool IsManagerLocked()
+        {
+            bool entered = Monitor.TryEnter(_manager);
+            if (entered)
+                Monitor.Exit(_manager);
+            return !entered;
+        }
+
+        private List<AssetOp> DiffModConfig(BeatSaberQuestomConfig config)
+        {
+            ModManager.ResetCache();
+            var toAddIDs = config.Mods.Where(x => x.Status == ModStatusType.Installed && !ModManager.Mods.Any(y => y.ID == x.ID && y.Status == ModStatusType.Installed)).Select(x => x.ID);
+            var toRemoveIDs = ModManager.Mods.Where(x => x.Status == ModStatusType.Installed && !config.Mods.Any(y => y.Status == ModStatusType.Installed && y.ID == x.ID)).Select(x=> x.ID);
+            List<ModDefinition> toAdd = new List<ModDefinition>();
+            List<ModDefinition> toRemove = new List<ModDefinition>();
+            var fullMods = ModManager.Mods;
+            foreach (var addID in toAddIDs)
+            {
+                var fullMod = fullMods.FirstOrDefault(x => x.ID == addID);
+                if (fullMod == null)
+                {
+                    Log.LogErr($"Added mod ID {addID} was not found, which probably means it isn't in the Mods/ folder.");
+                    throw new Exception($"Added mod ID {addID} was not found, which probably means it isn't in the Mods/ folder.");
+                }
+                toAdd.Add(fullMod);
+            }
+            foreach (var removeID in toRemoveIDs)
+            {
+                var fullMod = fullMods.FirstOrDefault(x => x.ID == removeID);
+                if (fullMod == null)
+                {
+                    Log.LogErr($"Removed mod ID {removeID} was not found, which probably means it isn't in the Mods/ folder.");
+                    throw new Exception($"Removed mod ID {removeID} was not found, which probably means it isn't in the Mods/ folder.");
+                }
+                toRemove.Add(fullMod);
+            }
+
+            List<AssetOp> ops = new List<AssetOp>();
+
+            toRemove.ForEach(x => ops.AddRange(ModManager.GetUninstallModOps(x)));
+            toAdd.ForEach(x => ops.AddRange(ModManager.GetInstallModOps(x)));
+            return ops;
         }
 
         public void UpdateConfig(BeatSaberQuestomConfig config)
         {
-            //todo: basic validation of the config
-            if (_readOnly)
-                throw new InvalidOperationException("Cannot update in read only mode.");
-
-
-            PreloadFiles();
-
-            //get existing playlists and their songs
-            //compare with new ones
-            //generate a diff
-            //etc.
-
-            UpdateColorConfig(config.Colors);
-
-            //TODO: something broke
-            //UpdateTextConfig(manager, config.TextChanges);
-
-            //if (!UpdateSaberConfig(manager, config.Saber))
-            //{
-            //    Log.LogErr("Saber failed to update.  Aborting all changes.");
-            //}
-
-            if (config.Playlists != null)
+            Stopwatch sw = new Stopwatch();
+            lock (this)
             {
-                UpdateMusicConfig(config);
-            }
-            else
-            {
-                Log.LogMsg("Playlists is null, song configuration will not be changed.");
-            }
+                //todo: basic validation of the config
 
-            Log.LogMsg("Serializing all assets...");
-            _manager.WriteAllOpenAssets();
+                //TODO; fix
+                //UpdateColorConfig(config.Colors);
 
-            FileProvider.Save();
+                //TODO: something broke
+                //UpdateTextConfig(manager, config.TextChanges);
+                List<AssetOp> ops = new List<AssetOp>();
 
-        }
+                //todo: eval if this is good to have here.  disabling it for now to help QuickFix fix things
+                //if (config.Mods != null)
+                //{
+                //    using (new LogTiming("Diffing mod config"))
+                //    {
+                //        ops.AddRange(DiffModConfig(config));
+                //    }
+                //}
+                //else
+                //{
+                //    Log.LogMsg("Mods config is null, not changing mods");
+                //}
 
-        public bool ApplyPatchSettingsFile()
-        {
-            string filename = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "patchsettings.json");
-            if (!File.Exists(filename))
-            {
-                Log.LogErr($"Can't apply patch settings from file, {filename} does not exist!");
-                return false;
-            }
-            List<FilePatch> patches = null;
-            using (StreamReader sr = new StreamReader(filename))
-            using (JsonReader jr = new JsonTextReader(sr))
-                patches = new JsonSerializer().Deserialize<List<FilePatch>>(jr);
-            Log.LogMsg($"Found {patches.Count} files to patch in {filename}");
-            foreach (var patch in patches)
-            {
-                if (!ApplyPatch(patch))
+                if (config.Playlists != null)
                 {
-                    Log.LogErr($"Failed to apply patch... aborting any further patching...");
-                    return false;
+                    Log.LogMsg("Updating music config...");
+
+                    using (new LogTiming("Diffing music config"))
+                    {
+                        ops.AddRange(DiffMusicConfig(config));
+                    }                    
+                }
+                else
+                {
+                    Log.LogMsg("Playlists is null, song configuration will not be changed.");
+                }
+
+                if (ops.Count < 1)
+                {
+                    Log.LogMsg("No changes needed to config.");
+                }
+                else
+                {
+                    List<AssetOp> failed = new List<AssetOp>();
+                    Log.LogMsg($"{ops.Count} Ops to update music config");
+                    OpManager.OpStatusChanged += (a, e) =>
+                    {
+                        if (e.Status == OpStatus.Failed)
+                        {
+                            failed.Add(e);
+                        }
+                    };
+
+                    ops.ForEach(x => OpManager.QueueOp(x));
+                    Log.LogMsg($"Ops queued, waiting for all to complete...");
+                    using (new LogTiming("waiting for ops to complete"))
+                    {
+                        ops.WaitForFinish();
+                    }
+
+                    if (failed.Count > 0)
+                    {
+                        Log.LogErr($"{failed.Count} ops failed while updating config.");
+                        failed.ForEach(x => Log.LogErr($"{x.GetType().Name} failed: {x.Exception.Message}"));
+                        throw new AssetOpsException("At least one internal operation failed while updating the config", failed);
+                    }
                 }
             }
-            return true;
         }
 
-        public bool ApplyPatch(FilePatch patch)
+        public void Save()
         {
-            if (!Patcher.Patch(FileProvider, patch))
+            lock (this)
             {
-                Log.LogErr($"File {patch.Filename} failed to patch!");
-                return false;
+                if (!Monitor.TryEnter(_manager))
+                    throw new Exception("Other operations are in progress, cannot save now.");
+                
+                    Stopwatch sw = new Stopwatch();
+                    try
+                    {
+                        Log.LogMsg("Serializing all assets...");
+                        sw.Restart();
+                        _manager.WriteAllOpenAssets();
+                        sw.Stop();
+                        Log.LogMsg($"Serialization of assets took {sw.ElapsedMilliseconds}ms");
+
+                        Log.LogMsg("Making sure everything is saved...");
+                        FileProvider.Save();
+
+
+                        if (ModManager.HasChanges)
+                        {
+                            using (new LogTiming("Saving mod status"))
+                            {
+                                ModManager.Save();
+                            }
+                        }
+                        else
+                        {
+                            Log.LogMsg("ModManager has no changes, not saving it.");
+                        }
+
+                        if (QueuedFileOperations.Count > 0)
+                        {
+                            using (new LogTiming("Performing queued file operations"))
+                            {
+                                foreach (var qfo in QueuedFileOperations.ToList())
+                                {
+                                    try
+                                    {
+                                        qfo.PerformFileOperation(_config);
+                                        QueuedFileOperations.Remove(qfo);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Log.LogErr($"Queued file operation of type {qfo.Type} for target {qfo.TargetPath} failed!", ex);
+                                        throw new Exception($"Queued file operation of type {qfo.Type} for target {qfo.TargetPath} failed!", ex);
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            Log.LogMsg("No queued file operations to perform");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.LogErr("Exception saving assets!", ex);
+                        throw new Exception("Failed to save assets!", ex);
+                    }
+                finally
+                {
+                    Monitor.Exit(_manager);
+                }
             }
-            return true;
-        }
-        public void SignAPK()
-        {
-            ApkSigner signer = new ApkSigner(_pemData);
-            signer.Sign(FileProvider);
         }
 
-        private MainLevelPackCollectionObject GetMainLevelPack()
+        private MainLevelPackCollectionObject _mainLevelPackCache;
+        internal MainLevelPackCollectionObject GetMainLevelPack()
         {
-            var mainLevelPack = _manager.MassFirstOrDefaultAsset<MainLevelPackCollectionObject>(x => true)?.Object;
-            if (mainLevelPack == null)
-                throw new Exception("Unable to find the main level pack collection object!");
-            return mainLevelPack;
+            if (_mainLevelPackCache == null)
+            {
+                var mainLevelPack = _manager.MassFirstOrDefaultAsset<MainLevelPackCollectionObject>(x => true, false)?.Object;
+                if (mainLevelPack == null)
+                    throw new Exception("Unable to find the main level pack collection object!");
+                _mainLevelPackCache = mainLevelPack;
+            }
+            return _mainLevelPackCache;
         }
 
-        private AssetsFile GetSongsAssetsFile()
+        private AssetsFile _songsAssetsFileCache;
+        internal AssetsFile GetSongsAssetsFile()
         {
-            var extrasPack = _manager.MassFirstOrDefaultAsset<BeatmapLevelPackObject>(x => x.Object.Name == "ExtrasLevelPack", true);
-            if (extrasPack == null)
-                throw new Exception("Unable to find the file that ExtrasLevelPack is in!");
-            return extrasPack.ParentFile;
+            if (_songsAssetsFileCache == null)
+            {
+                var extrasPack = _manager.MassFirstOrDefaultAsset<BeatmapLevelPackObject>(x => x.Object.Name == "ExtrasLevelPack", false);
+                if (extrasPack == null)
+                    throw new Exception("Unable to find the file that ExtrasLevelPack is in!");
+                _songsAssetsFileCache = extrasPack.ParentFile;
+            }
+            return _songsAssetsFileCache;
         }
 
-        private AlwaysOwnedContentModel GetAlwaysOwnedModel()
+        private AlwaysOwnedContent _aoModelCache;
+        internal AlwaysOwnedContent GetAlwaysOwnedModel()
         {
-            var aoModel = _manager.MassFirstOrDefaultAsset<AlwaysOwnedContentModel>(x => x.Object.Name == "DefaultAlwaysOwnedContentModel", true);
-            if (aoModel == null)
-                throw new Exception("Unable to find AlwaysOwnedContentModel!");
-            return aoModel.Object;
+            if (_aoModelCache == null)
+            {
+                var aoModel = _manager.MassFirstOrDefaultAsset<AlwaysOwnedContent>(x => x.Object.Name == "DefaultAlwaysOwnedContent", false);
+                if (aoModel == null)
+                    throw new Exception("Unable to find AlwaysOwnedContentModel!");
+                _aoModelCache = aoModel.Object;
+            }
+
+            return _aoModelCache;
         }
 
         private void UpdatePlaylistConfig(AssetsFile songsAssetFile, BeatSaberPlaylist playlist)
         {
             Log.LogMsg($"Processing playlist ID {playlist.PlaylistID}...");
-            CustomLevelLoader loader = new CustomLevelLoader(songsAssetFile);
+            CustomLevelLoader loader = new CustomLevelLoader(songsAssetFile, _config);
             BeatmapLevelPackObject levelPack = songsAssetFile.FindAsset<BeatmapLevelPackObject>(x => x.Object.PackID == playlist.PlaylistID)?.Object;
-            //create a new level pack if one waasn't found
+            //create a new level pack if one wasn't found
             if (levelPack == null)
             {
                 Log.LogMsg($"Level pack for playlist '{playlist.PlaylistID}' was not found and will be created");
@@ -207,12 +353,31 @@ namespace QuestomAssets
 
 
             levelPack.PackName = playlist.PlaylistName ?? levelPack.PackName;
-            if (playlist.CoverArtBytes != null)
+            //todo: allow for editing cover art
+            if (playlist.CoverImageBytes != null && playlist.CoverImageBytes.Length > 0)
             {
                 Log.LogMsg($"Loading cover art for playlist ID '{playlist.PlaylistID}'");
 
-                playlist.CoverArtSprite = loader.LoadPackCover(playlist.PlaylistID, playlist.CoverArtBytes);
+                var oldCoverImage = playlist?.LevelPackObject?.CoverImage;
+                var oldTex = playlist?.LevelPackObject?.CoverImage?.Object?.RenderData?.Texture;
+
+                //todo: verify this is a good place to delete stuff                
+                playlist.CoverArtSprite = loader.LoadPackCover(playlist.PlaylistID, playlist.CoverImageBytes);
                 playlist.LevelPackObject.CoverImage = playlist.CoverArtSprite.PtrFrom(playlist.LevelPackObject);
+                if (oldCoverImage != null)
+                {
+                    if (oldCoverImage.Object != null)
+                        songsAssetFile.DeleteObject(oldCoverImage.Object);
+
+                    oldCoverImage.Dispose();
+                }
+                if (oldTex != null)
+                {
+                    if (oldTex?.Object != null)
+                        songsAssetFile.DeleteObject(oldTex.Object);
+
+                    oldTex.Dispose();
+                }
             }
             else
             {
@@ -229,8 +394,8 @@ namespace QuestomAssets
 
             //clear out any levels, we'll add them back
             var levelCollection = levelPack.BeatmapLevelCollection.Object;
-            levelCollection.BeatmapLevels.ForEach(x => x.Dispose());
-            levelCollection.BeatmapLevels.Clear();
+            //levelCollection.BeatmapLevels.ForEach(x => x.Dispose());
+            //levelCollection.BeatmapLevels.Clear();
             int songCount = 0;
             Log.LogMsg($"Processing songs for playlist ID {playlist.PlaylistID}...");
             var totalSongs = playlist.SongList.Count();
@@ -247,7 +412,7 @@ namespace QuestomAssets
                 {
                     if (levelCollection.BeatmapLevels.Any(x => x.Object.LevelID == song.LevelData.LevelID))
                     {
-                        Log.LogErr($"Playlist ID '{playlist.PlaylistID}' already contains song ID '{song.SongID}' once, removing the second link");
+                        Log.LogErr($"Playlist ID '{playlist.PlaylistID}' already contains song ID '{song.SongID}'");
                     }
                     else
                     {
@@ -255,76 +420,106 @@ namespace QuestomAssets
                         continue;
                     }
                 }
-
-                playlist.SongList.Remove(song);
+                else
+                {
+                    Log.LogErr($"Song {song.SongID} failed to load!");
+                }
+            }
+            foreach (var bml in playlist.LevelPackObject.BeatmapLevelCollection.Object.BeatmapLevels.ToList())
+            {
+                if (!playlist.SongList.Any(x => x.SongID == bml.Object.LevelID))
+                {
+                    Log.LogMsg($"Song ID {bml.Object.LevelID} is not in the new configuration but is in the existing assets.  Removing the link.");
+                    playlist.LevelPackObject.BeatmapLevelCollection.Object.BeatmapLevels.Remove(bml);
+                    bml.Dispose();
+                }
             }
             Console.WriteLine($"Proccessed {totalSongs} for playlist ID {playlist.PlaylistID}");
         }
 
         private bool UpdateSongConfig(AssetsFile songsAssetFile, BeatSaberSong song, CustomLevelLoader loader)
         {
-            BeatmapLevelDataObject level = null;
-            if (!string.IsNullOrWhiteSpace(song.SongID))
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+            try
             {
-                var levels = songsAssetFile.FindAssets<BeatmapLevelDataObject>(x => x.Object.LevelID == song.SongID).Select(x => x.Object).ToList();
-                if (levels.Count() > 0)
+                BeatmapLevelDataObject level = null;
+                if (!string.IsNullOrWhiteSpace(song.SongID))
                 {
-                    if (levels.Count() > 1)
-                        Log.LogErr($"Song ID {song.SongID} already has more than one entry in the assets, this may cause problems!");
-                    else
-                        Log.LogMsg($"Song ID {song.SongID} exists already and won't be loaded");
-                    level = levels.First();
-                    song.LevelData = level;
-                    return true;
-                }
-                else
-                {
-                    Log.LogMsg($"Song ID '{song.SongID}' does not exist and will be created");
-                }
-            }
-            if (level != null && !string.IsNullOrWhiteSpace(song.CustomSongFolder))
-            {
-                Log.LogErr("SongID and CustomSongsFolder are both set and the level already exists.  The existing one will be used and CustomSongsFolder won'tbe imported again.");
-                return false;
-            }
-
-            //load new song
-            if (!string.IsNullOrWhiteSpace(song.CustomSongFolder))
-            {
-                try
-                {
-                    string oggPath;
-                    var deser = loader.DeserializeFromJson(song.CustomSongFolder, song.SongID);
-                    var found = songsAssetFile.FindAssets<BeatmapLevelDataObject>(x => x.Object.LevelID == deser.LevelID).Select(x => x.Object).FirstOrDefault();
-                    if (found != null)
+                    var levels = _manager.MassFindAssets<BeatmapLevelDataObject>(x => x.Object.LevelID == song.SongID, false).Select(x => x.Object).ToList();
+                    if (levels.Count() > 0)
                     {
-                        Log.LogErr($"No song id was specified, but the level {found.LevelID} is already in the assets, skipping it.");
-                        song.LevelData = found;
+                        if (levels.Count() > 1)
+                            Log.LogErr($"Song ID {song.SongID} already has more than one entry in the assets, this may cause problems!");
+                        else
+                            Log.LogMsg($"Song ID {song.SongID} exists already and won't be loaded");
+                        level = levels.First();
+                        song.LevelData = level;
+                        song.LevelAuthorName = level.LevelAuthorName;
+                        song.SongAuthorName = level.SongAuthorName;
+                        song.SongName = level.SongName;
+                        song.SongSubName = level.SongSubName;
                         return true;
                     }
-                    level = loader.LoadSongToAsset(deser, song.CustomSongFolder, out oggPath, true);
-                    song.SourceOgg = oggPath;
+                    else
+                    {
+                        Log.LogMsg($"Song ID '{song.SongID}' does not exist and will be created");
+                    }
                 }
-                catch (Exception ex)
+                if (level != null && !string.IsNullOrWhiteSpace(song.CustomSongPath))
                 {
-                    Log.LogErr($"Exception loading custom song folder '{song.CustomSongFolder}', skipping it", ex);
+                    Log.LogErr("SongID and CustomSongsFolder are both set and the level already exists.  The existing one will be used and CustomSongsFolder won'tbe imported again.");
                     return false;
                 }
 
-                if (level == null)
+                //load new song
+                if (!string.IsNullOrWhiteSpace(song.CustomSongPath))
                 {
-                    Log.LogErr($"Song at folder '{song.CustomSongFolder}' failed to load, skipping it");
-                    return false;
-                }
+                    try
+                    {
+                        var deser = loader.DeserializeFromJson(song.CustomSongPath, song.SongID);
+                        var found = songsAssetFile.FindAssets<BeatmapLevelDataObject>(x => x.Object.LevelID == deser.LevelID).Select(x => x.Object).FirstOrDefault();
+                        if (found != null)
+                        {
+                            Log.LogErr($"No song id was specified, but the level {found.LevelID} is already in the assets, skipping it.");
+                            song.LevelData = found;
+                            song.LevelAuthorName = found.LevelAuthorName;
+                            song.SongAuthorName = found.SongAuthorName;
+                            song.SongName = found.SongName;
+                            song.SongSubName = found.SongSubName;
+                            return true;
+                        }
+                        level = loader.LoadSongToAsset(deser, song.CustomSongPath, true);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.LogErr($"Exception loading custom song folder '{song.CustomSongPath}', skipping it", ex);
+                        return false;
+                    }
 
-                song.LevelData = level;
-                return true;
+                    if (level == null)
+                    {
+                        Log.LogErr($"Song at folder '{song.CustomSongPath}' failed to load, skipping it");
+                        return false;
+                    }
+
+                    song.LevelData = level;
+                    song.LevelAuthorName = level.LevelAuthorName;
+                    song.SongAuthorName = level.SongAuthorName;
+                    song.SongName = level.SongName;
+                    song.SongSubName = level.SongSubName;
+                    return true;
+                }
+                //level == null && string.IsNullOrWhiteSpace(song.CustomSongFolder)
+
+                Log.LogErr($"Song ID '{song.SongID}' either was not specified or could not be found and no CustomSongFolder was specified, skipping it.");
+                return false;
             }
-            //level == null && string.IsNullOrWhiteSpace(song.CustomSongFolder)
-
-            Log.LogErr($"Song ID '{song.SongID}' either was not specified or could not be found and no CustomSongFolder was specified, skipping it.");
-            return false;
-
+            finally
+            {
+                sw.Stop();
+                Log.LogMsg($"Updating song config for {song?.SongID} (path {song?.CustomSongPath}) took {sw.ElapsedMilliseconds}ms");
+            }
         }
 
         private void RemoveLevelAssets(BeatmapLevelDataObject level, List<string> audioFilesToDelete)
@@ -368,16 +563,12 @@ namespace QuestomAssets
             Log.LogMsg($"Removing assets for playlist ID '{ levelPack.PackID}'");
             var collection = levelPack.BeatmapLevelCollection.Object;
             var sprite = levelPack.CoverImage.Object;
-            var texture = sprite.Texture.Object;
+            var texture = sprite.RenderData.Texture.Object;
             songsAssetFile.DeleteObject(levelPack);
             songsAssetFile.DeleteObject(collection);
             songsAssetFile.DeleteObject(texture);
             songsAssetFile.DeleteObject(sprite);
         }
-
-
-
-
 
         #region Custom Saber
 
@@ -673,77 +864,225 @@ namespace QuestomAssets
         //}
         #endregion
 
-
-        private BeatSaberQuestomConfig GetConfig(bool suppressImages)
+        private List<AssetOp> DiffMusicConfig(BeatSaberQuestomConfig newConfig)
         {
-            BeatSaberQuestomConfig config = new BeatSaberQuestomConfig();
-            var mainPack = GetMainLevelPack();
-            foreach (var packPtr in mainPack.BeatmapLevelPacks)
-            {
-                var pack = packPtr.Target.Object;
-                if (HideOriginalPlaylists && BSConst.KnownLevelPackIDs.Contains(pack.PackID))
-                    continue;
+            List<AssetOp> ops = new List<AssetOp>();
+            Func<string, bool> IgnoreSongID = (songId) => {
 
-                var packModel = new BeatSaberPlaylist() { PlaylistName = pack.PackName, PlaylistID = pack.PackID, LevelPackObject = pack };
-                var collection = pack.BeatmapLevelCollection.Object;
-
-                //get cover art for playlist
-                if (!suppressImages)
+                //todo: because updates put new stuff in, don't mess with built in ones
+                if (true)//HideOriginalPlaylists)
                 {
+                    return BSConst.KnownLevelIDs.Contains(songId);
+                } else
+                {
+                    return false;
+                }
+            };
+
+            Func<string, bool> IgnorePackID = (packId) => {
+                //todo: because updates put new stuff in, don't mess with built in ones
+                if (true)//HideOriginalPlaylists)
+                {
+                    return BSConst.KnownLevelPackIDs.Contains(packId);
+                }
+                else
+                {
+                    return false;
+                }
+            };
+            //NOTE: this code is pretty inefficient in that it loops over collections many multiple times in all of the LINQ statements and ToList()s
+            //      If it becomes a performance bottleneck, it can probably all be compressed into 1 or 2 loops rather than a bunch of individual linq queries
+            //      but for now it's left inefficient because it's easier to follow what's happening
+            using (new LogTiming(nameof(DiffMusicConfig)))
+            {                
+                var lt = new LogTiming("find new playlists");
+
+                var newOrUpdatedPlaylists = newConfig.Playlists.Where(x => !MusicCache.PlaylistCache.ContainsKey(x.PlaylistID)      //playlist id doesn't exist
+                            || (x.PlaylistName != null && MusicCache.PlaylistCache[x.PlaylistID].Playlist.Name != x.PlaylistName)   //name is different
+                            || (x.CoverImageBytes != null && x.CoverImageBytes.Length > 0)).ToList();                               //cover image bytes is provided
+                                                                                                                                 //create an op for each added or changed playlist
+                newOrUpdatedPlaylists.ForEach(x => ops.Add(new AddOrUpdatePlaylistOp(x)));
+                lt.Dispose();
+                Log.LogMsg("Adding or updating playlist IDs: " + string.Join(", ", newOrUpdatedPlaylists.Select(x => x.PlaylistID).ToArray()));
+
+                lt = new LogTiming("build all config songs");
+                //get an anon SongID, PlaylistID pair of what's in the config passed in
+                var allConfigSongs = newConfig.Playlists.SelectMany(y => y.SongList.Select(x => new { SongID = x.SongID, PlaylistID = y.PlaylistID, Song = x })).ToList();
+                lt.Dispose();
+
+                lt = new LogTiming("make delete song ops");
+                //find any songs that have been removed from everywhere and make a song delete op for each of them.  song delete op will handle removing it from the playlist
+                //  check whether it should be ignored (i.e. leave OST stuff alone)
+                var removedSongIDs = MusicCache.SongCache.Keys.Where(x => !allConfigSongs.Any(y => y.SongID == x) && !IgnoreSongID(x) && !IgnorePackID(MusicCache.SongCache[x].Playlist.PackID)).ToList();
+                removedSongIDs.ForEach(x => ops.Add(new DeleteSongOp(x)));
+                lt.Dispose();
+                Log.LogMsg("Removing song IDs: " + string.Join(", ", removedSongIDs.ToArray()));
+
+                lt = new LogTiming("make move song ops");
+                //find any song/playlist tuples whose playlist doesn't match what's in the cache for that song (i.e. a song was moved to a different playlist)
+                var movedSongs = allConfigSongs.Where(x => MusicCache.SongCache.ContainsKey(x.SongID) && MusicCache.SongCache[x.SongID].Playlist.PackID != x.PlaylistID && !IgnorePackID(MusicCache.SongCache[x.SongID].Playlist.PackID) && !IgnoreSongID(x.SongID)).ToList();
+                movedSongs.ForEach(x => ops.Add(new MoveSongToPlaylistOp(x.SongID, x.PlaylistID, null)));
+                lt.Dispose();
+                Log.LogMsg("Moving song IDs to playlists: " + string.Join(", ", movedSongs.Select(x => x.SongID + " -> " + x.PlaylistID).ToArray()));
+
+                lt = new LogTiming("make new song ops");
+                //find any new songs, add an op to add them
+                var newSongs = allConfigSongs.Where(x => !MusicCache.SongCache.ContainsKey(x.SongID)).ToList();
+                newSongs.ForEach(x => ops.Add(new AddNewSongToPlaylistOp(x.Song, x.PlaylistID, false)));
+                lt.Dispose();
+                Log.LogMsg("Adding new songs to playlists: " + string.Join(", ", newSongs.Select(x => x.SongID + " -> " + x.PlaylistID)));
+
+                //find any playlists that should be removed.  tell the DeletePlaylistOp not to delete all songs in the playlist since we should have already cleaned them all up
+                //  check whether to ignore the playlist (i.e. don't delete OST stuff)
+                lt = new LogTiming("make remove playlist ops");
+                var removedPlaylists = MusicCache.PlaylistCache.Keys.Where(x => !newConfig.Playlists.Any(y => x == y.PlaylistID) && !IgnorePackID(x)).ToList();
+                removedPlaylists.ForEach(x => ops.Add(new DeletePlaylistOp(x, false)));
+                lt.Dispose();
+                Log.LogMsg("Removing playlist IDs: " + string.Join(", ", removedPlaylists.ToArray()));
+            }
+            return ops;
+        }
+
+        private BeatSaberQuestomConfig GetConfig()
+        {
+            Stopwatch sw = new Stopwatch();
+            try
+            {
+                sw.Start();
+                lock (this)
+                {
+                    BeatSaberQuestomConfig config = new BeatSaberQuestomConfig();
+                    
+                    var mainPack = GetMainLevelPack();
+                    CustomLevelLoader loader = new CustomLevelLoader(GetSongsAssetsFile(), _config);
+                    foreach (var packDef in MusicCache.PlaylistCache.Values.OrderBy(x=> x.Order))
+                    {
+                        var pack = packDef.Playlist;
+                        if (HideOriginalPlaylists && BSConst.KnownLevelPackIDs.Contains(pack.PackID))
+                            continue;
+
+                        var packModel = new BeatSaberPlaylist() { PlaylistName = pack.PackName, PlaylistID = pack.PackID, LevelPackObject = pack };
+                        var collection = pack.BeatmapLevelCollection.Object;
+
+                        foreach (var songPtr in collection.BeatmapLevels)
+                        {
+                            var songObj = songPtr.Object;
+                            var songModel = new BeatSaberSong()
+                            {
+                                LevelAuthorName = songObj.LevelAuthorName,
+                                SongID = songObj.LevelID,
+                                SongAuthorName = songObj.SongAuthorName,
+                                SongName = songObj.SongName,
+                                SongSubName = songObj.SongSubName,
+                                LevelData = songObj
+                            };
+                            //songModel.CoverArtFilename = loader.GetCoverImageFilename(songObj);
+                            packModel.SongList.Add(songModel);
+                        }
+                        config.Playlists.Add(packModel);
+                    }
                     try
                     {
-                        var coverSprite = pack.CoverImage.Object;
-                        var coverTex = coverSprite.Texture.Object;
-                        packModel.CoverArtBytes = coverTex.ToPngBytes();
-                        packModel.CoverArtBase64PNG = Convert.ToBase64String(packModel.CoverArtBytes);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.LogErr($"Unable to convert texture for playlist ID '{pack.PackID}' cover art", ex);
-                    }
-                }
-                foreach (var songPtr in collection.BeatmapLevels)
-                {
-                    var songObj = songPtr.Object;
-                    var songModel = new BeatSaberSong()
-                    {
-                        LevelAuthorName = songObj.LevelAuthorName,
-                        SongID = songObj.LevelID,
-                        SongAuthorName = songObj.SongAuthorName,
-                        SongName = songObj.SongName,
-                        SongSubName = songObj.SongSubName,
-                        LevelData = songObj
-                    };
-                    if (!suppressImages)
-                    {
-                        try
+                        var cm = GetColorManager();
+                        if (cm != null)
                         {
-                            var songCover = songObj.CoverImageTexture2D.Object;
-                            try
-                            {
-                                songModel.CoverArtBytes = songCover.ToPngBytes();
-                                songModel.CoverArtBase64PNG = Convert.ToBase64String(songModel.CoverArtBytes);
-                            }
-                            catch (Exception ex)
-                            {
-                                Log.LogErr($"Unable to convert texture for song ID '{songModel.SongID}' cover", ex);
-                            }
+                            var rc = cm.ColorB.Object.Color;
+                            var lc = cm.ColorA.Object.Color;
+                            config.RightColor = new BeatSaberColor() { A = (byte)(255 * rc.A), R = (byte)(255 * rc.R), G = (byte)(rc.G * 255), B = (byte)(rc.B * 255) };
+                            config.LeftColor = new BeatSaberColor() { A = (byte)(255 * lc.A), R = (byte)(255 * lc.R), G = (byte)(lc.G * 255), B = (byte)(lc.B * 255) };
                         }
-                        catch (Exception ex)
-                        {
-                            Log.LogErr($"Exception loading/converting the cover image for song id '{songObj.LevelID}'", ex);
-                        }
+                    } catch (Exception ex)
+                    {
+                        Log.LogMsg("Exception getting color manager, probably it's version 1.3");
                     }
-                    packModel.SongList.Add(songModel);
+                    ModManager.Mods.ForEach(x => config.Mods.Add(x));
+                    return config;
                 }
-                config.Playlists.Add(packModel);
             }
-            return config;
+            finally
+            {
+                sw.Stop();
+                Log.LogMsg($"Loading config took {sw.ElapsedMilliseconds}ms");
+            }
+        }
+
+        private void VerifyCharacteristics()
+        {
+
+            using (new LogTiming("Checking that custom characteristics exist"))
+            {
+                var lightshowName = MiscUtils.GetCharacteristicAssetName(Characteristic.Lightshow);
+                var lawlessName = MiscUtils.GetCharacteristicAssetName(Characteristic.Lawless);
+
+                var lightshowAsset = Manager.MassFirstAsset<BeatmapCharacteristicObject>(x => x.Object.Name == lightshowName, false)?.Object;
+                var lawlessAsset = Manager.MassFirstAsset<BeatmapCharacteristicObject>(x => x.Object.Name == lawlessName, false)?.Object;
+
+                if (lightshowAsset == null || lawlessAsset == null)
+                {
+                    var standardName = MiscUtils.GetCharacteristicAssetName(Characteristic.Standard);
+                    BeatmapCharacteristicObject standardCharacteristic = Manager.MassFirstAsset<BeatmapCharacteristicObject>(x => x.Object.Name == standardName, false)?.Object;
+                    int count = Manager.MassFindAssets<BeatmapCharacteristicObject>(x => true, false).Count();
+                    if (standardCharacteristic == null)
+                    {
+                        Log.LogErr($"Unable to locate the standard beatmap characteristic while verifying characteristics!");
+                        return;
+                    }
+                    if (lightshowAsset == null)
+                    {
+                        Log.LogMsg("Lightshow characteristic wasn't found, creating it.");
+                        CreateCharacteristic(Characteristic.Lightshow, standardCharacteristic, count);
+                        count++;
+                    }
+                    if (lawlessAsset == null)
+                    {
+                        Log.LogMsg("Lawless characteristic wasn't found, creating it.");
+                        CreateCharacteristic(Characteristic.Lawless, standardCharacteristic, count);
+                        count++;
+                    }
+                }
+            }
+        }
+
+        private void CreateCharacteristic(Characteristic characteristic, BeatmapCharacteristicObject baseToClone, int sort)
+        {
+            try
+            {
+                string characteristicName = $"LEVEL_{characteristic.ToString().ToUpper()}";
+                string hintText = $"{characteristicName}_HINT";
+                string assetName = MiscUtils.GetCharacteristicAssetName(Characteristic.Lightshow);
+                var lightshowAsset = (BeatmapCharacteristicObject)baseToClone.ObjectInfo.DeepClone(baseToClone.ObjectInfo.ParentFile);
+                lightshowAsset.Name = assetName;
+                lightshowAsset.SerializedName = characteristic.ToString();
+                lightshowAsset.SortingOrder = sort;
+                //todo: text translation stuff
+                //lightshowAsset.CharacteristicName = characteristicName;
+                //lightshowAsset.HintText = hintText;
+                try
+                {
+                    byte[] lightshowIcon = _config.EmbeddedResourcesFileProvider.Read("Lightshow.png");
+                    if (lightshowIcon == null || lightshowIcon.Length < 1)
+                        throw new Exception("Lightshow.png read was null or empty!");
+                    ImageUtils.Instance.AssignImageToTexture(lightshowIcon, lightshowAsset.Icon.Object.RenderData.Texture.Object, 256, 256, Int32.MaxValue, TextureConversionFormat.RGB24);
+                }
+                catch (Exception ex)
+                {
+                    Log.LogErr("Failed to load lightshow's png icon!", ex);
+                    throw;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.LogErr("Exception trying to create lightshow characteristic!", ex);
+            }
         }
 
         private void PreloadFiles()
         {
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
             _assetsLoadOrder.ForEach(x => _manager.GetAssetsFile(x));
+            sw.Stop();
+            Log.LogMsg($"Preloading files took {sw.ElapsedMilliseconds}ms");
         }
 
         //private bool UpdateSaberConfig(AssetsManager manager, SaberModel saberCfg)
@@ -821,138 +1160,6 @@ namespace QuestomAssets
         //    }
         //}
 
-        private void UpdateMusicConfig(BeatSaberQuestomConfig config)
-        {
-            //get the old config before we start on this
-            var originalConfig = GetConfig(false);
-            var songsAssetFile = GetSongsAssetsFile();
-            var aoModel = GetAlwaysOwnedModel();
-            foreach (var playlist in config.Playlists)
-            {
-                UpdatePlaylistConfig(songsAssetFile, playlist);
-            }
-
-            //open the assets with the main levels collection, find the file index of sharedassets17.assets, and add the playlists to it
-
-            var mainLevelPack = GetMainLevelPack();
-
-
-            var packsToUnlink = mainLevelPack.BeatmapLevelPacks.Where(x => !HideOriginalPlaylists || !BSConst.KnownLevelPackIDs.Contains(x.Object.PackID)).ToList();
-            var packsToRemove = mainLevelPack.BeatmapLevelPacks.Where(x => !BSConst.KnownLevelPackIDs.Contains(x.Object.PackID) && !config.Playlists.Any(y => y.PlaylistID == x.Object.PackID)).Select(x => x.Object).ToList();
-            foreach (var unlink in packsToUnlink)
-            {
-                mainLevelPack.BeatmapLevelPacks.Remove(unlink);
-                unlink.Dispose();
-            }
-
-            var oldSongs = originalConfig.Playlists.SelectMany(x => x.SongList).Select(x => x.LevelData).Distinct();
-            var newSongs = config.Playlists.SelectMany(x => x.SongList).Select(x => x.LevelData).Distinct();
-
-            //don't allow removal of the actual tracks or level packs that are built in, although you can unlink them from the main list
-            var removeSongs = oldSongs.Where(x => !newSongs.Contains(x) && !BSConst.KnownLevelIDs.Contains(x.LevelID)).Distinct().ToList();
-
-            var addedSongs = newSongs.Where(x => !oldSongs.Contains(x));
-
-            var removedPlaylistCount = originalConfig.Playlists.Where(x => !config.Playlists.Any(y => y.PlaylistID == x.PlaylistID)).Count();
-            var newPlaylistCount = config.Playlists.Where(x => !originalConfig.Playlists.Any(y => y.PlaylistID == x.PlaylistID)).Count();
-            //
-            //
-            //TODO: clean up cover art, it's leaking!
-            //
-            //
-            List<string> audioFilesToDelete = new List<string>();
-            removeSongs.ForEach(x => RemoveLevelAssets(x, audioFilesToDelete));
-
-            packsToRemove.ForEach(x => RemoveLevelPackAssets(x));
-
-            //relink all the level packs in order
-            var addPacks = config.Playlists.Select(x => x.LevelPackObject.PtrFrom(mainLevelPack));
-            mainLevelPack.BeatmapLevelPacks.AddRange(addPacks);
-
-            //link them to the always owned ones
-            var addPacksOwned = config.Playlists.Select(x => x.LevelPackObject.PtrFrom(aoModel));
-            aoModel.AlwaysOwnedPacks.AddRange(addPacksOwned);
-
-            ////do a first loop to guess at the file size
-            //Int64 originalApkSize = new FileInfo(_apkFilename).Length;
-            //Int64 sizeGuess = originalApkSize;
-            //foreach (var pl in config.Playlists)
-            //{
-            //    foreach (var sng in pl.SongList)
-            //    {
-            //        if (sng.SourceOgg != null)
-            //        {
-            //            var clip = sng.LevelData.AudioClip.Object;
-            //            sizeGuess += new FileInfo(sng.SourceOgg).Length;
-            //        }
-            //    }
-            //}
-            //foreach (var toDelete in audioFilesToDelete)
-            //{
-            //    sizeGuess -= apkFileProvider.GetFileSize(BSConst.KnownFiles.AssetsRootPath + toDelete);
-            //}
-
-            Log.LogMsg("");
-            Log.LogMsg("Playlists:");
-            Log.LogMsg($"  Added:   {newPlaylistCount}");
-            Log.LogMsg($"  Removed: {removedPlaylistCount}");
-            Log.LogMsg("");
-            Log.LogMsg("Songs:");
-            Log.LogMsg($"  Added:   {addedSongs.Count()}");
-            Log.LogMsg($"  Removed: {removeSongs.Count()}");
-            Log.LogMsg("");
-            //Log.LogMsg($"Original APK size:     {originalApkSize:n0}");
-            //Log.LogMsg($"Guesstimated new size: {sizeGuess:n0}");
-            //Log.LogMsg("");
-
-            //if (sizeGuess > Int32.MaxValue)
-            //{
-            //    Log.LogErr("***************ERROR*****************");
-            //    Log.LogErr($"Guesstimating a file size around {sizeGuess / (Int64)1000000}MB , this will crash immediately upon launch.");
-            //    Log.LogErr($"The file size MUST be less than {Int32.MaxValue / (int)1000000}MB");
-            //    Log.LogErr("***************ERROR*****************");
-            //    throw new OverflowException("File might exceed 2.1GB, aborting.");
-            //}
-
-            ////////START WRITING DATA
-
-
-
-            //todo: save here?
-
-
-            foreach (var pl in config.Playlists)
-            {
-                foreach (var sng in pl.SongList)
-                {
-                    if (sng.SourceOgg != null)
-                    {
-                        var clip = sng.LevelData.AudioClip.Object;
-
-                        FileProvider.WriteFile(sng.SourceOgg, AssetsRootPath + clip.Resource.Source, true, false);
-                        //saftey check to make sure we aren't removing a file we just put here
-                        if (audioFilesToDelete.Contains(clip.Resource.Source))
-                        {
-                            Log.LogErr($"Level id '{sng.LevelData.LevelID}' wrote file '{clip.Resource.Source}' that was on the delete list...");
-                            audioFilesToDelete.Remove(clip.Resource.Source);
-                        }
-                    }
-
-                    //todo: save on some interval to save ram?
-                }
-            }
-
-            if (audioFilesToDelete.Count > 0)
-            {
-                Log.LogMsg($"Deleting {audioFilesToDelete.ToString()} audio files");
-                foreach (var toDelete in audioFilesToDelete)
-                {
-                    //Log.LogMsg($"Deleting audio file {toDelete}");
-                    FileProvider.Delete(BSConst.KnownFiles.AssetsRootPath + toDelete);
-                }
-            }
-        }
-
         private void UpdateColorConfig(SimpleColorSO[] colors)
         {
             var manager = GetColorManager();
@@ -962,15 +1169,15 @@ namespace QuestomAssets
 
             if (colorA != null)
             {
-                (manager.ColorA.Object as SimpleColorSO).color = colorA.color;
+                (manager.ColorA.Object as SimpleColorSO).Color = colorA.Color;
             }
             if (colorB != null)
-                (manager.ColorB.Object as SimpleColorSO).color = colorB.color;
+                (manager.ColorB.Object as SimpleColorSO).Color = colorB.Color;
             // Reset
             if (colorA == null && colorB == null)
             {
-                (manager.ColorA.Object as SimpleColorSO).color = BSConst.Colors.DefaultColorA;
-                (manager.ColorB.Object as SimpleColorSO).color = BSConst.Colors.DefaultColorB;
+                (manager.ColorA.Object as SimpleColorSO).Color = BSConst.Colors.DefaultColorA;
+                (manager.ColorB.Object as SimpleColorSO).Color = BSConst.Colors.DefaultColorB;
             }
         }
 
@@ -988,9 +1195,9 @@ namespace QuestomAssets
 
         private ColorManager GetColorManager()
         {
-            var colorManager = _manager.MassFirstOrDefaultAsset<ColorManager>(x => true)?.Object;
-            if (colorManager == null)
-                throw new Exception("Unable to find the color manager asset!");
+            var colorManager = _manager.MassFirstOrDefaultAsset<ColorManager>(x => true, false)?.Object;
+           // if (colorManager == null)
+            //    throw new Exception("Unable to find the color manager asset!");
             return colorManager;
         }
 
@@ -1003,9 +1210,7 @@ namespace QuestomAssets
             // Literally the only object in the TextAssetFile is "BeatSaber" at PathID=1
             return textAssets.Object;
         }
-
-        
-
+               
         private List<string> GetAssetsLoadOrderFile()
         {
             string filename = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "assetsLoadOrder.json");
@@ -1031,6 +1236,31 @@ namespace QuestomAssets
             return loadOrder;
         }
 
+        #region IDisposable Support
+        private bool disposedValue = false; // To detect redundant calls
 
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    _manager.Dispose();
+                    _manager = null;
+                    _opManager.Dispose();
+                    _opManager = null;
+                }
+                disposedValue = true;
+            }
+        }
+
+        // This code added to correctly implement the disposable pattern.
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(true);
+
+        }
+        #endregion
     }
 }

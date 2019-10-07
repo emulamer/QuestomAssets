@@ -4,7 +4,7 @@ using System.Text;
 
 namespace QuestomAssets.AssetsChanger
 {
-    public class AssetBundle : AssetsObject, IHaveName
+    public sealed class AssetBundle : AssetsObject, IHaveName
     {
         public AssetBundle(AssetsFile assetsFile) : base(assetsFile, AssetsConstants.ClassID.MonoScriptType)
         {
@@ -15,12 +15,12 @@ namespace QuestomAssets.AssetsChanger
             Parse(reader);
         }
 
-        protected override void Parse(AssetsReader reader)
+        public override void Parse(AssetsReader reader)
         {
-            base.Parse(reader);
+            base.ParseBase(reader);
             Name = reader.ReadString();
             PreloadTable = reader.ReadArrayOf<ISmartPtr<AssetsObject>>(x => SmartPtr<AssetsObject>.Read(ObjectInfo.ParentFile, this, x));
-            Container = reader.ReadArrayOf(x => new Map(ObjectInfo.ParentFile, this, x));
+            Container = reader.ReadArrayOf(x => new BundleMap(ObjectInfo.ParentFile, this, x));
             MainAsset = new AssetInfo(ObjectInfo.ParentFile, this, reader);
             RuntimeCompatibility = reader.ReadUInt32();
             AssetBundleName = reader.ReadString();
@@ -29,7 +29,7 @@ namespace QuestomAssets.AssetsChanger
             reader.AlignTo(4);
             ExplicitDataLayout = reader.ReadInt32();
             PathFlags = reader.ReadInt32();
-            SceneHashes = reader.ReadArrayOf(x => new Map(ObjectInfo.ParentFile, this, x));
+            SceneHashes = reader.ReadArrayOf(x => new BundleMap(ObjectInfo.ParentFile, this, x));
         }
 
         protected override void WriteBase(AssetsWriter writer)
@@ -56,7 +56,7 @@ namespace QuestomAssets.AssetsChanger
 
         public string Name { get; set; }
         public List<ISmartPtr<AssetsObject>> PreloadTable { get; set; } = new List<ISmartPtr<AssetsObject>>();
-        public List<Map> Container { get; set; } = new List<Map>();
+        public List<BundleMap> Container { get; set; } = new List<BundleMap>();
         public AssetInfo MainAsset { get; set; }
         public UInt32 RuntimeCompatibility { get; set; }
         public string AssetBundleName { get; set; }
@@ -66,7 +66,7 @@ namespace QuestomAssets.AssetsChanger
         public bool IsStreamedSceneAssetBundle { get; set; }
         public Int32 ExplicitDataLayout { get; set; }
         public Int32 PathFlags { get; set; }
-        public List<Map> SceneHashes { get; set; }
+        public List<BundleMap> SceneHashes { get; set; }
 
     }
 }

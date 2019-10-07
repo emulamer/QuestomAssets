@@ -12,6 +12,7 @@ using System.Reflection;
 using QuestomAssets.AssetsChanger;
 using QuestomAssets;
 using QuestomAssets.Utils;
+using System.IO;
 
 namespace Assplorer
 {
@@ -23,6 +24,8 @@ namespace Assplorer
             InitializeComponent();
         }
         public event EventHandler<TreeNodeMouseClickEventArgs> NodeRightClicked;
+
+        public event EventHandler<Node> NodeSelected;
 
         public TreeNode SelectedNode
         {
@@ -46,7 +49,7 @@ namespace Assplorer
             }
         }
         public bool AutoExpand { get; set; } = true;
-        public Color HighlightColor { get; set; } = Color.AliceBlue;
+        public System.Drawing.Color HighlightColor { get; set; } = System.Drawing.Color.AliceBlue;
         private Node _dataSource;
         public Node DataSource
         {
@@ -78,7 +81,7 @@ namespace Assplorer
             if (n.StubToNode != null)
             {
                 //node.Text += ""
-                node.ForeColor = Color.DarkBlue;
+                node.ForeColor = System.Drawing.Color.DarkBlue;
                 node.Text = node.Text + " " + n.StubToNode.Text;
                 node.ImageIndex = 1;
                 node.SelectedImageIndex = 1;
@@ -91,7 +94,7 @@ namespace Assplorer
             }
             else if (isClone)
             {
-                node.ForeColor = Color.DarkBlue;
+                node.ForeColor = System.Drawing.Color.DarkBlue;
 
             }
             else
@@ -148,6 +151,7 @@ namespace Assplorer
             {
                 HighlightNodesByTag(node, selectedNode);
             }
+            NodeSelected?.Invoke(this, selectedNode);
         }
 
         private void HighlightNodesByTag(TreeNode node, Node tag)
@@ -159,7 +163,7 @@ namespace Assplorer
             }
             else
             {
-                node.BackColor = Color.White;
+                node.BackColor = System.Drawing.Color.White;
             }
             foreach (var n in node.Nodes)
             {
@@ -222,6 +226,25 @@ namespace Assplorer
             var n = e.Node.Tag as Node;
             if (n != null)
             {
+                cm.MenuItems.Add(new MenuItem("Copy Value", (o, ea) =>
+                {
+                    var s = n.Obj as string;
+                    var aso = n.Obj as AssetsObject;
+                    if (s != null)
+                    {
+                        Clipboard.SetText(s);
+                    }
+                    else if (aso != null)
+                    {
+                        Clipboard.SetText(n.Text);
+                    } else
+                    {
+                        Clipboard.SetText(Convert.ToString(n.Obj ?? ""));
+                    }
+
+
+                }));
+
                 var ao = n.Obj as AssetsObject;
                 if (ao != null)
                 {
@@ -245,6 +268,32 @@ namespace Assplorer
                             Clipboard.Clear();
                             Clipboard.SetText(n.GetHashCode().ToString(), TextDataFormat.Text);
                             ClipData = n;
+                        }));
+                        cm.MenuItems.Add(new MenuItem("Export Raw", (o, ea) =>
+                        {
+                            SaveFileDialog sfd = new SaveFileDialog();
+                            var name = Path.GetFileNameWithoutExtension(ao.ObjectInfo.ParentFile.AssetsFilename) + "-" + ao.ObjectInfo.ObjectID.ToString().PadLeft(4, '0');
+                            if (ao as IHaveName != null)
+                                name = name + "-" + (ao as IHaveName).Name;
+                            sfd.FileName = new string(name.Where(x => !System.IO.Path.GetInvalidFileNameChars().Contains(x)).ToArray()) + ".dat";
+                            sfd.OverwritePrompt = true;
+                            if (sfd.ShowDialog() == DialogResult.Cancel)
+                                return;
+                            try
+                            {
+                                using (FileStream fs = File.Open(sfd.FileName, FileMode.Create, FileAccess.Write, FileShare.Write))
+                                {
+                                    using (AssetsWriter aw = new AssetsWriter(fs))
+                                    {
+                                        ao.Write(aw);
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Log.LogErr($"failed to save {sfd.FileName}", ex);
+                                MessageBox.Show($"Error saving {sfd.FileName}, check log for details.", "Error Saving", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            }
                         }));
                     }
                 }

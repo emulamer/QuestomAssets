@@ -15,6 +15,7 @@ using QuestomAssets.BeatSaber;
 using QuestomAssets.Utils;
 using System.IO;
 using System.Text.RegularExpressions;
+using QuestomAssets.Models;
 
 namespace Assplorer
 {
@@ -27,7 +28,7 @@ namespace Assplorer
         }
 
         AssetsManager _manager;
-        IAssetsFileProvider _fileProvider;
+        IFileProvider _fileProvider;
 
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
@@ -67,7 +68,7 @@ namespace Assplorer
                     CloseStuff();
                     try
                     {
-                        _fileProvider = new ApkAssetsFileProvider(ofd.FileName, FileCacheMode.Memory,false);
+                        _fileProvider = new ZipFileProvider(ofd.FileName, FileCacheMode.Memory,false);
                         _manager = new AssetsManager(_fileProvider, BSConst.KnownFiles.AssetsRootPath, BSConst.GetAssetTypeMap());
                         if (_fileProvider.FindFiles("globalgamemanagers").Count > 0)
                             _manager.GetAssetsFile("globalgamemanagers.assets");
@@ -102,7 +103,7 @@ namespace Assplorer
                     try
                     {
                         _fileProvider = new FolderFileProvider(fbd.SelectedPath, false);
-                        _manager = new AssetsManager(_fileProvider, "", BSConst.GetAssetTypeMap());
+                        _manager = new AssetsManager(_fileProvider,"", BSConst.GetAssetTypeMap());
                         if (_fileProvider.FindFiles("globalgamemanagers").Count > 0)
                             _manager.GetAssetsFile("globalgamemanagers.assets");
                         if (_fileProvider.FindFiles("globalgamemanagers.assets*").Count > 0)
@@ -113,7 +114,7 @@ namespace Assplorer
                     }
                     catch (Exception ex)
                     {
-                        Log.LogErr("Couldn't load APK!", ex);
+                        Log.LogErr("Couldn't load folder!", ex);
                         MessageBox.Show("Failed to load!");
                         if (_fileProvider != null)
                         {
@@ -291,7 +292,7 @@ namespace Assplorer
         {
             _manager.WriteAllOpenAssets();
             _fileProvider.Save();
-            if (_fileProvider is ApkAssetsFileProvider)
+            if (_fileProvider is ZipFileProvider)
             {
                 ApkSigner s = new ApkSigner(BSConst.DebugCertificatePEM);
                 s.Sign(_fileProvider);
@@ -299,6 +300,40 @@ namespace Assplorer
  
             
             CloseStuff();
+        }
+        private Node selectedNode = null;
+        private void EtMain_NodeSelected(object sender, Node e)
+        {
+            if (e.Obj == null)
+            {
+                selectedNode = null;
+                pgAssetProps.SelectedObject = null;
+            } else
+            {
+                selectedNode = e;
+                pgAssetProps.SelectedObject = e.Obj;
+            }
+        }
+
+        private void PgAssetProps_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
+        {
+            if (selectedNode != null)
+            {
+                try
+                {
+                    string nodeName;
+                    string typeName;
+                    Node.MakeNodeAndTypeName(selectedNode.Obj, out nodeName, out typeName);
+                    selectedNode.Text = nodeName;
+                    var tn = selectedNode.ExtRef as TreeNode;
+                    if (tn != null)
+                        tn.Text = selectedNode.Text;
+                }
+                catch (Exception ex)
+                {
+                    Log.LogErr($"Exception updating node text", ex);
+                }
+            }
         }
     }
 }

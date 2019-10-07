@@ -23,7 +23,7 @@ namespace QuestomAssets.Utils
     public class Patcher
     {
         
-        public static bool Patch(IAssetsFileProvider apk, FilePatch patch)
+        public static bool Patch(IFileProvider apk, FilePatch patch)
         {
             string binaryFile = patch.Filename;
             if (!apk.FileExists(binaryFile))

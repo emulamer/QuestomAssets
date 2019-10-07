@@ -4,12 +4,13 @@ using System.Text;
 using QuestomAssets.AssetsChanger;
 using System.IO;
 using System.Linq;
+using QuestomAssets.Utils;
 
 namespace QuestomAssets.BeatSaber
 {
     public static class Extensions
     {
-        private static string FindFirstOfSplit(IAssetsFileProvider fp, string assetsFile)
+        private static string FindFirstOfSplit(IFileProvider fp, string assetsFile)
         {
             int lastDot = assetsFile.LastIndexOf('.');
             if (lastDot > 0)
@@ -45,7 +46,7 @@ namespace QuestomAssets.BeatSaber
             return null;            
         }
 
-        public static string CorrectAssetFilename(this IAssetsFileProvider fp, string assetsFile)
+        public static string CorrectAssetFilename(this IFileProvider fp, string assetsFile)
         {
             var correctName = FindFirstOfSplit(fp, assetsFile);
             if (correctName != null)
@@ -58,6 +59,16 @@ namespace QuestomAssets.BeatSaber
                 correctName = FindFirstOfSplit(fp, whyUnity);
                 if (correctName != null)
                     return correctName;
+
+                //whyUnity = assetsFile.Replace("library/", "");
+                //correctName = FindFirstOfSplit(fp, whyUnity);
+                //if (correctName != null)
+                //    return correctName;
+
+                //whyUnity = assetsFile.Replace("/library/", "");
+                //correctName = FindFirstOfSplit(fp, whyUnity);
+                //if (correctName != null)
+                //    return correctName;
             }
 
             //some of the files in ExternalFiles have library/ on them, but they're actually in the root path
@@ -74,11 +85,10 @@ namespace QuestomAssets.BeatSaber
             
 
 
-            throw new ArgumentException("The file doesn't exist in the APK with any name!");
+            throw new ArgumentException($"The assets file {assetsFile} doesn't exist in with any known name variations!");
         }
 
-
-        public static Stream ReadCombinedAssets(this IAssetsFileProvider fp, string assetsFilePath)
+        public static Stream ReadCombinedAssets(this IFileProvider fp, string assetsFilePath, out bool wasCombined)
         {
             string actualName = fp.CorrectAssetFilename(assetsFilePath);
 
@@ -90,16 +100,28 @@ namespace QuestomAssets.BeatSaber
             }
             else
             {
+                wasCombined = false;
                 return fp.GetReadStream(actualName);
             }
-            MemoryStream msFullFile = new MemoryStream();
-            foreach (string assetsFile in assetFiles)
-            {
-                byte[] fileBytes = fp.Read(assetsFile);
-                msFullFile.Write(fileBytes, 0, fileBytes.Length);
-            }
+            wasCombined = true;
+            //TODO: property or something on the file provider interface letting this code know if it should use the combined stream
+            //      I think combined stream may perform horribly on zip files or cause other issues.
 
-            return msFullFile;
+            if (true)
+            {
+                return new CombinedStream(assetFiles, fp);
+            }
+            else
+            {
+                MemoryStream msFullFile = new MemoryStream();
+                foreach (string assetsFile in assetFiles)
+                {
+                    byte[] fileBytes = fp.Read(assetsFile);
+                    msFullFile.Write(fileBytes, 0, fileBytes.Length);
+                }
+
+                return msFullFile;
+            }
         }
 
     }

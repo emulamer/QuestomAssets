@@ -7,19 +7,27 @@ using System.Linq;
 
 namespace QuestomAssets.AssetsChanger
 {
-    public class AssetsManager
+    public class AssetsManager : IDisposable
     {
         public Dictionary<string, Type> ClassNameToTypes { get; private set; } = new Dictionary<string, Type>();
-        private IAssetsFileProvider _fileProvider;
+        private IFileProvider _fileProvider;
         private string _assetsRootPath;
 
-        public AssetsManager(IAssetsFileProvider fileProvider, string assetsRootPath, Dictionary<string, Type> classNameToTypes)
+        public AssetsManager(IFileProvider fileProvider, string assetsRootPath, Dictionary<string, Type> classNameToTypes)
         {
             _fileProvider = fileProvider;
             _assetsRootPath = assetsRootPath;
             LazyLoad = true;
             ClassNameToTypes = classNameToTypes;
             ForceLoadAllFiles = false;
+        }
+
+        public bool HasChanges
+        {
+            get
+            {
+                return _openAssetsFiles.Any(x=> x.Value.HasChanges);
+            }
         }
 
         private Dictionary<string, AssetsFile> _openAssetsFiles = new Dictionary<string, AssetsFile>();
@@ -93,66 +101,80 @@ namespace QuestomAssets.AssetsChanger
 
         public AssetsFile GetAssetsFile(string assetsFilename)
         {
-            if (_openAssetsFiles.ContainsKey(assetsFilename.ToLower()))
-                return _openAssetsFiles[assetsFilename.ToLower()];
-            AssetsFile assetsFile = new AssetsFile(this, _fileProvider, _assetsRootPath, assetsFilename, false);
-            _openAssetsFiles.Add(assetsFilename.ToLower(), assetsFile);
-            assetsFile.LoadData();
-            return assetsFile;
+            lock (_openAssetsFiles)
+            {
+                if (_openAssetsFiles.ContainsKey(assetsFilename.ToLower()))
+                    return _openAssetsFiles[assetsFilename.ToLower()];
+                AssetsFile assetsFile = new AssetsFile(this, _fileProvider, _assetsRootPath, assetsFilename, false);
+                _openAssetsFiles.Add(assetsFilename.ToLower(), assetsFile);
+                assetsFile.LoadData();
+                return assetsFile;
+            }
         }
 
         public bool TryGetAssetsFile(string assetsFilename, out AssetsFile loadedFile)
         {
-            if (_openAssetsFiles.ContainsKey(assetsFilename))
+            lock (_openAssetsFiles)
             {
-                loadedFile = _openAssetsFiles[assetsFilename];
+                if (_openAssetsFiles.ContainsKey(assetsFilename))
+                {
+                    loadedFile = _openAssetsFiles[assetsFilename];
+                    return true;
+                }
+                AssetsFile assetsFile = null;
+                try
+                {
+                    assetsFile = new AssetsFile(this, _fileProvider, _assetsRootPath, assetsFilename, false);
+                }
+                catch
+                {
+                    loadedFile = null;
+                    return false;
+                }
+                _openAssetsFiles.Add(assetsFilename, assetsFile);
+                assetsFile.LoadData();
+                loadedFile = assetsFile;
                 return true;
             }
-            AssetsFile assetsFile = null;
-            try
-            {
-                assetsFile = new AssetsFile(this, _fileProvider, _assetsRootPath, assetsFilename, false);
-            }
-            catch
-            {
-                loadedFile = null;
-                return false;
-            }
-            _openAssetsFiles.Add(assetsFilename, assetsFile);
-            assetsFile.LoadData();
-            loadedFile = assetsFile;
-            return true;
         }
 
         public void WriteAllOpenAssets()
         {
-            foreach (var assetsFileName in _openAssetsFiles.Keys.ToList())
+            lock (_openAssetsFiles)
             {
-                var assetsFile = _openAssetsFiles[assetsFileName];
-                if (assetsFile.HasChanges)
+                lock (this)
                 {
-                    Log.LogMsg($"File {assetsFileName} has changed, writing new contents.");
-                    try
+                    foreach (var assetsFileName in _openAssetsFiles.Keys.ToList())
                     {
-                        assetsFile.Write();
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.LogErr($"Exception writing assets file {assetsFileName}", ex);
-                        throw;
+                        var assetsFile = _openAssetsFiles[assetsFileName];
+                        if (assetsFile.HasChanges)
+                        {
+                            Log.LogMsg($"File {assetsFileName} has changed, writing new contents.");
+                            try
+                            {
+                                assetsFile.Write();
+                            }
+                            catch (Exception ex)
+                            {
+                                Log.LogErr($"Exception writing assets file {assetsFileName}", ex);
+                                throw;
+                            }
+                        }
                     }
                 }
-                _openAssetsFiles.Remove(assetsFileName);
             }
         }
 
         public void CloseAllOpenAssets()
         {
-            foreach (var assetsFileName in _openAssetsFiles.Keys.ToList())
+            lock (this)
             {
-                var assetsFile = _openAssetsFiles[assetsFileName];
-                _openAssetsFiles[assetsFileName].Dispose();
-                _openAssetsFiles.Remove(assetsFileName);
+                foreach (var assetsFileName in _openAssetsFiles.Keys.ToList())
+                {
+                    var assetsFile = _openAssetsFiles[assetsFileName];
+                    _openAssetsFiles[assetsFileName].Dispose();
+                    _openAssetsFiles.Remove(assetsFileName);
+                }
             }
         }
 
@@ -239,8 +261,16 @@ namespace QuestomAssets.AssetsChanger
             List<AssetsFile> deepSearched = new List<AssetsFile>();
             //do a quick pass on the open assts files so that if we find one and stop at that, we don't iterate them all
             foreach (var file in _openAssetsFiles.Values.ToList())
-                foreach (var res in file.FindAssets(filter))
-                    yield return res;
+            {
+                if (!searched.Contains(file))
+                {
+                    searched.Add(file);
+                    foreach (var res in file.FindAssets(filter))
+                    {
+                        yield return res;
+                    }
+                }
+            }
 
             if (deepSearch)
             {
@@ -250,5 +280,30 @@ namespace QuestomAssets.AssetsChanger
                         yield return res;
             }
         }
+
+        #region IDisposable Support
+        private bool disposedValue = false; // To detect redundant calls
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    this.CloseAllOpenAssets();
+                }
+
+                disposedValue = true;
+            }
+        }
+
+
+        // This code added to correctly implement the disposable pattern.
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(true);
+        }
+        #endregion
     }
 }

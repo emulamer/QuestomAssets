@@ -11,29 +11,19 @@ using Newtonsoft.Json.Linq;
 
 namespace QuestomAssets.BeatSaber
 {
-    public class BeatmapDataObject: MonoBehaviourObject
+    public sealed class BeatmapDataObject: MonoBehaviourObject
     {
         public BeatmapDataObject(IObjectInfo<AssetsObject> objectInfo, AssetsReader reader) : base(objectInfo)
         {
             Parse(reader);
         }
 
-        //public BeatmapDataObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
-        //{ }
-
         public BeatmapDataObject(AssetsFile assetsFile) : base(assetsFile, assetsFile.Manager.GetScriptObject("BeatmapDataSO"))
         { }
 
-        
-        
-        //public BeatmapDataObject(AssetsReader reader)
-        //{
-        //    Parse(reader);
-        //}
-
-        protected override void Parse(AssetsReader reader)
+        public override void Parse(AssetsReader reader)
         {
-            base.Parse(reader);
+            base.ParseBase(reader);
             JsonData = reader.ReadString();
             reader.AlignTo(4);
         }
@@ -57,15 +47,6 @@ namespace QuestomAssets.BeatSaber
             set
             {
                 var json = value;
-                if (json != null)
-                {
-                    var jo = JObject.Parse(json);
-                    if (jo.ContainsKey("_BPMChanges"))
-                    {
-                        jo.Remove("_BPMChanges");
-                        json = jo.ToString(Formatting.None);
-                    }
-                }
                 _jsonData = value;
             }
         }
@@ -88,7 +69,19 @@ namespace QuestomAssets.BeatSaber
         [JsonProperty("_hasRequiredDataForLoad")]
         public bool HasRequiredDataForLoad { get; set; }
 
-
+        [System.ComponentModel.Browsable(false)]
+        [Newtonsoft.Json.JsonIgnore]
+        public override byte[] ScriptParametersData
+        {
+            get
+            {
+                throw new InvalidOperationException("Cannot access parameters data from this object.");
+            }
+            set
+            {
+                throw new InvalidOperationException("Cannot access parameters data from this object.");
+            }
+        }
 
     }
 }

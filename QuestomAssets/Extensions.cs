@@ -10,12 +10,74 @@ namespace QuestomAssets
 {
     public static class Extensions
     {
+        public static string GetDirectoryFwdSlash(this string path)
+        {
+            if (!path.Contains("/"))
+                return "";
 
+            return path.Substring(0, path.LastIndexOf('/'));
+        }
+
+        public static string FullMessage(this Exception exception)
+        {
+            if (exception == null)
+                return "(Exception was null!)";
+
+            string exmsg = "";
+            exmsg = $"{exception.Message} {exception.StackTrace}";
+            var ex = exception.InnerException;
+            while (ex != null)
+            {
+                exmsg += $"\nInnerException: {ex.Message} {ex.StackTrace}";
+                ex = ex.InnerException;
+            }
+            return exmsg;
+        }
+
+        public static string GetFilenameFwdSlash(this string path)
+        {
+            if (path == "/")
+                return "";
+
+            if (!path.Contains("/"))
+                return path;
+
+            if (path.EndsWith("/"))
+                path = path.TrimEnd('/');
+
+            int idx = path.LastIndexOf('/') + 1;
+
+            return path.Substring(idx, path.Length - idx);
+        }
+
+        public static string CombineFwdSlash(this string path1, string path2)
+        {
+            if (path1 == null || path2 == null)
+                return null;
+
+            if (path1.EndsWith("/") && path1.Length > 1)
+                path1 = path1.TrimEnd('/');
+
+            path2 = path2.TrimStart('/');
+
+            if (string.IsNullOrWhiteSpace(path1))
+                return path2;
+
+            if (string.IsNullOrWhiteSpace(path2))
+                throw new ArgumentException("Path 2 is required!");
+
+            return path1 + "/" + path2;
+        }
         public static T DeepClone<T>(this IObjectInfo<T> source, AssetsFile toFile = null, List<CloneExclusion> exclusions = null, List<AssetsObject> addedObjects = null) where T : AssetsObject
         {
             return Cloner.DeepClone<T>((T)source.Object, toFile, addedObjects, null, exclusions);
         }
 
+        public static string ReadToString(this IFileProvider provider, string filename)
+        {
+            var data = provider.Read(filename);
+            return System.Text.Encoding.UTF8.GetString(data);
+        }
 
         public static byte[] ToPngBytes(this Texture2DObject texture)
         {

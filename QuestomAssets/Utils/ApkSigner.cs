@@ -62,7 +62,7 @@ namespace QuestomAssets.Utils
             }
         }
 
-        public void Sign(IAssetsFileProvider fileProvider)
+        public void Sign(IFileProvider fileProvider)
         {
             MemoryStream msManifestFile = new MemoryStream();
             MemoryStream msSigFile = new MemoryStream();
@@ -137,7 +137,7 @@ namespace QuestomAssets.Utils
         /// <summary>
         /// Writes the MANIFEST.MF name and hash and the sigfile.SF hash for the sourceFile
         /// </summary>
-        private void WriteEntryHashes(IAssetsFileProvider provider, string sourceFile, Stream manifestFileStream, Stream signatureFileStream)
+        private void WriteEntryHashes(IFileProvider provider, string sourceFile, Stream manifestFileStream, Stream signatureFileStream)
         {
 
             using (Stream s = provider.GetReadStream(sourceFile))

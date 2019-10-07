@@ -24,6 +24,7 @@ namespace QuestomAssets.AssetsChanger
         T Clone(AssetsFile toFile = null);
         bool IsLoaded { get; }
         AssetsObject GetObjectForWrite();
+        void FreeObject();
     }
     public class ObjectInfo<T> : IObjectInfo<T> where T: AssetsObject
     {
@@ -127,6 +128,18 @@ namespace QuestomAssets.AssetsChanger
 
         public static IObjectInfo<AssetsObject> FromClassID(AssetsFile assetsFile, int classID, AssetsObject assetsObject)
         {
+            var foundType = assetsFile.Metadata.Types.FirstOrDefault(x => x.ClassID == classID);
+            if (foundType == null)
+            {
+                
+                Log.LogMsg($"Type with class ID {classID} was not found in file {assetsFile.AssetsFilename}, it will be added.");
+                if (classID == AssetsConstants.ClassID.MonoBehaviourScriptType || classID == AssetsConstants.ClassID.MonoScriptType)
+                {
+                    Log.LogErr("Monoscripts and Monobehaviours can't be created in files that don't already have them by using a class ID.");
+                    throw new Exception("Class ID not found in file!");
+                }
+                assetsFile.Metadata.Types.Add(new AssetsType() { ClassID = classID });
+            }
             var typeIndex = assetsFile.Metadata.Types.IndexOf(assetsFile.Metadata.Types.First(x => x.ClassID == classID));
             return FromTypeIndex(assetsFile, typeIndex, assetsObject);
         }
@@ -200,6 +213,12 @@ namespace QuestomAssets.AssetsChanger
                 case AssetsConstants.ClassID.RectTransformClassID:
                     type = typeof(RectTransform);
                     break;
+                case AssetsConstants.ClassID.MaterialClassID:
+                    type = typeof(MaterialObject);
+                    break;
+                case AssetsConstants.ClassID.MeshRendererClassID:
+                    type = typeof(MeshRendererObject);
+                    break;
                 default:
                     type = typeof(AssetsObject);
                     break;
@@ -222,6 +241,11 @@ namespace QuestomAssets.AssetsChanger
                 return _object != null;
             }
         }
+
+        public void FreeObject()
+        {
+            _object = null;
+        }
         
         /// <summary>
         /// If the object has already been loaded, it returns the typed, parsed object.  If the object has not yet been loaded, it returns a base AssetsObject with unparsed data so that it's faster to write and doesn't pull in all the pointer refs
@@ -231,17 +255,23 @@ namespace QuestomAssets.AssetsChanger
             if (_object != null)
                 return _object;
 
-            using (var reader = ParentFile.GetReaderAtDataOffset())
+            lock (ParentFile)
             {
-                return new AssetsObject(this, reader);
+                using (var reader = ParentFile.GetReaderAtDataOffset())
+                {
+                    return new AssetsObject(this, reader);
+                }
             }
         }
 
         private void LoadObject()
         {
-            using (var reader = ParentFile.GetReaderAtDataOffset())
+            lock (ParentFile)
             {
-                _object = (T) Activator.CreateInstance(typeof(T), this, reader);
+                using (var reader = ParentFile.GetReaderAtDataOffset())
+                {
+                    _object = (T)Activator.CreateInstance(typeof(T), this, reader);
+                }
             }
         }
 

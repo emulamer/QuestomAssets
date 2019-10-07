@@ -1,0 +1,46 @@
+﻿{
+  "ID": "KatanaSaberv1",
+  "Name": "Katana Sabers V1",
+  "Author": "elliotttate",
+  "Description": "Katana sabers",
+  "Category": "Saber",
+  "TargetBeatSaberVersion": "1.1.0",
+  "CanUninstall": false,
+  "Components": [
+    {
+      "Type": "AssetsMod",
+      "InstallAction": {
+        "PreloadFiles": ["sharedassets12.assets"],
+		"Actions": [
+			{
+				"Type": "ReplaceAsset",
+				"StepNumber": 1,
+				"Locator": { 
+					"TypeIs": "Mesh",
+					"NameIs": "SaberBlade"
+					},
+				"FromDataFile": "SaberBlade.dat"
+			},
+			{
+				"Type": "ReplaceAsset",
+				"StepNumber": 1,
+				"Locator": { 
+					"TypeIs": "Mesh",
+					"NameIs": "SaberGlowingEdges"
+					},
+				"FromDataFile": "SaberGlowingEdges.dat"
+			},
+			{
+				"Type": "ReplaceAsset",
+				"StepNumber": 1,
+				"Locator": { 
+					"TypeIs": "Mesh",
+					"NameIs": "SaberHandle"
+					},
+				"FromDataFile": "SaberHandle.dat"
+			}
+		]
+      }
+    }
+  ]
+}

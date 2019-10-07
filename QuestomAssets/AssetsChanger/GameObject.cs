@@ -7,7 +7,7 @@ using System.Text;
 
 namespace QuestomAssets.AssetsChanger
 {
-    public class GameObject : AssetsObject, IHaveName
+    public sealed class GameObject : AssetsObject, IHaveName
     {
         public GameObject(AssetsFile assetsFile) : base(assetsFile, AssetsConstants.ClassID.GameObjectClassID)
         {
@@ -17,35 +17,22 @@ namespace QuestomAssets.AssetsChanger
         public GameObject(IObjectInfo<AssetsObject> objectInfo, AssetsReader reader) : base(objectInfo)
         {
             Parse(reader);
-            ParseDetails(reader);
         }
-
-        //protected void UpdateType(AssetsMetadata metadata, Guid scriptHash, PPtr monoscriptTypePtr)
-        //{
-        //    base.UpdateType(metadata, scriptHash);
-        //}
-
-        //public GameObject()
-        //{ IsActive = true; }
 
         protected GameObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
         { IsActive = true; }
 
 
-        protected override void Parse(AssetsReader reader)
+        public override void Parse(AssetsReader reader)
         {
-            base.Parse(reader);            
-        }
-
-        protected void ParseDetails(AssetsReader reader)
-        {
+            base.ParseBase(reader);
             int count = reader.ReadInt32();
             for (int i = 0; i < count; i++)
                 Components.Add(SmartPtr<AssetsObject>.Read(ObjectInfo.ParentFile, this, reader));
             Layer = reader.ReadUInt32();
             Name = reader.ReadString();
             Tag = reader.ReadUInt16();
-            IsActive = reader.ReadBoolean();            
+            IsActive = reader.ReadBoolean();
         }
 
         protected override void WriteBase(AssetsWriter writer)
@@ -74,5 +61,9 @@ namespace QuestomAssets.AssetsChanger
         public UInt16 Tag { get; set; }
 
         public bool IsActive { get; set; }
+
+        [System.ComponentModel.Browsable(false)]
+        [Newtonsoft.Json.JsonIgnore]
+        public override byte[] Data { get => throw new InvalidOperationException("Data cannot be accessed from this class!"); set => throw new InvalidOperationException("Data cannot be accessed from this class!"); }
     }
 }

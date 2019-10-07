@@ -33,6 +33,39 @@ namespace QuestomAssets.AssetsChanger
         }
     }
 
+    public class Vector4F
+    {
+
+        public Single X { get; set; }
+        public Single Y { get; set; }
+        public Single Z { get; set; }
+        public Single W { get; set; }
+        public Vector4F()
+        { }
+
+        public Vector4F(AssetsReader reader)
+        {
+            Parse(reader);
+        }
+
+        private void Parse(AssetsReader reader)
+        {
+            X = reader.ReadSingle();
+            Y = reader.ReadSingle();
+            Z = reader.ReadSingle();
+            W = reader.ReadSingle();
+        }
+
+        public void Write(AssetsWriter writer)
+        {
+            writer.Write(X);
+            writer.Write(Y);
+            writer.Write(Z);
+            writer.Write(W);
+        }
+
+    }
+
     public class Vector2F
     {
         public Single X { get; set; }

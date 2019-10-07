@@ -19,9 +19,9 @@ namespace QuestomAssets.AssetsChanger
         public Texture2DObject(AssetsFile assetsFile) : base(assetsFile, AssetsConstants.ClassID.Texture2DClassID)
         { }
 
-        protected override void Parse(AssetsReader reader)
+        public override void Parse(AssetsReader reader)
         {
-            base.Parse(reader);
+            base.ParseBase(reader);
             Name = reader.ReadString();
             ForcedFallbackFormat = reader.ReadInt32();
             DownscaleFallback = reader.ReadBoolean();
@@ -73,17 +73,9 @@ namespace QuestomAssets.AssetsChanger
         }
 
 
-        public override byte[] Data
-        {
-            get
-            {
-                throw new InvalidOperationException("Data cannot be accessed from this class.");
-            }
-            set
-            {
-                throw new InvalidOperationException("Data cannot be accessed from this class.");
-            }
-        }
+        [System.ComponentModel.Browsable(false)]
+        [Newtonsoft.Json.JsonIgnore]
+        public override byte[] Data { get => throw new InvalidOperationException("Data cannot be accessed from this class!"); set => throw new InvalidOperationException("Data cannot be accessed from this class!"); }
 
 
         public string Name { get; set; }

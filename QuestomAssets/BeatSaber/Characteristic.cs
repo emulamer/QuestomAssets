@@ -7,12 +7,14 @@ using System.Text;
 
 namespace QuestomAssets.BeatSaber
 {
-    [JsonConverter(typeof(StringEnumConverter))]
+    [JsonConverter(typeof(StringEnumConverter), false)]
     public enum Characteristic
     {
         Standard,
         OneSaber,
-        NoArrows
+        NoArrows,
+        Lightshow,
+        Lawless
     }
 }
 

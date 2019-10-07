@@ -11,8 +11,6 @@ namespace QuestomAssets.BeatSaber
 {
     public sealed class BeatmapLevelDataObject : MonoBehaviourObject, INeedAssetsMetadata
     {
-
-
         public BeatmapLevelDataObject(IObjectInfo<AssetsObject> objectInfo, AssetsReader reader) : base(objectInfo)
         {
             Parse(reader);
@@ -21,6 +19,16 @@ namespace QuestomAssets.BeatSaber
         public BeatmapLevelDataObject(AssetsFile assetsFile) : base(assetsFile, assetsFile.Manager.GetScriptObject("BeatmapLevelSO"))
         { }
 
+        /// <summary>
+        /// Empty constructor is used only for temporary deserialization, it will not create a useable AssetObject!
+        /// </summary>
+        public BeatmapLevelDataObject() : base(null)
+        {
+
+        }
+
+        [System.ComponentModel.Browsable(false)]
+        [Newtonsoft.Json.JsonIgnore]
         public override byte[] ScriptParametersData
         {
             get
@@ -32,6 +40,7 @@ namespace QuestomAssets.BeatSaber
                 throw new InvalidOperationException("Cannot access parameters data from this object.");
             }
         }
+
         private string _levelID;
 
         [JsonProperty("_levelID")]
@@ -41,7 +50,7 @@ namespace QuestomAssets.BeatSaber
             {
                 if (_levelID == null)
                 {
-                    _levelID = MiscUtils.GetLevelID(SongName);
+                    _levelID = MiscUtils.SanitizeName(SongName);
                 }
                 //this probably isn't safe to use as a songID
                 return _levelID;
@@ -100,8 +109,11 @@ namespace QuestomAssets.BeatSaber
         [JsonIgnore]
         public ISmartPtr<Texture2DObject> CoverImageTexture2D { get; set; }
 
+        //[JsonIgnore]
+        //public ISmartPtr<AssetsObject> EnvironmentSceneInfo { get; set; }
+
         [JsonIgnore]
-        public ISmartPtr<AssetsObject> EnvironmentSceneInfo { get; set; }
+        public ISmartPtr<AssetsObject> EnvironmentInfo { get; set; }
 
         [JsonIgnore]
         public ISmartPtr<AudioClipObject> AudioClip { get; set; }
@@ -123,7 +135,7 @@ namespace QuestomAssets.BeatSaber
             writer.Write(PreviewStartTime);
             writer.Write(PreviewDuration);
             CoverImageTexture2D.Write(writer);
-            EnvironmentSceneInfo.Write(writer);
+            EnvironmentInfo.Write(writer);
             writer.Write(DifficultyBeatmapSets.Count);
             foreach (var bms in DifficultyBeatmapSets)
             {
@@ -131,9 +143,9 @@ namespace QuestomAssets.BeatSaber
             }
         }
 
-        protected override void Parse(AssetsReader reader)
+        public override void Parse(AssetsReader reader)
         {
-            base.Parse(reader);
+            base.ParseBase(reader);
             LevelID = reader.ReadString();
             SongName = reader.ReadString();
             SongSubName = reader.ReadString();
@@ -147,15 +159,8 @@ namespace QuestomAssets.BeatSaber
             PreviewStartTime = reader.ReadSingle();
             PreviewDuration = reader.ReadSingle();
             CoverImageTexture2D = SmartPtr<Texture2DObject>.Read(ObjectInfo.ParentFile, this, reader);
-            EnvironmentSceneInfo = SmartPtr<AssetsObject>.Read(ObjectInfo.ParentFile, this, reader);
+            EnvironmentInfo = SmartPtr<AssetsObject>.Read(ObjectInfo.ParentFile, this, reader);
             DifficultyBeatmapSets = reader.ReadArrayOf(x => new DifficultyBeatmapSet(ObjectInfo.ParentFile, this, x));
         }
-
-        
-        
-
     }
-
-
-
 }

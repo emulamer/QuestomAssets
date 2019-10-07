@@ -18,7 +18,6 @@ namespace QuestomAssets.AssetsChanger
         public MonoBehaviourObject(IObjectInfo<AssetsObject> objectInfo, AssetsReader reader) : base(objectInfo)
         {
             Parse(reader);
-            ParseDetails(reader);
         }
 
         //protected void UpdateType(AssetsMetadata metadata, Guid scriptHash, PPtr monoscriptTypePtr)
@@ -61,6 +60,7 @@ namespace QuestomAssets.AssetsChanger
             }
         }
 
+        [System.ComponentModel.Browsable(false)]
         [JsonIgnore]
         public override byte[] Data
         {
@@ -74,19 +74,20 @@ namespace QuestomAssets.AssetsChanger
             }
         }
 
-        protected override void Parse(AssetsReader reader)
+        public override void Parse(AssetsReader reader)
         {
-            base.Parse(reader);
+            ParseBase(reader);
+            var readLength = ObjectInfo.DataSize - (reader.Position - ObjectInfo.DataOffset);
+            ScriptParametersData = reader.ReadBytes(readLength);
+            reader.AlignTo(4);
+        }
+
+        protected override void ParseBase(AssetsReader reader)
+        {
+            base.ParseBase(reader);
             Enabled = reader.ReadInt32();
             MonoscriptTypePtr = SmartPtr<MonoScriptObject>.Read(ObjectInfo.ParentFile, this, reader);
             Name = reader.ReadString();
-        }
-
-        private void ParseDetails(AssetsReader reader)
-        {
-            var readLength = ObjectInfo.DataSize - (reader.Position - ObjectInfo.DataOffset);  
-            ScriptParametersData = reader.ReadBytes(readLength);
-            reader.AlignTo(4);
         }
 
         protected override void WriteBase(AssetsWriter writer)

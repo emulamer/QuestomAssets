@@ -50,7 +50,7 @@
             this.tvExplorer.Location = new System.Drawing.Point(0, 0);
             this.tvExplorer.Name = "tvExplorer";
             this.tvExplorer.SelectedImageIndex = 0;
-            this.tvExplorer.Size = new System.Drawing.Size(450, 339);
+            this.tvExplorer.Size = new System.Drawing.Size(1038, 339);
             this.tvExplorer.TabIndex = 1;
             this.tvExplorer.BeforeExpand += new System.Windows.Forms.TreeViewCancelEventHandler(this.TvExplorer_BeforeExpand);
             this.tvExplorer.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.TvExplorer_AfterSelect);
@@ -109,7 +109,7 @@
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.tvExplorer);
-            this.splitContainer1.Size = new System.Drawing.Size(450, 371);
+            this.splitContainer1.Size = new System.Drawing.Size(1038, 371);
             this.splitContainer1.SplitterDistance = 28;
             this.splitContainer1.TabIndex = 6;
             // 
@@ -120,7 +120,7 @@
             this.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.Controls.Add(this.splitContainer1);
             this.Name = "ExploreTree";
-            this.Size = new System.Drawing.Size(450, 371);
+            this.Size = new System.Drawing.Size(1038, 371);
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel1.PerformLayout();
             this.splitContainer1.Panel2.ResumeLayout(false);

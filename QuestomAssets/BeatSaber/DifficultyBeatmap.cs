@@ -19,11 +19,17 @@ namespace QuestomAssets.BeatSaber
         [JsonProperty("_noteJumpMovementSpeed")]
         public Single NoteJumpMovementSpeed { get; set; }
 
+        /// <summary>
+        /// This value is actually an integer, but some custom maps have a float in there and it won't deserialize properly
+        /// </summary>
         [JsonProperty("_noteJumpStartBeatOffset")]
-        public int NoteJumpStartBeatOffset { get; set; }
+        public Single NoteJumpStartBeatOffset { get; set; }
 
         [JsonProperty("_beatmapData")]
         public BeatmapDataObject BeatmapData { get; set; }
+
+        [JsonProperty("_beatmapFilename")]
+        public string BeatmapFilename { get; set; }
 
         //unity assets format only
         [JsonIgnore]
@@ -54,7 +60,8 @@ namespace QuestomAssets.BeatSaber
             writer.Write((int)Difficulty);
             writer.Write(DifficultyRank);
             writer.Write(NoteJumpMovementSpeed);
-            writer.Write(NoteJumpStartBeatOffset);
+            Int32 jump = (Int32)NoteJumpStartBeatOffset;
+            writer.Write(jump);
             BeatmapDataPtr.Write(writer);            
         }
     }

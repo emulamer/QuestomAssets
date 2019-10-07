@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace QuestomAssets
@@ -7,6 +8,7 @@ namespace QuestomAssets
     public static class Log
     {
         private static List<ILog> _logSinks = new List<ILog>();
+
 
         public static void ClearLogSinks()
         {
@@ -18,12 +20,30 @@ namespace QuestomAssets
             _logSinks.Add(logSink);
         }
 
+        public static void ClearSinksOfType<T>(Func<T, bool> filter) where T : class, ILog
+        {
+            var sinks = _logSinks.Where(x => x as T != null && filter.Invoke(x as T)).ToList();
+            _logSinks.RemoveAll(x => sinks.Contains(x));
+            foreach (var sink in sinks)
+            {
+                var disp = sink as IDisposable;
+                if (disp != null)
+                    disp.Dispose();
+            }
+        }
+
+        public static void RemoveLogSink(ILog logSink)
+        {
+            if (_logSinks.Contains(logSink))
+                _logSinks.Remove(logSink);
+        }
+
         public static void LogMsg(string message, params object[] args)
         {
             _logSinks.ForEach(x =>
             {
                 try
-                { x.LogMsg(message, args); }
+                { x.LogMsg($"MSG: {message}", args); }
                 catch { }
             });
         }
@@ -33,7 +53,12 @@ namespace QuestomAssets
             _logSinks.ForEach(x =>
             {
                 try
-                { x.LogErr(message, ex); }
+                {
+                    if (ex != null)
+                        x.LogErr($"ERR: {message}", ex);
+                    else
+                        x.LogErr($"ERR: {message}");
+                }
                 catch { }
             });
         }
@@ -43,7 +68,7 @@ namespace QuestomAssets
             _logSinks.ForEach(x =>
             {
                 try
-                { x.LogErr(message); }
+                { x.LogErr($"ERR: {message}"); }
                 catch { }
             });
         }

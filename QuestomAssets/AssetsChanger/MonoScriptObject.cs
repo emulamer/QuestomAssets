@@ -4,7 +4,7 @@ using System.Text;
 
 namespace QuestomAssets.AssetsChanger
 {
-    public class MonoScriptObject : AssetsObject, IHaveName
+    public sealed class MonoScriptObject : AssetsObject, IHaveName
     {
         public MonoScriptObject(AssetsFile assetsFile) : base(assetsFile, AssetsConstants.ClassID.MonoScriptType)
         {
@@ -15,12 +15,9 @@ namespace QuestomAssets.AssetsChanger
             Parse(reader);
         }
 
-        //public MonoScriptObject(IObjectInfo<AssetsObject> objectInfo) : base(objectInfo)
-        //{ }
-
-        protected override void Parse(AssetsReader reader)
+        public override void Parse(AssetsReader reader)
         {
-            base.Parse(reader);
+            base.ParseBase(reader);
             Name = reader.ReadString();
             ExecutionOrder = reader.ReadInt32();
             PropertiesHash = reader.ReadGuid();
@@ -51,6 +48,10 @@ namespace QuestomAssets.AssetsChanger
         public string ClassName { get; set; }
         public string Namespace { get; set; }
         public string AssemblyName { get; set; }
+
+        [System.ComponentModel.Browsable(false)]
+        [Newtonsoft.Json.JsonIgnore]
+        public override byte[] Data { get => throw new InvalidOperationException("Data cannot be accessed from this class!"); set => throw new InvalidOperationException("Data cannot be accessed from this class!"); }
 
     }
 }

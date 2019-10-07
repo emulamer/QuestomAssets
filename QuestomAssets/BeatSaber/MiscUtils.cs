@@ -8,10 +8,34 @@ namespace QuestomAssets.BeatSaber
 {
     public class MiscUtils
     {
-        private static HashSet<char> InvalidChars = new HashSet<char>(System.IO.Path.GetInvalidPathChars().Union(System.IO.Path.GetInvalidFileNameChars()).Union(new char[] { ' ' }));
-        public static string GetLevelID(string songName)
+        private static HashSet<char> InvalidChars = new HashSet<char>(System.IO.Path.GetInvalidPathChars().Union(System.IO.Path.GetInvalidFileNameChars()).Union(new char[] { ' ' }).Union(new char[] { '-' }));
+        public static string SanitizeName(string songName)
         {
             return new string(songName.Where(c => !InvalidChars.Contains(c)).ToArray());
+        }
+
+        public static string GetCharacteristicAssetName(Characteristic characteristic)
+        {
+            string name = null;
+            switch (characteristic)
+            {
+                case Characteristic.OneSaber:
+                    name = "OneColorBeatmapCharacteristic";
+                    break;
+                case Characteristic.NoArrows:
+                    name = "NoArrowsBeatmapCharacteristic";
+                    break;
+                case Characteristic.Standard:
+                    name = "StandardBeatmapCharacteristic";
+                    break;
+                case Characteristic.Lightshow:
+                    name = "LightshowBeatmapCharacteristic";
+                    break;
+                case Characteristic.Lawless:
+                    name = "LawlessBeatmapCharacteristic";
+                    break;
+            }
+            return name;
         }
         //string playlist = @"C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\Playlists\SongBrowserPluginFavorites.json";
         //string customSongsFolder2 = @"C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\CustomSongs";

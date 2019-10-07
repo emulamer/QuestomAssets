@@ -7,6 +7,7 @@ namespace QuestomAssets.BeatSaber
 {
     public static class BSConst
     {
+        
         public static class KnownFiles
         {
             //public const string File19 = "sharedassets19.assets";
@@ -83,13 +84,18 @@ namespace QuestomAssets.BeatSaber
             scriptHashToTypes.Add("BeatmapLevelSO", typeof(BeatmapLevelDataObject));
             scriptHashToTypes.Add("SimpleColorSO", typeof(SimpleColorSO));
             scriptHashToTypes.Add("ColorManager", typeof(ColorManager));
-            scriptHashToTypes.Add("AlwaysOwnedContentModelSO", typeof(AlwaysOwnedContentModel));
+            scriptHashToTypes.Add("AlwaysOwnedContentSO", typeof(AlwaysOwnedContent));
+            scriptHashToTypes.Add("SceneInfo", typeof(EnvironmentSceneInfoObject));
+            scriptHashToTypes.Add("EnvironmentInfoSO", typeof(EnvironmentInfoObject));
+            scriptHashToTypes.Add("BeatmapCharacteristicSO", typeof(BeatmapCharacteristicObject));
+            scriptHashToTypes.Add("BeatmapCharacteristicCollectionSO", typeof(BeatmapCharacteristicCollectionObject));
             return scriptHashToTypes;
         }
 
         public static List<string> KnownLevelPackIDs { get; } = new List<string>() {
             "OstVol1",
             "OstVol2",
+            "OstVol3",
             "Extras",
             "Monstercat",
             "ImagineDragons"
@@ -97,7 +103,7 @@ namespace QuestomAssets.BeatSaber
 
         public static List<string> KnownLevelIDs { get; } = new List<string>()
         {
-            "100BillsLevel",
+            "100Bills",
             "AngelVoices",
             "BeatSaber",
             "BalearicPumping",
